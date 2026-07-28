@@ -253,8 +253,14 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         status: "archived",
       });
 
+      await updateCourseOfferings(courseId, {
+        title,
+        status: "archived",
+        enrollment_open: false,
+      });
+
       setMessage("Course deleted.");
-      await loadCourse();
+      window.location.hash = "/admin/courses";
     } catch (caughtError) {
       setError(
         caughtError instanceof Error

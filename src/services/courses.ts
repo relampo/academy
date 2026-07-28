@@ -95,6 +95,7 @@ export async function listCoursesWithEditions() {
   const { data, error } = await supabase
     .from("courses")
     .select("*, course_editions(*)")
+    .neq("status", "archived")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -121,8 +122,9 @@ export async function getCourseWithEditions(courseId: string) {
 export async function listPublishedCourseEditions(studentId?: string) {
   const { data, error } = await supabase
     .from("course_editions")
-    .select("*, courses(*), enrollments(*)")
+    .select("*, courses!inner(*), enrollments(*)")
     .in("status", ["published", "enrollment_closed", "completed"])
+    .neq("courses.status", "archived")
     .order("start_date", { ascending: true, nullsFirst: false });
 
   if (error) {
