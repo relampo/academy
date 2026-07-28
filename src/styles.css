@@ -1117,6 +1117,37 @@ p {
   color: #657286;
 }
 
+.student-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  border-top: 1px solid #edf1f6;
+  padding-top: 12px;
+}
+
+.student-requirements > span {
+  color: #39465a;
+}
+
+.student-requirements > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.student-requirements small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #526176;
+  font-size: 0.76rem;
+  font-weight: 900;
+  padding: 0 10px;
+}
+
 .student-progress-track {
   height: 10px;
   overflow: hidden;
@@ -1322,13 +1353,6 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.student-resource-chip small {
-  color: #657286;
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-transform: uppercase;
 }
 
 .student-resource-chip:hover,

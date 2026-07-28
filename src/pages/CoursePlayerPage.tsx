@@ -58,12 +58,12 @@ function renderStudentResource(resource: Resource) {
     <>
       <ResourceIcon aria-hidden="true" size={16} strokeWidth={2.2} />
       <span>{resource.title}</span>
-      <small>{label}</small>
     </>
   );
 
   return resource.external_url ? (
     <a
+      aria-label={`${label}: ${resource.title}`}
       className="student-resource-chip"
       href={resource.external_url}
       key={resource.id}
@@ -73,7 +73,11 @@ function renderStudentResource(resource: Resource) {
       {content}
     </a>
   ) : (
-    <div className="student-resource-chip" key={resource.id}>
+    <div
+      aria-label={`${label}: ${resource.title}`}
+      className="student-resource-chip"
+      key={resource.id}
+    >
       {content}
     </div>
   );
@@ -179,15 +183,23 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       {!isLoading && modules.length > 0 ? (
         <section className="student-progress-panel">
           <div>
-            <span>Progress</span>
+            <span>Lesson progress</span>
             <strong>{progress}%</strong>
           </div>
           <div className="student-progress-track">
             <span style={{ width: `${progress}%` }} />
           </div>
           <p>
-            {completedCount} of {lessons.length} lessons completed
+            {completedCount} of {lessons.length} lessons viewed
           </p>
+          <div className="student-requirements">
+            <span>Course completion requires</span>
+            <div>
+              <small>Instructor confirms attendance</small>
+              <small>Instructor confirms full class</small>
+              <small>Student completes quiz</small>
+            </div>
+          </div>
         </section>
       ) : null}
 
@@ -231,8 +243,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                         <button
                           aria-label={
                             completedLessonIds.has(lesson.id)
-                              ? "Mark lesson incomplete"
-                              : "Mark lesson complete"
+                              ? "Mark lesson not viewed"
+                              : "Mark lesson viewed"
                           }
                           className="student-complete-toggle"
                           type="button"
@@ -271,7 +283,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               >
                                 <PlayCircle aria-hidden="true" size={16} />
                                 <span>Lesson video</span>
-                                <small>Video</small>
                               </a>
                             ) : null}
                             {lesson.resources.map((resource) =>
