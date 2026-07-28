@@ -82,7 +82,10 @@ export async function listCourseContent(courseId: string) {
     throw error;
   }
 
-  return data as ModuleWithLessons[];
+  return (data as ModuleWithLessons[]).map((module) => ({
+    ...module,
+    lessons: module.lessons.filter((lesson) => lesson.status !== "archived"),
+  }));
 }
 
 export async function createModule(input: CreateModuleInput) {

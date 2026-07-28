@@ -641,6 +641,12 @@ p {
   font-size: 1rem;
 }
 
+.lesson-row.is-editing .lesson-heading strong,
+.lesson-row.is-editing .lesson-kicker,
+.lesson-edit-form label {
+  font-weight: 500;
+}
+
 .lesson-title-stack {
   display: grid;
   gap: 2px;

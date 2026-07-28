@@ -211,6 +211,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const refreshCourseContent = async () => {
+    const nextModules = await listCourseContent(courseId);
+    setModules(nextModules);
+  };
+
   const loadCourse = async () => {
     setIsLoading(true);
     setError(null);
@@ -463,7 +468,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setModuleDescription("");
       setIsAddingModule(false);
       setMessage("Module created.");
-      await loadCourse();
+      await refreshCourseContent();
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, "Could not create module."));
     } finally {
@@ -506,7 +511,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setLessonDuration("");
       setActiveLessonModuleId(null);
       setMessage("Lesson created.");
-      await loadCourse();
+      await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -544,7 +549,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setResourceType("external_link");
       setActiveResourceLessonId(null);
       setMessage("Resource added.");
-      await loadCourse();
+      await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -614,7 +619,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
 
       setEditingModuleId(null);
       setMessage("Module updated.");
-      await loadCourse();
+      await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -667,7 +672,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
 
       setEditingLessonId(null);
       setMessage("Lesson updated.");
-      await loadCourse();
+      await refreshCourseContent();
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, "Could not update lesson."));
     } finally {
@@ -692,7 +697,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       });
 
       setMessage("Lesson deleted.");
-      await loadCourse();
+      await refreshCourseContent();
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, "Could not delete lesson."));
     } finally {
@@ -708,7 +713,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     try {
       await deleteResource(resourceId);
       setMessage("Resource removed.");
-      await loadCourse();
+      await refreshCourseContent();
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, "Could not remove resource."));
     } finally {
@@ -729,7 +734,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       });
 
       setMessage("Module deleted.");
-      await loadCourse();
+      await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -1254,7 +1259,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       <p className="tree-empty">No lessons in this module.</p>
                     ) : (
                       module.lessons.map((lesson, lessonIndex) => (
-                        <div className="lesson-row" key={lesson.id}>
+                        <div
+                          className={`lesson-row${
+                            editingLessonId === lesson.id ? " is-editing" : ""
+                          }`}
+                          key={lesson.id}
+                        >
                           <div className="lesson-heading">
                             <button
                               className="lesson-toggle"
