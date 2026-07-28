@@ -68,8 +68,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     useState<CourseStatus>("draft");
   const [editingEditionEnrollmentOpen, setEditingEditionEnrollmentOpen] =
     useState(false);
-  const [editingEditionRequiresApproval, setEditingEditionRequiresApproval] =
-    useState(true);
   const [moduleTitle, setModuleTitle] = useState("");
   const [moduleDescription, setModuleDescription] = useState("");
   const [moduleStatus, setModuleStatus] = useState<LessonStatus>("draft");
@@ -137,7 +135,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       );
       setEditingEditionStatus(primaryOffering?.status ?? "draft");
       setEditingEditionEnrollmentOpen(primaryOffering?.enrollment_open ?? false);
-      setEditingEditionRequiresApproval(primaryOffering?.requires_approval ?? true);
       setLessonModuleId((current) => current || nextModules[0]?.id || "");
       setResourceLessonId(
         (current) => current || nextModules[0]?.lessons[0]?.id || "",
@@ -229,7 +226,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         end_date: editingEditionEndDate || null,
         capacity: editingEditionCapacity ? Number(editingEditionCapacity) : null,
         enrollment_open: editingEditionEnrollmentOpen,
-        requires_approval: editingEditionRequiresApproval,
+        requires_approval: true,
       });
 
       setMessage("Enrollment settings updated.");
@@ -611,8 +608,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
           <section className="content-panel compact-panel">
             <div className="panel-heading">
               <div>
-                <p className="eyebrow">Enrollment</p>
-                <h2>Enrollment settings</h2>
+                <h2>Enrollment</h2>
               </div>
             </div>
             {primaryOffering ? (
@@ -671,8 +667,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </select>
                   </label>
                 </div>
-                <div className="toggle-row">
-                  <label>
+                <div className="toggle-row single-toggle-row">
+                  <label className="switch-row">
                     <input
                       checked={editingEditionEnrollmentOpen}
                       type="checkbox"
@@ -680,17 +676,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                         setEditingEditionEnrollmentOpen(event.target.checked)
                       }
                     />
-                    Enrollment open
-                  </label>
-                  <label>
-                    <input
-                      checked={editingEditionRequiresApproval}
-                      type="checkbox"
-                      onChange={(event) =>
-                        setEditingEditionRequiresApproval(event.target.checked)
-                      }
-                    />
-                    Requires approval
+                    <span>
+                      <strong>Enrollment open</strong>
+                      <small>Requests always require approval.</small>
+                    </span>
                   </label>
                 </div>
                 <div className="inline-actions">
