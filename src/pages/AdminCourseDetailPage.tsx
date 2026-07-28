@@ -64,8 +64,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [editingEditionStartDate, setEditingEditionStartDate] = useState("");
   const [editingEditionEndDate, setEditingEditionEndDate] = useState("");
   const [editingEditionCapacity, setEditingEditionCapacity] = useState("");
-  const [editingEditionStatus, setEditingEditionStatus] =
-    useState<CourseStatus>("draft");
   const [editingEditionEnrollmentOpen, setEditingEditionEnrollmentOpen] =
     useState(false);
   const [moduleTitle, setModuleTitle] = useState("");
@@ -133,7 +131,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setEditingEditionCapacity(
         primaryOffering?.capacity ? String(primaryOffering.capacity) : "",
       );
-      setEditingEditionStatus(primaryOffering?.status ?? "draft");
       setEditingEditionEnrollmentOpen(primaryOffering?.enrollment_open ?? false);
       setLessonModuleId((current) => current || nextModules[0]?.id || "");
       setResourceLessonId(
@@ -166,6 +163,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         description: description || null,
         status,
       });
+
+      if (primaryOffering) {
+        await updateCourseEdition(primaryOffering.id, {
+          title,
+          status,
+        });
+      }
 
       setMessage("Course updated.");
       await loadCourse();
@@ -221,7 +225,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     try {
       await updateCourseEdition(primaryOffering.id, {
         title: course.title,
-        status: editingEditionStatus,
         start_date: editingEditionStartDate || null,
         end_date: editingEditionEndDate || null,
         capacity: editingEditionCapacity ? Number(editingEditionCapacity) : null,
@@ -638,35 +641,17 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     />
                   </label>
                 </div>
-                <div className="form-grid">
-                  <label>
-                    Capacity
-                    <input
-                      min="1"
-                      type="number"
-                      value={editingEditionCapacity}
-                      onChange={(event) =>
-                        setEditingEditionCapacity(event.target.value)
-                      }
-                    />
-                  </label>
-                  <label>
-                    Status
-                    <select
-                      value={editingEditionStatus}
-                      onChange={(event) =>
-                        setEditingEditionStatus(event.target.value as CourseStatus)
-                      }
-                    >
-                      <option value="draft">Draft</option>
-                      <option value="published">Published</option>
-                      <option value="enrollment_closed">
-                        Enrollment closed
-                      </option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </label>
-                </div>
+                <label>
+                  Capacity
+                  <input
+                    min="1"
+                    type="number"
+                    value={editingEditionCapacity}
+                    onChange={(event) =>
+                      setEditingEditionCapacity(event.target.value)
+                    }
+                  />
+                </label>
                 <div className="toggle-row">
                   <label className="checkbox-row enrollment-open-row">
                     <input
