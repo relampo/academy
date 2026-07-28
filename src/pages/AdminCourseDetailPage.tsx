@@ -17,6 +17,7 @@ import {
   listCourseContent,
   updateModule,
   type ModuleWithLessons,
+  type Resource,
 } from "../services/content";
 import {
   getCourseWithEditions,
@@ -58,6 +59,36 @@ const resourceTypeIcons: Record<string, LucideIcon> = {
 
 function getResourceIcon(resourceType: string) {
   return resourceTypeIcons[resourceType] ?? File;
+}
+
+function renderResourceChip(resource: Resource) {
+  const ResourceIcon = getResourceIcon(resource.resource_type);
+  const resourceLabel = `${
+    resourceTypeLabels[resource.resource_type] ?? resource.resource_type
+  }: ${resource.title}`;
+  const chipContent = (
+    <>
+      <ResourceIcon aria-hidden="true" size={16} strokeWidth={2.2} />
+      <span>{resource.title}</span>
+    </>
+  );
+
+  return resource.external_url ? (
+    <a
+      aria-label={resourceLabel}
+      className="resource-chip"
+      href={resource.external_url}
+      key={resource.id}
+      rel="noreferrer"
+      target="_blank"
+    >
+      {chipContent}
+    </a>
+  ) : (
+    <div aria-label={resourceLabel} className="resource-chip" key={resource.id}>
+      {chipContent}
+    </div>
+  );
 }
 
 function getErrorMessage(caughtError: unknown, fallback: string) {
@@ -1134,17 +1165,26 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               <span>
                                 {lesson.description || "No description yet."}
                               </span>
-                              <div className="mini-list">
-                                {lesson.duration_minutes ? (
-                                  <span>{lesson.duration_minutes} min</span>
-                                ) : null}
+                              <div className="lesson-support-row">
+                                <div className="mini-list">
+                                  {lesson.duration_minutes ? (
+                                    <span>{lesson.duration_minutes} min</span>
+                                  ) : null}
+                                  {lesson.resources.length > 0 ? (
+                                    <span>
+                                      {lesson.resources.length}{" "}
+                                      {lesson.resources.length === 1
+                                        ? "resource"
+                                        : "resources"}
+                                    </span>
+                                  ) : null}
+                                </div>
                                 {lesson.resources.length > 0 ? (
-                                  <span>
-                                    {lesson.resources.length}{" "}
-                                    {lesson.resources.length === 1
-                                      ? "resource"
-                                      : "resources"}
-                                  </span>
+                                  <div className="resource-list">
+                                    {lesson.resources.map((resource) =>
+                                      renderResourceChip(resource),
+                                    )}
+                                  </div>
                                 ) : null}
                               </div>
                             </div>
@@ -1207,54 +1247,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 </button>
                               </div>
                             </form>
-                          ) : null}
-                          {!collapsedLessonIds.has(lesson.id) &&
-                          lesson.resources.length > 0 ? (
-                            <div className="resource-list">
-                              {lesson.resources.map((resource) => (
-                                (() => {
-                                  const ResourceIcon = getResourceIcon(
-                                    resource.resource_type,
-                                  );
-                                  const resourceLabel = `${
-                                    resourceTypeLabels[
-                                      resource.resource_type
-                                    ] ?? resource.resource_type
-                                  }: ${resource.title}`;
-                                  const chipContent = (
-                                    <>
-                                      <ResourceIcon
-                                        aria-hidden="true"
-                                        size={16}
-                                        strokeWidth={2.2}
-                                      />
-                                      <span>{resource.title}</span>
-                                    </>
-                                  );
-
-                                  return resource.external_url ? (
-                                    <a
-                                      aria-label={resourceLabel}
-                                      className="resource-chip"
-                                      href={resource.external_url}
-                                      key={resource.id}
-                                      rel="noreferrer"
-                                      target="_blank"
-                                    >
-                                      {chipContent}
-                                    </a>
-                                  ) : (
-                                    <div
-                                      aria-label={resourceLabel}
-                                      className="resource-chip"
-                                      key={resource.id}
-                                    >
-                                      {chipContent}
-                                    </div>
-                                  );
-                                })()
-                              ))}
-                            </div>
                           ) : null}
                         </div>
                       ))

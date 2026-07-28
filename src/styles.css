@@ -699,6 +699,14 @@ p {
   padding: 0 14px 14px 42px;
 }
 
+.lesson-support-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
 .lesson-heading button,
 .secondary-action {
   display: inline-flex;
@@ -890,7 +898,7 @@ p {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 0;
   padding-left: 0;
 }
 
@@ -899,13 +907,13 @@ p {
   align-items: center;
   gap: 7px;
   max-width: 100%;
-  min-height: 32px;
+  min-height: 30px;
   border: 1px solid #d9e0ea;
   border-radius: 999px;
   background: #ffffff;
   color: #39465a;
   font-weight: 800;
-  padding: 6px 10px;
+  padding: 5px 10px;
   text-decoration: none;
 }
 
