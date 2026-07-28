@@ -1392,7 +1392,8 @@ p {
   font-size: 1.02rem;
 }
 
-.student-duration {
+.student-duration,
+.student-points-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1403,6 +1404,11 @@ p {
   font-weight: 800;
   padding: 6px 10px;
   white-space: nowrap;
+}
+
+.student-points-badge {
+  background: #fff6cf;
+  color: #805f00;
 }
 
 .student-lesson-body {

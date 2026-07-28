@@ -6,7 +6,6 @@ import {
   ClipboardCheck,
   Circle,
   CircleHelp,
-  Clock3,
   File,
   FileText,
   Link,
@@ -46,6 +45,9 @@ type CoursePlayerPageProps = {
   courseId: string;
 };
 
+const attendancePoints = 10;
+const quizMaxPoints = 20;
+
 const resourceTypeLabels: Record<string, string> = {
   external_link: "External link",
   video: "Video",
@@ -68,6 +70,10 @@ const resourceTypeIcons: Record<string, LucideIcon> = {
 
 function getResourceIcon(resourceType: string) {
   return resourceTypeIcons[resourceType] ?? File;
+}
+
+function formatPoints(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 function renderStudentResource(resource: Resource) {
@@ -161,6 +167,63 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const attemptByQuiz = new Map(
     quizAttempts.map((attempt) => [attempt.quiz_id, attempt]),
   );
+
+  const getLessonPointSummary = (lessonId: string) => {
+    const attendanceRecord = attendanceByLesson.get(lessonId);
+    const assignment = assignmentByLesson.get(lessonId);
+    const submission = assignment
+      ? submissionByAssignment.get(assignment.id)
+      : null;
+    const quiz = quizByLesson.get(lessonId);
+    const quizAttempt = quiz ? attemptByQuiz.get(quiz.id) : null;
+    const assignmentMaxPoints = assignment?.points ?? 10;
+    const earned =
+      (attendanceRecord?.attended ? attendancePoints : 0) +
+      (quizAttempt?.total_score ?? 0) +
+      (submission?.points_awarded ?? 0);
+    const max = attendancePoints + quizMaxPoints + assignmentMaxPoints;
+    const hasPending =
+      !attendanceRecord?.attended ||
+      !quizAttempt ||
+      submission?.points_awarded === null ||
+      submission?.points_awarded === undefined;
+
+    return {
+      earned,
+      max,
+      label: hasPending
+        ? "Points pending"
+        : `${formatPoints(earned)}/${formatPoints(max)} pts`,
+      tooltip: [
+        `Attendance: ${
+          attendanceRecord?.attended
+            ? `${attendancePoints}/${attendancePoints} pts`
+            : "pending"
+        }`,
+        `Quiz: ${
+          quizAttempt
+            ? `${formatPoints(quizAttempt.total_score)}/${quizMaxPoints} pts`
+            : "pending"
+        }`,
+        `Assignment: ${
+          submission?.points_awarded !== null &&
+          submission?.points_awarded !== undefined
+            ? `${formatPoints(submission.points_awarded)}/${formatPoints(
+                assignmentMaxPoints,
+              )} pts`
+            : "pending"
+        }`,
+      ].join("\n"),
+    };
+  };
+
+  const getModuleTooltip = (module: ModuleWithLessons) =>
+    module.lessons
+      .map((lesson, index) => {
+        const summary = getLessonPointSummary(lesson.id);
+        return `Lesson ${index + 1}: ${summary.label}\n${summary.tooltip}`;
+      })
+      .join("\n\n");
 
   const toggleLessonComplete = async (lessonId: string) => {
     if (!user) {
@@ -455,6 +518,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
               <button
                 aria-expanded={!isModuleCollapsed}
                 className="student-module-header"
+                title={getModuleTooltip(module)}
                 type="button"
                 onClick={() => toggleModule(module.id)}
               >
@@ -463,7 +527,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                   <h2>{module.title}</h2>
                   <p>{module.description || "No description yet."}</p>
                 </div>
-                <small>
+                <small title={getModuleTooltip(module)}>
                   {moduleCompletedCount}/{module.lessons.length}
                 </small>
                 {isModuleCollapsed ? (
@@ -513,6 +577,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                           : submission
                             ? "Assignment submitted"
                             : "Assignment pending";
+                    const lessonPointSummary = getLessonPointSummary(lesson.id);
 
                     return (
                     <article
@@ -543,12 +608,12 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                           <span>Lesson {lessonIndex + 1}</span>
                           <h3>{lesson.title}</h3>
                         </div>
-                        {lesson.duration_minutes ? (
-                          <span className="student-duration">
-                            <Clock3 aria-hidden="true" size={15} />
-                            {lesson.duration_minutes} min
-                          </span>
-                        ) : null}
+                        <span
+                          className="student-points-badge"
+                          title={lessonPointSummary.tooltip}
+                        >
+                          {lessonPointSummary.label}
+                        </span>
                       </header>
                       <div className="student-lesson-body">
                         <div className="student-status-row">
@@ -596,6 +661,14 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               <div className="student-assignment-side">
                                 <div className="student-assignment-meta">
                                   <span>{assignment.assignment_type}</span>
+                                  <span>
+                                    {submission?.points_awarded !== null &&
+                                    submission?.points_awarded !== undefined
+                                      ? `${formatPoints(
+                                          submission.points_awarded,
+                                        )}/${formatPoints(assignment.points)} pts`
+                                      : "Points pending"}
+                                  </span>
                                   {submission?.submission_url ? (
                                     <a
                                       href={submission.submission_url}
@@ -694,9 +767,15 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               </div>
                             </div>
                             {quizAttempt ? (
-                              <span className="student-quiz-result">
-                                Completed
-                              </span>
+                              <div className="student-assignment-meta">
+                                <span className="student-quiz-result">
+                                  Completed
+                                </span>
+                                <span>
+                                  {formatPoints(quizAttempt.total_score)}/
+                                  {quizMaxPoints} pts
+                                </span>
+                              </div>
                             ) : activeQuizLessonId === lesson.id &&
                               isQuizReady ? (
                               <div className="student-quiz-runner">
@@ -710,6 +789,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                         <span>
                                           Question {activeQuizQuestionIndex + 1}/
                                           {quiz.quiz_questions.length}
+                                        </span>
+                                        <span>
+                                          2 pts under 30s · 1.5 under 60s · 1 after
                                         </span>
                                       </div>
                                       <strong>{question.question_text}</strong>
@@ -770,14 +852,19 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                 })()}
                               </div>
                             ) : (
-                              <button
-                                className="secondary-action student-submit-action"
-                                disabled={!isQuizReady}
-                                type="button"
-                                onClick={() => startQuiz(lesson.id)}
-                              >
-                                {isQuizReady ? "Start quiz" : "Quiz pending"}
-                              </button>
+                              <div className="student-assignment-side">
+                                <div className="student-assignment-meta">
+                                  <span>Points pending</span>
+                                </div>
+                                <button
+                                  className="secondary-action student-submit-action"
+                                  disabled={!isQuizReady}
+                                  type="button"
+                                  onClick={() => startQuiz(lesson.id)}
+                                >
+                                  {isQuizReady ? "Start quiz" : "Quiz pending"}
+                                </button>
+                              </div>
                             )}
                           </section>
                         ) : null}
