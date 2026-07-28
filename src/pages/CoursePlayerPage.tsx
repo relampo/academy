@@ -178,11 +178,13 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       setIsLoading(true);
 
       try {
-        const [nextCourse, nextModules, nextProgress] = await Promise.all([
+        const [nextCourse, nextModules] = await Promise.all([
           getCourseWithEditions(courseId),
           listCourseContent(courseId),
-          user ? listLessonProgress(courseId, user.id) : Promise.resolve([]),
         ]);
+        const nextProgress = user
+          ? await listLessonProgress(courseId, user.id).catch(() => [])
+          : [];
 
         setCourse(nextCourse);
         setModules(nextModules);
