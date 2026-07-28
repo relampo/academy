@@ -537,7 +537,7 @@ p {
 .module-toggle {
   display: flex;
   flex: 1;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   min-width: 0;
   border: 0;
