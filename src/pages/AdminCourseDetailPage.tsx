@@ -849,7 +849,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       ) : null}
 
       {!isLoading && course ? (
-        <section className="content-panel">
+        <section className="content-panel curriculum-panel">
           <div className="page-header compact-header">
             <div>
               <p className="eyebrow">Curriculum</p>
@@ -919,9 +919,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       {collapsedModuleIds.has(module.id) ? "+" : "-"}
                     </span>
                     <div>
-                      <h2>
-                        Module {moduleIndex + 1}: <span>{module.title}</span>
-                      </h2>
+                      <span className="module-kicker">Module {moduleIndex + 1}</span>
+                      <h2>{module.title}</h2>
                       <p>{module.description || "No description yet."}</p>
                     </div>
                   </button>
@@ -1080,11 +1079,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               <span aria-hidden="true">
                                 {collapsedLessonIds.has(lesson.id) ? "+" : "-"}
                               </span>
-                              <div>
-                                <strong>
-                                  Lesson {lessonIndex + 1}:{" "}
-                                  <span>{lesson.title}</span>
-                                </strong>
+                              <div className="lesson-title-stack">
+                                <span className="lesson-kicker">
+                                  Lesson {lessonIndex + 1}
+                                </span>
+                                <strong>{lesson.title}</strong>
                               </div>
                             </button>
                             <button
