@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Circle,
   Clock3,
   File,
@@ -83,6 +85,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,6 +112,20 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     });
   };
 
+  const toggleModule = (moduleId: string) => {
+    setCollapsedModuleIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(moduleId)) {
+        next.delete(moduleId);
+      } else {
+        next.add(moduleId);
+      }
+
+      return next;
+    });
+  };
+
   useEffect(() => {
     const loadCourse = async () => {
       setError(null);
@@ -120,6 +139,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
 
         setCourse(nextCourse);
         setModules(nextModules);
+        setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
       } catch (caughtError) {
         setError(
           caughtError instanceof Error
@@ -172,77 +192,101 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       ) : null}
 
       <div className="student-course-shell">
-        {modules.map((module, moduleIndex) => (
-          <article className="student-module" key={module.id}>
-            <header className="student-module-header">
-              <span>Module {moduleIndex + 1}</span>
-              <div>
-                <h2>{module.title}</h2>
-                <p>{module.description || "No description yet."}</p>
-              </div>
-            </header>
-            <div className="student-lesson-list">
-              {module.lessons.length === 0 ? (
-                <p className="tree-empty">No lessons in this module.</p>
-              ) : null}
-              {module.lessons.map((lesson, lessonIndex) => (
-                <article className="student-lesson" key={lesson.id}>
-                  <header className="student-lesson-header">
-                    <button
-                      aria-label={
-                        completedLessonIds.has(lesson.id)
-                          ? "Mark lesson incomplete"
-                          : "Mark lesson complete"
-                      }
-                      className="student-complete-toggle"
-                      type="button"
-                      onClick={() => toggleLessonComplete(lesson.id)}
-                    >
-                      {completedLessonIds.has(lesson.id) ? (
-                        <CheckCircle2 aria-hidden="true" size={22} />
-                      ) : (
-                        <Circle aria-hidden="true" size={22} />
-                      )}
-                    </button>
-                    <div>
-                      <span>Lesson {lessonIndex + 1}</span>
-                      <h3>{lesson.title}</h3>
-                    </div>
-                    {lesson.duration_minutes ? (
-                      <span className="student-duration">
-                        <Clock3 aria-hidden="true" size={15} />
-                        {lesson.duration_minutes} min
-                      </span>
-                    ) : null}
-                  </header>
-                  <div className="student-lesson-body">
-                    {lesson.description ? <span>{lesson.description}</span> : null}
-                    {lesson.content ? <p>{lesson.content}</p> : null}
-                    {lesson.video_url || lesson.resources.length > 0 ? (
-                      <div className="student-resource-list">
-                        {lesson.video_url ? (
-                          <a
-                            className="student-resource-chip"
-                            href={lesson.video_url}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            <PlayCircle aria-hidden="true" size={16} />
-                            <span>Lesson video</span>
-                            <small>Video</small>
-                          </a>
+        {modules.map((module, moduleIndex) => {
+          const isModuleCollapsed = collapsedModuleIds.has(module.id);
+          const moduleCompletedCount = module.lessons.filter((lesson) =>
+            completedLessonIds.has(lesson.id),
+          ).length;
+
+          return (
+            <article className="student-module" key={module.id}>
+              <button
+                aria-expanded={!isModuleCollapsed}
+                className="student-module-header"
+                type="button"
+                onClick={() => toggleModule(module.id)}
+              >
+                <span>Module {moduleIndex + 1}</span>
+                <div>
+                  <h2>{module.title}</h2>
+                  <p>{module.description || "No description yet."}</p>
+                </div>
+                <small>
+                  {moduleCompletedCount}/{module.lessons.length}
+                </small>
+                {isModuleCollapsed ? (
+                  <ChevronRight aria-hidden="true" size={20} />
+                ) : (
+                  <ChevronDown aria-hidden="true" size={20} />
+                )}
+              </button>
+              {!isModuleCollapsed ? (
+                <div className="student-lesson-list">
+                  {module.lessons.length === 0 ? (
+                    <p className="tree-empty">No lessons in this module.</p>
+                  ) : null}
+                  {module.lessons.map((lesson, lessonIndex) => (
+                    <article className="student-lesson" key={lesson.id}>
+                      <header className="student-lesson-header">
+                        <button
+                          aria-label={
+                            completedLessonIds.has(lesson.id)
+                              ? "Mark lesson incomplete"
+                              : "Mark lesson complete"
+                          }
+                          className="student-complete-toggle"
+                          type="button"
+                          onClick={() => toggleLessonComplete(lesson.id)}
+                        >
+                          {completedLessonIds.has(lesson.id) ? (
+                            <CheckCircle2 aria-hidden="true" size={22} />
+                          ) : (
+                            <Circle aria-hidden="true" size={22} />
+                          )}
+                        </button>
+                        <div>
+                          <span>Lesson {lessonIndex + 1}</span>
+                          <h3>{lesson.title}</h3>
+                        </div>
+                        {lesson.duration_minutes ? (
+                          <span className="student-duration">
+                            <Clock3 aria-hidden="true" size={15} />
+                            {lesson.duration_minutes} min
+                          </span>
                         ) : null}
-                        {lesson.resources.map((resource) =>
-                          renderStudentResource(resource),
-                        )}
+                      </header>
+                      <div className="student-lesson-body">
+                        {lesson.description ? (
+                          <span>{lesson.description}</span>
+                        ) : null}
+                        {lesson.content ? <p>{lesson.content}</p> : null}
+                        {lesson.video_url || lesson.resources.length > 0 ? (
+                          <div className="student-resource-list">
+                            {lesson.video_url ? (
+                              <a
+                                className="student-resource-chip"
+                                href={lesson.video_url}
+                                rel="noreferrer"
+                                target="_blank"
+                              >
+                                <PlayCircle aria-hidden="true" size={16} />
+                                <span>Lesson video</span>
+                                <small>Video</small>
+                              </a>
+                            ) : null}
+                            {lesson.resources.map((resource) =>
+                              renderStudentResource(resource),
+                            )}
+                          </div>
+                        ) : null}
                       </div>
-                    ) : null}
-                  </div>
-                </article>
-              ))}
-            </div>
-          </article>
-        ))}
+                    </article>
+                  ))}
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
       </div>
     </section>
   );

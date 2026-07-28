@@ -1148,11 +1148,23 @@ p {
 
 .student-module-header {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
   gap: 14px;
+  border: 0;
   border-bottom: 1px solid #edf1f6;
   background: #fbfcff;
+  color: inherit;
+  cursor: pointer;
   padding: 18px 20px;
+  text-align: left;
+}
+
+.student-module-header:hover,
+.student-module-header:focus-visible {
+  background: #fffdf3;
+  outline: none;
 }
 
 .student-module-header > span {
@@ -1180,6 +1192,23 @@ p {
 
 .student-module-header p {
   color: #657286;
+}
+
+.student-module-header small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #526176;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.student-module-header svg {
+  color: #526176;
 }
 
 .student-lesson-list {
