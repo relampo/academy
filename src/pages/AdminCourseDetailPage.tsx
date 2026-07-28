@@ -15,6 +15,14 @@ import {
   updateCourseOfferings,
   type CourseWithEditions,
 } from "../services/courses";
+import { useAuth } from "../hooks/useAuth";
+import {
+  assignCourseInstructor,
+  listCourseInstructors,
+  listInstructorProfiles,
+  type CourseInstructorAssignment,
+  type InstructorProfile,
+} from "../services/instructors";
 import type { Enums } from "../types/database.types";
 
 type CourseStatus = Enums<"course_status">;
@@ -45,6 +53,18 @@ function getErrorMessage(caughtError: unknown, fallback: string) {
   return fallback;
 }
 
+function getProfileName(profile: InstructorProfile | null) {
+  if (!profile) {
+    return "Unknown instructor";
+  }
+
+  return (
+    profile.display_name ||
+    `${profile.first_name} ${profile.last_name}`.trim() ||
+    "Unnamed instructor"
+  );
+}
+
 type AdminCourseDetailPageProps = {
   courseId: string;
 };
@@ -54,8 +74,14 @@ type PendingDelete =
   | { type: "module"; module: ModuleWithLessons };
 
 export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) {
+  const { user } = useAuth();
   const [course, setCourse] = useState<CourseWithEditions | null>(null);
   const [modules, setModules] = useState<ModuleWithLessons[]>([]);
+  const [instructors, setInstructors] = useState<InstructorProfile[]>([]);
+  const [assignedInstructors, setAssignedInstructors] = useState<
+    CourseInstructorAssignment[]
+  >([]);
+  const [selectedInstructorId, setSelectedInstructorId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<CourseStatus>("draft");
@@ -104,10 +130,22 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setError(null);
 
     try {
-      const nextCourse = await getCourseWithEditions(courseId);
-      const nextModules = await listCourseContent(courseId);
+      const [
+        nextCourse,
+        nextModules,
+        nextInstructors,
+        nextAssignedInstructors,
+      ] = await Promise.all([
+        getCourseWithEditions(courseId),
+        listCourseContent(courseId),
+        listInstructorProfiles(),
+        listCourseInstructors(courseId),
+      ]);
       setCourse(nextCourse);
       setModules(nextModules);
+      setInstructors(nextInstructors);
+      setAssignedInstructors(nextAssignedInstructors);
+      setSelectedInstructorId((current) => current || nextInstructors[0]?.id || "");
       setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
       setCollapsedLessonIds(
         new Set(
@@ -234,6 +272,37 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setError(
         getErrorMessage(caughtError, "Could not update enrollment settings."),
       );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAssignInstructor = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!selectedInstructorId || !user) {
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await assignCourseInstructor(courseId, selectedInstructorId, user.id);
+      const nextAssignedInstructors = await listCourseInstructors(courseId);
+      setMessage("Instructor assigned.");
+      setAssignedInstructors(nextAssignedInstructors);
+      setSelectedInstructorId(
+        instructors.find(
+          (instructor) =>
+            !nextAssignedInstructors.some(
+              (assignment) => assignment.instructor_id === instructor.id,
+            ),
+        )?.id ?? "",
+      );
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError, "Could not assign instructor."));
     } finally {
       setIsSubmitting(false);
     }
@@ -674,6 +743,56 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 <span>This course needs enrollment settings before students can join.</span>
               </div>
             )}
+          </section>
+
+          <section className="content-panel compact-panel">
+            <div className="panel-heading">
+              <div>
+                <h2>Instructors</h2>
+              </div>
+            </div>
+            <form className="stacked-form" onSubmit={handleAssignInstructor}>
+              <label>
+                Assign instructor
+                <select
+                  disabled={instructors.length === 0}
+                  value={selectedInstructorId}
+                  onChange={(event) => setSelectedInstructorId(event.target.value)}
+                >
+                  {instructors.length === 0 ? (
+                    <option value="">No active instructors</option>
+                  ) : null}
+                  {instructors.map((instructor) => (
+                    <option key={instructor.id} value={instructor.id}>
+                      {getProfileName(instructor)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  !selectedInstructorId ||
+                  assignedInstructors.some(
+                    (assignment) =>
+                      assignment.instructor_id === selectedInstructorId,
+                  )
+                }
+              >
+                Assign instructor
+              </button>
+            </form>
+            <div className="mini-list instructor-list">
+              {assignedInstructors.length === 0 ? (
+                <span>No instructors assigned</span>
+              ) : null}
+              {assignedInstructors.map((assignment) => (
+                <span key={assignment.instructor_id}>
+                  {getProfileName(assignment.profiles)}
+                </span>
+              ))}
+            </div>
           </section>
         </div>
       ) : null}

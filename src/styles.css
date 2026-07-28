@@ -321,6 +321,14 @@ p {
   gap: 16px;
 }
 
+.course-overview-grid .content-panel:first-child {
+  grid-row: span 2;
+}
+
+.instructor-list {
+  margin-top: 12px;
+}
+
 .three-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
