@@ -336,12 +336,22 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                       </header>
                       <div className="student-lesson-body">
                         <div className="student-status-row">
-                          <span>
+                          <span
+                            className={
+                              attendanceRecord?.attended ? "is-confirmed" : ""
+                            }
+                          >
                             {attendanceRecord?.attended
                               ? "Attendance confirmed"
                               : "Attendance pending"}
                           </span>
-                          <span>
+                          <span
+                            className={
+                              attendanceRecord?.stayed_until_end
+                                ? "is-confirmed"
+                                : ""
+                            }
+                          >
                             {attendanceRecord?.stayed_until_end
                               ? "Full class confirmed"
                               : "Full class pending"}

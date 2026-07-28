@@ -1350,6 +1350,11 @@ p {
   padding: 0 10px;
 }
 
+.student-status-row .is-confirmed {
+  background: #e5f8ed;
+  color: #1f7a45;
+}
+
 .student-resource-list {
   display: flex;
   flex-wrap: wrap;
