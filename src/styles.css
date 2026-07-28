@@ -1660,6 +1660,11 @@ p {
   margin-bottom: 24px;
 }
 
+.assignment-gradebook-panel {
+  width: 100%;
+  overflow: hidden;
+}
+
 .assignment-search {
   display: grid;
   gap: 6px;
@@ -1811,6 +1816,180 @@ p {
 .assignment-pagination button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.assignment-table-scroll {
+  overflow: auto;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.assignment-gradebook-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+}
+
+.assignment-gradebook-table th,
+.assignment-gradebook-table td {
+  border-right: 1px solid #e8edf4;
+  border-bottom: 1px solid #e8edf4;
+  vertical-align: top;
+}
+
+.assignment-gradebook-table thead th {
+  min-width: 190px;
+  background: #f8fafc;
+  color: #39465a;
+  padding: 10px;
+  text-align: left;
+}
+
+.assignment-gradebook-table thead th:first-child,
+.assignment-gradebook-table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 220px;
+  max-width: 260px;
+  background: #ffffff;
+}
+
+.assignment-gradebook-table thead th:first-child {
+  z-index: 3;
+  background: #f8fafc;
+}
+
+.assignment-gradebook-table tbody th {
+  color: #18212f;
+  font-weight: 900;
+  padding: 12px;
+  text-align: left;
+}
+
+.assignment-gradebook-table td {
+  width: 210px;
+  padding: 8px;
+}
+
+.assignment-gradebook-table th span,
+.assignment-gradebook-table th small {
+  display: block;
+  overflow: hidden;
+  color: #657286;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assignment-gradebook-table th strong {
+  display: block;
+  margin: 2px 0;
+  color: #18212f;
+}
+
+.assignment-cell {
+  display: grid;
+  gap: 8px;
+  min-height: 122px;
+  border-left: 3px solid #d8bd3d;
+  border-radius: 8px;
+  background: #fffdf3;
+  padding: 8px;
+}
+
+.assignment-cell.is-reviewed {
+  border-left-color: #37a267;
+  background: #f3fbf6;
+}
+
+.assignment-cell.is-needs_revision {
+  border-left-color: #d46b53;
+  background: #fff7f5;
+}
+
+.assignment-cell-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.assignment-cell-top span {
+  color: #526176;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: capitalize;
+}
+
+.assignment-cell-top a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #8a6900;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.assignment-cell label {
+  display: grid;
+  gap: 4px;
+  color: #39465a;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.assignment-cell input {
+  width: 100%;
+  min-height: 30px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 8px;
+}
+
+.assignment-cell-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.assignment-cell-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 30px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #39465a;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 900;
+  padding: 0 7px;
+}
+
+.assignment-cell-actions button:first-child {
+  border-color: #b9dfc9;
+  color: #1f7a45;
+}
+
+.assignment-cell-actions button:last-child {
+  border-color: #e5b6ad;
+  color: #8f2f23;
+}
+
+.assignment-empty {
+  display: grid;
+  min-height: 54px;
+  place-items: center;
+  border: 1px dashed #d9e0ea;
+  border-radius: 8px;
+  color: #7a8799;
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .module-heading .curriculum-actions button {

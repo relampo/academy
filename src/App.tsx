@@ -3,6 +3,7 @@ import { BrandMark } from "./components/BrandMark";
 import { AppLayout } from "./layouts/AppLayout";
 import { useAuth } from "./hooks/useAuth";
 import { AdminCourseDetailPage } from "./pages/AdminCourseDetailPage";
+import { AssignmentReviewPage } from "./pages/AssignmentReviewPage";
 import { AttendancePage } from "./pages/AttendancePage";
 import { CoursePlayerPage } from "./pages/CoursePlayerPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -38,6 +39,16 @@ function renderDynamicRoute(path: string): DynamicRoute | null {
       allowedRoles: ["admin", "instructor"],
       element: <AttendancePage courseId={attendanceMatch[1]} />,
       navPath: "/teaching",
+    };
+  }
+
+  const assignmentMatch = path.match(/^\/assignments\/([^/]+)$/);
+
+  if (assignmentMatch?.[1]) {
+    return {
+      allowedRoles: ["admin", "instructor"],
+      element: <AssignmentReviewPage courseId={assignmentMatch[1]} />,
+      navPath: "/assignments",
     };
   }
 

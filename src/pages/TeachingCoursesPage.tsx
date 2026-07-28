@@ -89,7 +89,10 @@ export function TeachingCoursesPage() {
                 >
                   Attendance
                 </a>
-                <a className="secondary-action" href="#/assignments">
+                <a
+                  className="secondary-action"
+                  href={`#/assignments/${course.id}`}
+                >
                   Assignments
                 </a>
                 <a
