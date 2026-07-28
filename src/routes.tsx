@@ -50,7 +50,7 @@ export const appRoutes: AppRoute[] = [
   },
   {
     path: "/assignments",
-    label: "Teaching",
+    label: "Assignments",
     Component: TeachingCoursesPage,
     allowedRoles: ["admin", "instructor"],
     navGroup: "instructor",

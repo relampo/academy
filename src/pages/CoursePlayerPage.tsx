@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -21,6 +21,7 @@ import {
   listAssignmentSubmissionsByAssignmentIds,
   listCourseContent,
   markLessonViewed,
+  submitAssignment,
   unmarkLessonViewed,
   type AssignmentSubmission,
   type LessonAttendance,
@@ -110,6 +111,14 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     () => new Set(),
   );
   const [savingLessonId, setSavingLessonId] = useState<string | null>(null);
+  const [activeAssignmentLessonId, setActiveAssignmentLessonId] = useState<
+    string | null
+  >(null);
+  const [assignmentUrl, setAssignmentUrl] = useState("");
+  const [assignmentNotes, setAssignmentNotes] = useState("");
+  const [savingAssignmentId, setSavingAssignmentId] = useState<string | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -194,6 +203,57 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
 
       return next;
     });
+  };
+
+  const startAssignmentSubmission = (
+    lessonId: string,
+    submission: AssignmentSubmission | null,
+  ) => {
+    setActiveAssignmentLessonId(lessonId);
+    setAssignmentUrl(submission?.submission_url ?? "");
+    setAssignmentNotes(submission?.notes ?? "");
+  };
+
+  const handleSubmitAssignment = async (
+    event: FormEvent<HTMLFormElement>,
+    assignmentId: string,
+  ) => {
+    event.preventDefault();
+
+    if (!user) {
+      return;
+    }
+
+    setError(null);
+    setSavingAssignmentId(assignmentId);
+
+    try {
+      const submission = await submitAssignment({
+        assignmentId,
+        studentId: user.id,
+        submissionUrl: assignmentUrl || null,
+        notes: assignmentNotes || null,
+      });
+
+      setAssignmentSubmissions((current) => {
+        const withoutCurrent = current.filter(
+          (currentSubmission) =>
+            currentSubmission.assignment_id !== assignmentId,
+        );
+        return [...withoutCurrent, submission];
+      });
+      setActiveAssignmentLessonId(null);
+      setAssignmentUrl("");
+      setAssignmentNotes("");
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Could not submit assignment.",
+      );
+    } finally {
+      setSavingAssignmentId(null);
+    }
   };
 
   useEffect(() => {
@@ -402,6 +462,85 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                         </div>
                         {lesson.description ? (
                           <span>{lesson.description}</span>
+                        ) : null}
+                        {assignment ? (
+                          <section className="student-assignment-panel">
+                            <div>
+                              <small>Assignment</small>
+                              <strong>{assignment.title}</strong>
+                              {assignment.description ? (
+                                <p>{assignment.description}</p>
+                              ) : null}
+                            </div>
+                            <div className="student-assignment-meta">
+                              <span>{assignment.assignment_type}</span>
+                              <span>{assignment.points} pts</span>
+                            </div>
+                            {activeAssignmentLessonId === lesson.id ? (
+                              <form
+                                className="student-assignment-form"
+                                onSubmit={(event) =>
+                                  void handleSubmitAssignment(
+                                    event,
+                                    assignment.id,
+                                  )
+                                }
+                              >
+                                <label>
+                                  Submission link
+                                  <input
+                                    placeholder="Google Drive, GitHub, document or video link"
+                                    type="url"
+                                    value={assignmentUrl}
+                                    onChange={(event) =>
+                                      setAssignmentUrl(event.target.value)
+                                    }
+                                  />
+                                </label>
+                                <label>
+                                  Notes
+                                  <textarea
+                                    value={assignmentNotes}
+                                    onChange={(event) =>
+                                      setAssignmentNotes(event.target.value)
+                                    }
+                                  />
+                                </label>
+                                <div className="inline-actions">
+                                  <button
+                                    className="primary-action"
+                                    disabled={
+                                      savingAssignmentId === assignment.id
+                                    }
+                                    type="submit"
+                                  >
+                                    Submit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setActiveAssignmentLessonId(null)
+                                    }
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            ) : (
+                              <button
+                                className="secondary-action"
+                                type="button"
+                                onClick={() =>
+                                  startAssignmentSubmission(
+                                    lesson.id,
+                                    submission ?? null,
+                                  )
+                                }
+                              >
+                                {submission ? "Update submission" : "Submit work"}
+                              </button>
+                            )}
+                          </section>
                         ) : null}
                         {lesson.content ? <p>{lesson.content}</p> : null}
                         {lesson.video_url || lesson.resources.length > 0 ? (

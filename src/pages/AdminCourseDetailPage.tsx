@@ -20,9 +20,12 @@ import {
   createResource,
   deleteResource,
   getNextModulePosition,
+  listLessonAssignments,
   listCourseContent,
   updateLesson,
   updateModule,
+  upsertLessonAssignment,
+  type LessonAssignment,
   type LessonWithResources,
   type ModuleWithLessons,
   type Resource,
@@ -164,6 +167,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [assignedInstructors, setAssignedInstructors] = useState<
     CourseInstructorAssignment[]
   >([]);
+  const [lessonAssignments, setLessonAssignments] = useState<LessonAssignment[]>(
+    [],
+  );
   const [selectedInstructorId, setSelectedInstructorId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -202,6 +208,14 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [editingLessonContent, setEditingLessonContent] = useState("");
   const [editingLessonVideoUrl, setEditingLessonVideoUrl] = useState("");
   const [editingLessonDuration, setEditingLessonDuration] = useState("");
+  const [editingAssignmentLessonId, setEditingAssignmentLessonId] = useState<
+    string | null
+  >(null);
+  const [editingAssignmentTitle, setEditingAssignmentTitle] = useState("");
+  const [editingAssignmentDescription, setEditingAssignmentDescription] =
+    useState("");
+  const [editingAssignmentType, setEditingAssignmentType] = useState("report");
+  const [editingAssignmentPoints, setEditingAssignmentPoints] = useState("10");
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -215,8 +229,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [error, setError] = useState<string | null>(null);
 
   const refreshCourseContent = async () => {
-    const nextModules = await listCourseContent(courseId);
+    const [nextModules, nextAssignments] = await Promise.all([
+      listCourseContent(courseId),
+      listLessonAssignments(courseId),
+    ]);
     setModules(nextModules);
+    setLessonAssignments(nextAssignments);
   };
 
   const loadCourse = async () => {
@@ -227,16 +245,19 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       const [
         nextCourse,
         nextModules,
+        nextLessonAssignments,
         nextInstructors,
         nextAssignedInstructors,
       ] = await Promise.all([
         getCourseWithEditions(courseId),
         listCourseContent(courseId),
+        listLessonAssignments(courseId),
         listInstructorProfiles(),
         listCourseInstructors(courseId),
       ]);
       setCourse(nextCourse);
       setModules(nextModules);
+      setLessonAssignments(nextLessonAssignments);
       setInstructors(nextInstructors);
       setAssignedInstructors(nextAssignedInstructors);
       setSelectedInstructorId(
@@ -494,7 +515,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       ) + 1;
 
     try {
-      await createLesson({
+      const lesson = await createLesson({
         course_id: courseId,
         module_id: lessonModuleId || null,
         title: lessonTitle,
@@ -505,6 +526,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         duration_minutes: lessonDuration ? Number(lessonDuration) : null,
         position: nextPosition,
         status: "published",
+      });
+      await upsertLessonAssignment({
+        lessonId: lesson.id,
+        title: `Assignment - ${lesson.title}`,
+        description: "Submit the required evidence for this class.",
+        assignmentType: "report",
+        points: 10,
       });
 
       setLessonTitle("");
@@ -650,6 +678,61 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     });
   };
 
+  const startEditAssignment = (lesson: LessonWithResources) => {
+    const assignment = lessonAssignments.find(
+      (currentAssignment) => currentAssignment.lesson_id === lesson.id,
+    );
+
+    setEditingAssignmentLessonId(lesson.id);
+    setEditingAssignmentTitle(assignment?.title ?? `Assignment - ${lesson.title}`);
+    setEditingAssignmentDescription(
+      assignment?.description ?? "Submit the required evidence for this class.",
+    );
+    setEditingAssignmentType(assignment?.assignment_type ?? "report");
+    setEditingAssignmentPoints(String(assignment?.points ?? 10));
+    setCollapsedLessonIds((current) => {
+      const next = new Set(current);
+      next.delete(lesson.id);
+      return next;
+    });
+  };
+
+  const handleUpdateAssignment = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!editingAssignmentLessonId) {
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      const assignment = await upsertLessonAssignment({
+        lessonId: editingAssignmentLessonId,
+        title: editingAssignmentTitle,
+        description: editingAssignmentDescription || null,
+        assignmentType: editingAssignmentType,
+        points: editingAssignmentPoints ? Number(editingAssignmentPoints) : 10,
+      });
+
+      setLessonAssignments((current) => {
+        const withoutCurrent = current.filter(
+          (currentAssignment) =>
+            currentAssignment.lesson_id !== editingAssignmentLessonId,
+        );
+        return [...withoutCurrent, assignment];
+      });
+      setEditingAssignmentLessonId(null);
+      setMessage("Assignment updated.");
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError, "Could not update assignment."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleUpdateLesson = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -766,6 +849,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   };
 
   const primaryOffering = course?.course_editions[0] ?? null;
+  const assignmentByLesson = new Map(
+    lessonAssignments.map((assignment) => [assignment.lesson_id, assignment]),
+  );
   const availableInstructors = instructors.filter(
     (instructor) =>
       !assignedInstructors.some(
@@ -1299,6 +1385,18 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </button>
                               <button
+                                aria-label="Edit assignment"
+                                title="Edit assignment"
+                                type="button"
+                                onClick={() => startEditAssignment(lesson)}
+                              >
+                                <FileText
+                                  aria-hidden="true"
+                                  size={17}
+                                  strokeWidth={2.2}
+                                />
+                              </button>
+                              <button
                                 className="subtle-action"
                                 aria-label="Add resource"
                                 title="Add resource"
@@ -1428,6 +1526,34 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               <span>
                                 {lesson.description || "No description yet."}
                               </span>
+                              <div className="assignment-summary">
+                                {(() => {
+                                  const assignment = assignmentByLesson.get(
+                                    lesson.id,
+                                  );
+
+                                  return (
+                                    <>
+                                      <FileText
+                                        aria-hidden="true"
+                                        size={17}
+                                        strokeWidth={2.2}
+                                      />
+                                      <div>
+                                        <small>Required assignment</small>
+                                        <strong>
+                                          {assignment?.title ??
+                                            `Assignment - ${lesson.title}`}
+                                        </strong>
+                                      </div>
+                                      <span>
+                                        {assignment?.assignment_type ?? "report"}
+                                      </span>
+                                      <span>{assignment?.points ?? 10} pts</span>
+                                    </>
+                                  );
+                                })()}
+                              </div>
                               <div className="lesson-support-row">
                                 <div className="mini-list">
                                   {lesson.duration_minutes ? (
@@ -1455,6 +1581,83 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 ) : null}
                               </div>
                             </div>
+                          ) : null}
+                          {!collapsedLessonIds.has(lesson.id) &&
+                          editingAssignmentLessonId === lesson.id ? (
+                            <form
+                              className="inline-builder-form assignment-form"
+                              onSubmit={handleUpdateAssignment}
+                            >
+                              <label>
+                                Assignment title
+                                <input
+                                  required
+                                  value={editingAssignmentTitle}
+                                  onChange={(event) =>
+                                    setEditingAssignmentTitle(event.target.value)
+                                  }
+                                />
+                              </label>
+                              <label>
+                                Instructions
+                                <textarea
+                                  value={editingAssignmentDescription}
+                                  onChange={(event) =>
+                                    setEditingAssignmentDescription(
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </label>
+                              <div className="form-grid">
+                                <label>
+                                  Type
+                                  <select
+                                    value={editingAssignmentType}
+                                    onChange={(event) =>
+                                      setEditingAssignmentType(
+                                        event.target.value,
+                                      )
+                                    }
+                                  >
+                                    <option value="report">Report/link</option>
+                                    <option value="script">
+                                      Script validation
+                                    </option>
+                                    <option value="document">Document</option>
+                                    <option value="drive_link">
+                                      Google Drive link
+                                    </option>
+                                  </select>
+                                </label>
+                                <label>
+                                  Points
+                                  <input
+                                    min="0"
+                                    type="number"
+                                    value={editingAssignmentPoints}
+                                    onChange={(event) =>
+                                      setEditingAssignmentPoints(
+                                        event.target.value,
+                                      )
+                                    }
+                                  />
+                                </label>
+                              </div>
+                              <div className="inline-actions">
+                                <button type="submit" disabled={isSubmitting}>
+                                  Save assignment
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setEditingAssignmentLessonId(null)
+                                  }
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </form>
                           ) : null}
                           {!collapsedLessonIds.has(lesson.id) &&
                           activeResourceLessonId === lesson.id ? (

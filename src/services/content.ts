@@ -13,6 +13,22 @@ export type LessonProgress = Tables<"lesson_progress">;
 export type AssignmentSubmission = Tables<"assignment_submissions">;
 export type Resource = Tables<"resources">;
 
+export type AssignmentReviewItem = AssignmentSubmission & {
+  profiles: Pick<
+    Tables<"profiles">,
+    "id" | "display_name" | "first_name" | "last_name"
+  > | null;
+  lesson_assignments:
+    | (LessonAssignment & {
+        lessons:
+          | (Pick<Tables<"lessons">, "id" | "title" | "course_id"> & {
+              modules: Pick<Tables<"modules">, "title"> | null;
+            })
+          | null;
+      })
+    | null;
+};
+
 export type LessonWithResources = Lesson & {
   resources: Resource[];
 };
@@ -125,6 +141,36 @@ export async function createLesson(input: CreateLessonInput) {
   const { data, error } = await supabase
     .from("lessons")
     .insert(input)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function upsertLessonAssignment(input: {
+  lessonId: string;
+  title: string;
+  description?: string | null;
+  assignmentType?: string;
+  points?: number;
+}) {
+  const { data, error } = await supabase
+    .from("lesson_assignments")
+    .upsert(
+      {
+        lesson_id: input.lessonId,
+        title: input.title,
+        description: input.description ?? null,
+        assignment_type: input.assignmentType ?? "report",
+        points: input.points ?? 10,
+        required: true,
+      },
+      { onConflict: "lesson_id" },
+    )
     .select()
     .single();
 
@@ -362,6 +408,46 @@ export async function submitAssignment(input: {
       },
       { onConflict: "assignment_id,student_id" },
     )
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function listAssignmentReviewItems() {
+  const { data, error } = await supabase
+    .from("assignment_submissions")
+    .select(
+      "*, profiles!assignment_submissions_student_id_fkey(id, display_name, first_name, last_name), lesson_assignments!inner(*, lessons!inner(id, title, course_id, modules(title)))",
+    )
+    .order("submitted_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as unknown as AssignmentReviewItem[];
+}
+
+export async function reviewAssignmentSubmission(input: {
+  submissionId: string;
+  status: "reviewed" | "needs_revision";
+  pointsAwarded?: number | null;
+  reviewedBy: string;
+}) {
+  const { data, error } = await supabase
+    .from("assignment_submissions")
+    .update({
+      status: input.status,
+      points_awarded: input.pointsAwarded ?? null,
+      reviewed_by: input.reviewedBy,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", input.submissionId)
     .select()
     .single();
 
