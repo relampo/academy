@@ -269,6 +269,35 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     return true;
   };
 
+  const handleAddInstructor = async () => {
+    if (!selectedInstructorId || !user) {
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await assignCourseInstructor(courseId, selectedInstructorId, user.id);
+      const nextAssignedInstructors = await listCourseInstructors(courseId);
+      setAssignedInstructors(nextAssignedInstructors);
+      setSelectedInstructorId(
+        instructors.find(
+          (instructor) =>
+            !nextAssignedInstructors.some(
+              (assignment) => assignment.instructor_id === instructor.id,
+            ),
+        )?.id ?? "",
+      );
+      setMessage("Instructor added.");
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError, "Could not add instructor."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const deleteCourse = async () => {
     setError(null);
     setMessage(null);
@@ -694,24 +723,38 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
             <div className="stacked-form">
               <label>
                 Assign instructor
-                <select
-                  disabled={!isEditingCourse || availableInstructors.length === 0}
-                  value={selectedInstructorId}
-                  onChange={(event) => setSelectedInstructorId(event.target.value)}
-                >
-                  {availableInstructors.length === 0 ? (
-                    <option value="">
-                      {instructors.length === 0
-                        ? "No active instructors"
-                        : "All instructors assigned"}
-                    </option>
-                  ) : null}
-                  {availableInstructors.map((instructor) => (
-                    <option key={instructor.id} value={instructor.id}>
-                      {getProfileName(instructor)}
-                    </option>
-                  ))}
-                </select>
+                <div className="inline-picker">
+                  <select
+                    disabled={availableInstructors.length === 0 || isSubmitting}
+                    value={selectedInstructorId}
+                    onChange={(event) => setSelectedInstructorId(event.target.value)}
+                  >
+                    {availableInstructors.length === 0 ? (
+                      <option value="">
+                        {instructors.length === 0
+                          ? "No active instructors"
+                          : "All instructors assigned"}
+                      </option>
+                    ) : null}
+                    {availableInstructors.map((instructor) => (
+                      <option key={instructor.id} value={instructor.id}>
+                        {getProfileName(instructor)}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="secondary-action"
+                    disabled={
+                      !selectedInstructorId ||
+                      availableInstructors.length === 0 ||
+                      isSubmitting
+                    }
+                    type="button"
+                    onClick={() => void handleAddInstructor()}
+                  >
+                    Add
+                  </button>
+                </div>
               </label>
             </div>
             <div className="mini-list instructor-list">

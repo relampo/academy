@@ -366,6 +366,12 @@ p {
   margin-top: 12px;
 }
 
+.inline-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
 .course-setup-actions {
   display: flex;
   justify-content: flex-end;
