@@ -46,6 +46,7 @@ type CoursePlayerPageProps = {
 };
 
 const attendancePoints = 10;
+const partialAttendancePoints = 5;
 const quizMaxPoints = 20;
 
 const resourceTypeLabels: Record<string, string> = {
@@ -74,6 +75,22 @@ function getResourceIcon(resourceType: string) {
 
 function formatPoints(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function getAttendancePoints(record?: LessonAttendance) {
+  if (!record?.attended) {
+    return 0;
+  }
+
+  return record.stayed_until_end ? attendancePoints : partialAttendancePoints;
+}
+
+function getAttendanceLabel(record?: LessonAttendance) {
+  if (!record?.attended) {
+    return "pending";
+  }
+
+  return record.stayed_until_end ? "full class" : "attended";
 }
 
 function renderStudentResource(resource: Resource) {
@@ -177,8 +194,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     const quiz = quizByLesson.get(lessonId);
     const quizAttempt = quiz ? attemptByQuiz.get(quiz.id) : null;
     const assignmentMaxPoints = assignment?.points ?? 10;
+    const earnedAttendancePoints = getAttendancePoints(attendanceRecord);
     const earned =
-      (attendanceRecord?.attended ? attendancePoints : 0) +
+      earnedAttendancePoints +
       (quizAttempt?.total_score ?? 0) +
       (submission?.points_awarded ?? 0);
     const max = attendancePoints + quizMaxPoints + assignmentMaxPoints;
@@ -197,7 +215,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       tooltip: [
         `Attendance: ${
           attendanceRecord?.attended
-            ? `${attendancePoints}/${attendancePoints} pts`
+            ? `${getAttendanceLabel(attendanceRecord)} · ${formatPoints(
+                earnedAttendancePoints,
+              )}/${attendancePoints} pts`
             : "pending"
         }`,
         `Quiz: ${
@@ -623,7 +643,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                             }
                           >
                             {attendanceRecord?.attended
-                              ? "Attendance confirmed"
+                              ? attendanceRecord.stayed_until_end
+                                ? "Full class confirmed"
+                                : "Attendance confirmed"
                               : "Attendance pending"}
                           </span>
                           <span className={quizStatusClass}>
