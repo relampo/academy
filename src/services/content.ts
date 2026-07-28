@@ -7,6 +7,7 @@ import type {
 
 export type Module = Tables<"modules">;
 export type Lesson = Tables<"lessons">;
+export type LessonAttendance = Tables<"lesson_attendance">;
 export type LessonProgress = Tables<"lesson_progress">;
 export type Resource = Tables<"resources">;
 
@@ -250,4 +251,53 @@ export async function unmarkLessonViewed(lessonId: string, studentId: string) {
   if (error) {
     throw error;
   }
+}
+
+export async function listLessonAttendance(courseId: string, studentId?: string) {
+  let query = supabase
+    .from("lesson_attendance")
+    .select("*, lessons!inner(course_id)")
+    .eq("lessons.course_id", courseId);
+
+  if (studentId) {
+    query = query.eq("student_id", studentId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
+
+  return data as LessonAttendance[];
+}
+
+export async function saveLessonAttendance(input: {
+  lessonId: string;
+  studentId: string;
+  attended: boolean;
+  stayedUntilEnd: boolean;
+  confirmedBy: string;
+}) {
+  const { data, error } = await supabase
+    .from("lesson_attendance")
+    .upsert(
+      {
+        lesson_id: input.lessonId,
+        student_id: input.studentId,
+        attended: input.attended,
+        stayed_until_end: input.attended && input.stayedUntilEnd,
+        confirmed_by: input.confirmedBy,
+        confirmed_at: new Date().toISOString(),
+      },
+      { onConflict: "lesson_id,student_id" },
+    )
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }

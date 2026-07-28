@@ -85,6 +85,12 @@ export function TeachingCoursesPage() {
                 </a>
                 <a
                   className="secondary-action"
+                  href={`#/attendance/${course.id}`}
+                >
+                  Attendance
+                </a>
+                <a
+                  className="secondary-action"
                   href={`#/enrollments?courseId=${course.id}`}
                 >
                   Requests

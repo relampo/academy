@@ -1327,6 +1327,24 @@ p {
   color: #657286;
 }
 
+.student-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.student-status-row span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #526176;
+  font-size: 0.76rem;
+  font-weight: 900;
+  padding: 0 10px;
+}
+
 .student-resource-list {
   display: flex;
   flex-wrap: wrap;
@@ -1366,6 +1384,38 @@ p {
   background: var(--brand-soft);
   color: var(--brand-text);
   outline: none;
+}
+
+.attendance-list {
+  display: grid;
+  gap: 10px;
+}
+
+.attendance-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px 16px;
+}
+
+.attendance-row strong,
+.attendance-row span {
+  display: block;
+}
+
+.attendance-row > div > span {
+  color: #657286;
+  font-size: 0.82rem;
+}
+
+.compact-toggle {
+  gap: 8px;
+  margin: 0;
+  white-space: nowrap;
 }
 
 .compact-course-form {
@@ -1826,6 +1876,10 @@ p {
 
   .student-lesson-body {
     padding-left: 20px;
+  }
+
+  .attendance-row {
+    grid-template-columns: 1fr;
   }
 
   .details-block {

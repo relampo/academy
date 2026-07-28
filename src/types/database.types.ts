@@ -388,6 +388,64 @@ export type Database = {
           },
         ]
       }
+      lesson_attendance: {
+        Row: {
+          attended: boolean
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          lesson_id: string
+          stayed_until_end: boolean
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          attended?: boolean
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          lesson_id: string
+          stayed_until_end?: boolean
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          attended?: boolean
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          stayed_until_end?: boolean
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_attendance_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_attendance_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_progress: {
         Row: {
           created_at: string

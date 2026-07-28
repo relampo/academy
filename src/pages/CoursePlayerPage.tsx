@@ -14,10 +14,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import {
+  listLessonAttendance,
   listLessonProgress,
   listCourseContent,
   markLessonViewed,
   unmarkLessonViewed,
+  type LessonAttendance,
   type Resource,
   type ModuleWithLessons,
 } from "../services/content";
@@ -94,6 +96,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [attendance, setAttendance] = useState<LessonAttendance[]>([]);
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -107,6 +110,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   ).length;
   const progress =
     lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
+  const attendanceByLesson = new Map(
+    attendance.map((record) => [record.lesson_id, record]),
+  );
 
   const toggleLessonComplete = async (lessonId: string) => {
     if (!user) {
@@ -185,12 +191,16 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         const nextProgress = user
           ? await listLessonProgress(courseId, user.id).catch(() => [])
           : [];
+        const nextAttendance = user
+          ? await listLessonAttendance(courseId, user.id).catch(() => [])
+          : [];
 
         setCourse(nextCourse);
         setModules(nextModules);
         setCompletedLessonIds(
           new Set(nextProgress.map((progressItem) => progressItem.lesson_id)),
         );
+        setAttendance(nextAttendance);
         setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
       } catch (caughtError) {
         setError(
@@ -285,7 +295,10 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                   {module.lessons.length === 0 ? (
                     <p className="tree-empty">No lessons in this module.</p>
                   ) : null}
-                  {module.lessons.map((lesson, lessonIndex) => (
+                  {module.lessons.map((lesson, lessonIndex) => {
+                    const attendanceRecord = attendanceByLesson.get(lesson.id);
+
+                    return (
                     <article className="student-lesson" key={lesson.id}>
                       <header className="student-lesson-header">
                         <button
@@ -317,6 +330,19 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                         ) : null}
                       </header>
                       <div className="student-lesson-body">
+                        <div className="student-status-row">
+                          <span>
+                            {attendanceRecord?.attended
+                              ? "Attendance confirmed"
+                              : "Attendance pending"}
+                          </span>
+                          <span>
+                            {attendanceRecord?.stayed_until_end
+                              ? "Full class confirmed"
+                              : "Full class pending"}
+                          </span>
+                          <span>Quiz pending</span>
+                        </div>
                         {lesson.description ? (
                           <span>{lesson.description}</span>
                         ) : null}
@@ -341,7 +367,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                         ) : null}
                       </div>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : null}
             </article>

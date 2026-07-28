@@ -27,6 +27,14 @@ export type EnrollmentReviewItem = Enrollment & {
   > | null;
 };
 
+export type CourseStudentEnrollment = Enrollment & {
+  profiles: Pick<
+    Tables<"profiles">,
+    "id" | "display_name" | "first_name" | "last_name"
+  > | null;
+  course_editions: Pick<CourseEdition, "course_id"> | null;
+};
+
 export type CreateCourseInput = Pick<
   TablesInsert<"courses">,
   "title" | "slug" | "short_description" | "description" | "status"
@@ -403,6 +411,23 @@ export async function updateEnrollmentStatus(
   }
 
   return data;
+}
+
+export async function listApprovedCourseStudents(courseId: string) {
+  const { data, error } = await supabase
+    .from("enrollments")
+    .select(
+      "*, profiles!enrollments_student_id_fkey(id, display_name, first_name, last_name), course_editions!inner(course_id)",
+    )
+    .eq("status", "approved")
+    .eq("course_editions.course_id", courseId)
+    .order("requested_at", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as unknown as CourseStudentEnrollment[];
 }
 
 export async function duplicateCourse(courseId: string) {
