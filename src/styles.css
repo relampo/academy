@@ -716,6 +716,7 @@ p {
 }
 
 .lesson-heading .lesson-toggle {
+  justify-content: flex-start;
   min-height: auto;
   border: 0;
   border-radius: 0;
