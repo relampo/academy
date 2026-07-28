@@ -317,12 +317,8 @@ p {
 
 .course-overview-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  grid-template-columns: minmax(420px, 2fr) minmax(240px, 1fr) minmax(240px, 1fr);
   gap: 16px;
-}
-
-.course-overview-grid .content-panel:first-child {
-  grid-row: span 2;
 }
 
 .instructor-list {
