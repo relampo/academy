@@ -1285,6 +1285,11 @@ p {
   outline: none;
 }
 
+.student-complete-toggle:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .student-lesson-header > div > span {
   color: #657286;
   font-size: 0.76rem;

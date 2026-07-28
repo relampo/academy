@@ -7,6 +7,7 @@ import type {
 
 export type Module = Tables<"modules">;
 export type Lesson = Tables<"lessons">;
+export type LessonProgress = Tables<"lesson_progress">;
 export type Resource = Tables<"resources">;
 
 export type LessonWithResources = Lesson & {
@@ -198,6 +199,53 @@ export async function deleteResource(resourceId: string) {
     .from("resources")
     .delete()
     .eq("id", resourceId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function listLessonProgress(courseId: string, studentId: string) {
+  const { data, error } = await supabase
+    .from("lesson_progress")
+    .select("*, lessons!inner(course_id)")
+    .eq("student_id", studentId)
+    .eq("lessons.course_id", courseId);
+
+  if (error) {
+    throw error;
+  }
+
+  return data as LessonProgress[];
+}
+
+export async function markLessonViewed(lessonId: string, studentId: string) {
+  const { data, error } = await supabase
+    .from("lesson_progress")
+    .upsert(
+      {
+        lesson_id: lessonId,
+        student_id: studentId,
+        viewed_at: new Date().toISOString(),
+      },
+      { onConflict: "lesson_id,student_id" },
+    )
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function unmarkLessonViewed(lessonId: string, studentId: string) {
+  const { error } = await supabase
+    .from("lesson_progress")
+    .delete()
+    .eq("lesson_id", lessonId)
+    .eq("student_id", studentId);
 
   if (error) {
     throw error;

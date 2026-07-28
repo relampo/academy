@@ -388,6 +388,48 @@ export type Database = {
           },
         ]
       }
+      lesson_progress: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string
+          student_id: string
+          updated_at: string
+          viewed_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id: string
+          student_id: string
+          updated_at?: string
+          viewed_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          student_id?: string
+          updated_at?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modules: {
         Row: {
           course_id: string

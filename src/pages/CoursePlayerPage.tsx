@@ -14,7 +14,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import {
+  listLessonProgress,
   listCourseContent,
+  markLessonViewed,
+  unmarkLessonViewed,
   type Resource,
   type ModuleWithLessons,
 } from "../services/content";
@@ -22,6 +25,7 @@ import {
   getCourseWithEditions,
   type CourseWithEditions,
 } from "../services/courses";
+import { useAuth } from "../hooks/useAuth";
 
 type CoursePlayerPageProps = {
   courseId: string;
@@ -84,6 +88,7 @@ function renderStudentResource(resource: Resource) {
 }
 
 export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
+  const { user } = useAuth();
   const [course, setCourse] = useState<CourseWithEditions | null>(null);
   const [modules, setModules] = useState<ModuleWithLessons[]>([]);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(
@@ -92,6 +97,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [savingLessonId, setSavingLessonId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,11 +108,17 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const progress =
     lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
 
-  const toggleLessonComplete = (lessonId: string) => {
+  const toggleLessonComplete = async (lessonId: string) => {
+    if (!user) {
+      return;
+    }
+
+    const wasCompleted = completedLessonIds.has(lessonId);
+
     setCompletedLessonIds((current) => {
       const next = new Set(current);
 
-      if (next.has(lessonId)) {
+      if (wasCompleted) {
         next.delete(lessonId);
       } else {
         next.add(lessonId);
@@ -114,6 +126,36 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
 
       return next;
     });
+
+    setSavingLessonId(lessonId);
+    setError(null);
+
+    try {
+      if (wasCompleted) {
+        await unmarkLessonViewed(lessonId, user.id);
+      } else {
+        await markLessonViewed(lessonId, user.id);
+      }
+    } catch (caughtError) {
+      setCompletedLessonIds((current) => {
+        const next = new Set(current);
+
+        if (wasCompleted) {
+          next.add(lessonId);
+        } else {
+          next.delete(lessonId);
+        }
+
+        return next;
+      });
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Could not update lesson progress.",
+      );
+    } finally {
+      setSavingLessonId(null);
+    }
   };
 
   const toggleModule = (moduleId: string) => {
@@ -136,13 +178,17 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       setIsLoading(true);
 
       try {
-        const [nextCourse, nextModules] = await Promise.all([
+        const [nextCourse, nextModules, nextProgress] = await Promise.all([
           getCourseWithEditions(courseId),
           listCourseContent(courseId),
+          user ? listLessonProgress(courseId, user.id) : Promise.resolve([]),
         ]);
 
         setCourse(nextCourse);
         setModules(nextModules);
+        setCompletedLessonIds(
+          new Set(nextProgress.map((progressItem) => progressItem.lesson_id)),
+        );
         setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
       } catch (caughtError) {
         setError(
@@ -156,7 +202,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     };
 
     void loadCourse();
-  }, [courseId]);
+  }, [courseId, user?.id]);
 
   return (
     <section className="page">
@@ -247,8 +293,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               : "Mark lesson viewed"
                           }
                           className="student-complete-toggle"
+                          disabled={savingLessonId === lesson.id}
                           type="button"
-                          onClick={() => toggleLessonComplete(lesson.id)}
+                          onClick={() => void toggleLessonComplete(lesson.id)}
                         >
                           {completedLessonIds.has(lesson.id) ? (
                             <CheckCircle2 aria-hidden="true" size={22} />
