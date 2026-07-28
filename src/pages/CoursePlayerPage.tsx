@@ -465,18 +465,40 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                         ) : null}
                         {assignment ? (
                           <section className="student-assignment-panel">
-                            <div>
+                            <div className="student-assignment-main">
+                              <ClipboardCheck
+                                aria-hidden="true"
+                                size={17}
+                                strokeWidth={2.4}
+                              />
+                              <div>
                               <small>Assignment</small>
                               <strong>{assignment.title}</strong>
                               {assignment.description ? (
                                 <p>{assignment.description}</p>
                               ) : null}
+                              </div>
                             </div>
-                            <div className="student-assignment-meta">
-                              <span>{assignment.assignment_type}</span>
-                              <span>{assignment.points} pts</span>
-                            </div>
-                            {activeAssignmentLessonId === lesson.id ? (
+                            {activeAssignmentLessonId !== lesson.id ? (
+                              <div className="student-assignment-side">
+                                <div className="student-assignment-meta">
+                                  <span>{assignment.assignment_type}</span>
+                                  <span>{assignment.points} pts</span>
+                                </div>
+                                <button
+                                  className="secondary-action student-submit-action"
+                                  type="button"
+                                  onClick={() =>
+                                    startAssignmentSubmission(
+                                      lesson.id,
+                                      submission ?? null,
+                                    )
+                                  }
+                                >
+                                  {submission ? "Update" : "Submit"}
+                                </button>
+                              </div>
+                            ) : (
                               <form
                                 className="student-assignment-form"
                                 onSubmit={(event) =>
@@ -526,19 +548,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                   </button>
                                 </div>
                               </form>
-                            ) : (
-                              <button
-                                className="secondary-action student-submit-action"
-                                type="button"
-                                onClick={() =>
-                                  startAssignmentSubmission(
-                                    lesson.id,
-                                    submission ?? null,
-                                  )
-                                }
-                              >
-                                {submission ? "Update submission" : "Submit work"}
-                              </button>
                             )}
                           </section>
                         ) : null}

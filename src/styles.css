@@ -1418,11 +1418,26 @@ p {
 
 .student-assignment-panel {
   display: grid;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
   border: 1px solid #e1e7f0;
   border-radius: 8px;
   background: #f8fafc;
-  padding: 12px;
+  padding: 10px 12px;
+}
+
+.student-assignment-main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  min-width: 0;
+}
+
+.student-assignment-main svg {
+  color: #a77c00;
+  margin-top: 2px;
 }
 
 .student-assignment-panel small {
@@ -1436,6 +1451,26 @@ p {
 .student-assignment-panel strong {
   display: block;
   margin-top: 2px;
+  overflow: hidden;
+  color: #18212f;
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-assignment-panel p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 2px;
+  font-size: 0.86rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.student-assignment-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .student-assignment-meta {
@@ -1458,7 +1493,10 @@ p {
 
 .student-assignment-form {
   display: grid;
+  grid-column: 1 / -1;
   gap: 10px;
+  border-top: 1px solid #e1e7f0;
+  padding-top: 10px;
 }
 
 .student-assignment-form label {
@@ -1482,7 +1520,7 @@ p {
 }
 
 .student-submit-action {
-  justify-self: start;
+  flex: 0 0 auto;
   min-height: 32px;
   font-size: 0.86rem;
   padding: 0 10px;
@@ -2135,6 +2173,14 @@ p {
 }
 
 @media (max-width: 820px) {
+  .student-assignment-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .student-assignment-side {
+    justify-content: space-between;
+  }
+
   .assignment-review-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
