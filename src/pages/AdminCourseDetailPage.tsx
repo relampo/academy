@@ -20,6 +20,7 @@ import {
   assignCourseInstructor,
   listCourseInstructors,
   listInstructorProfiles,
+  removeCourseInstructor,
   type CourseInstructorAssignment,
   type InstructorProfile,
 } from "../services/instructors";
@@ -293,6 +294,31 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setMessage("Instructor added.");
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, "Could not add instructor."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRemoveInstructor = async (instructorId: string) => {
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await removeCourseInstructor(courseId, instructorId);
+      const nextAssignedInstructors = await listCourseInstructors(courseId);
+      setAssignedInstructors(nextAssignedInstructors);
+      setSelectedInstructorId(
+        instructors.find(
+          (instructor) =>
+            !nextAssignedInstructors.some(
+              (assignment) => assignment.instructor_id === instructor.id,
+            ),
+        )?.id ?? "",
+      );
+      setMessage("Instructor removed.");
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError, "Could not remove instructor."));
     } finally {
       setIsSubmitting(false);
     }
@@ -762,8 +788,18 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 <span>No instructors assigned</span>
               ) : null}
               {assignedInstructors.map((assignment) => (
-                <span key={assignment.instructor_id}>
+                <span className="removable-chip" key={assignment.instructor_id}>
                   {getProfileName(assignment.profiles)}
+                  <button
+                    aria-label={`Remove ${getProfileName(assignment.profiles)}`}
+                    disabled={isSubmitting}
+                    type="button"
+                    onClick={() =>
+                      void handleRemoveInstructor(assignment.instructor_id)
+                    }
+                  >
+                    x
+                  </button>
                 </span>
               ))}
             </div>

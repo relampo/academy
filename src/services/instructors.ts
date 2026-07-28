@@ -70,6 +70,21 @@ export async function assignCourseInstructor(
   return data;
 }
 
+export async function removeCourseInstructor(
+  courseId: string,
+  instructorId: string,
+) {
+  const { error } = await supabase
+    .from("course_instructors")
+    .delete()
+    .eq("course_id", courseId)
+    .eq("instructor_id", instructorId);
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function listTeachingCourses(instructorId: string) {
   const { data, error } = await supabase
     .from("course_instructors")
