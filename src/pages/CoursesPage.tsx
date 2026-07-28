@@ -86,10 +86,18 @@ export function CoursesPage() {
       <div className="course-list">
         {editions.map((edition) => {
           const enrollment = edition.enrollments[0];
+          const canRequestAgain =
+            enrollment?.status === "rejected" ||
+            enrollment?.status === "withdrawn";
           const canRequest =
             edition.enrollment_open &&
             edition.status === "published" &&
-            !enrollment;
+            (!enrollment || canRequestAgain);
+          const buttonLabel = enrollment
+            ? canRequestAgain
+              ? "Request again"
+              : enrollment.status
+            : "Enroll";
 
           return (
             <article className="course-row" key={edition.id}>
@@ -119,9 +127,7 @@ export function CoursesPage() {
                 >
                   {requestingEditionId === edition.id
                     ? "Requesting..."
-                    : enrollment
-                      ? enrollment.status
-                      : "Enroll"}
+                    : buttonLabel}
                 </button>
               </div>
             </article>

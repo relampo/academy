@@ -255,6 +255,45 @@ export async function updateCourseEdition(
 }
 
 export async function requestEnrollment(courseEditionId: string, studentId: string) {
+  const { data: existingEnrollment, error: existingError } = await supabase
+    .from("enrollments")
+    .select("*")
+    .eq("course_edition_id", courseEditionId)
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+  if (existingError) {
+    throw existingError;
+  }
+
+  if (
+    existingEnrollment &&
+    !["rejected", "withdrawn"].includes(existingEnrollment.status)
+  ) {
+    return existingEnrollment;
+  }
+
+  if (existingEnrollment) {
+    const { data, error } = await supabase
+      .from("enrollments")
+      .update({
+        status: "pending",
+        approved_at: null,
+        approved_by: null,
+        completed_at: null,
+        rejection_reason: null,
+      })
+      .eq("id", existingEnrollment.id)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  }
+
   const { data, error } = await supabase
     .from("enrollments")
     .insert({
