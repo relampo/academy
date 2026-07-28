@@ -299,7 +299,12 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                     const attendanceRecord = attendanceByLesson.get(lesson.id);
 
                     return (
-                    <article className="student-lesson" key={lesson.id}>
+                    <article
+                      className={`student-lesson${
+                        completedLessonIds.has(lesson.id) ? " is-viewed" : ""
+                      }`}
+                      key={lesson.id}
+                    >
                       <header className="student-lesson-header">
                         <button
                           aria-label={
