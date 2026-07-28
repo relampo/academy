@@ -326,6 +326,11 @@ p {
   gap: 18px;
 }
 
+.course-setup-form {
+  display: grid;
+  gap: 18px;
+}
+
 .details-block {
   display: grid;
   align-content: start;
@@ -338,6 +343,10 @@ p {
 .details-block-main {
   border-left: 0;
   padding-left: 0;
+}
+
+.details-block:not(.details-block-main) .form-grid {
+  grid-template-columns: 1fr;
 }
 
 .subsection-heading {
@@ -355,6 +364,37 @@ p {
 
 .instructor-list {
   margin-top: 12px;
+}
+
+.course-setup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid #edf1f6;
+  padding-top: 16px;
+}
+
+.course-setup-actions button {
+  min-height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #39465a;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0 14px;
+}
+
+.course-setup-actions .primary-action {
+  border-color: transparent;
+  background: var(--brand);
+  color: var(--brand-text);
+}
+
+.course-setup-actions .danger-action {
+  border-color: #e5b6ad;
+  background: #ffffff;
+  color: #8f2f23;
 }
 
 .three-grid {

@@ -182,10 +182,15 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     void loadCourse();
   }, [courseId]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSaveCourseSetup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setMessage(null);
+
+    if (!validateEditionDates(editingEditionStartDate, editingEditionEndDate)) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -197,20 +202,33 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         status,
       });
 
-      if (primaryOffering) {
-        await updateCourseOfferings(courseId, {
-          title,
-          status,
-        });
+      await updateCourseOfferings(courseId, {
+        title,
+        status,
+        start_date: editingEditionStartDate || null,
+        end_date: editingEditionEndDate || null,
+        capacity: editingEditionCapacity ? Number(editingEditionCapacity) : null,
+        enrollment_open: editingEditionEnrollmentOpen,
+        requires_approval: true,
+      });
+
+      if (
+        selectedInstructorId &&
+        user &&
+        !assignedInstructors.some(
+          (assignment) => assignment.instructor_id === selectedInstructorId,
+        )
+      ) {
+        await assignCourseInstructor(courseId, selectedInstructorId, user.id);
       }
 
-      setMessage("Course updated.");
+      setMessage("Course setup updated.");
       await loadCourse();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not update course.",
+          : "Could not update course setup.",
       );
     } finally {
       setIsSubmitting(false);
@@ -225,6 +243,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setTitle(course.title);
     setDescription(course.description ?? course.short_description ?? "");
     setStatus(course.status);
+    const primaryOffering = course.course_editions[0];
+    setEditingEditionStartDate(primaryOffering?.start_date ?? "");
+    setEditingEditionEndDate(primaryOffering?.end_date ?? "");
+    setEditingEditionCapacity(
+      primaryOffering?.capacity ? String(primaryOffering.capacity) : "",
+    );
+    setEditingEditionEnrollmentOpen(primaryOffering?.enrollment_open ?? false);
     setIsEditingCourse(false);
   };
 
@@ -235,77 +260,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     }
 
     return true;
-  };
-
-  const handleUpdatePrimaryOffering = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
-
-    if (!primaryOffering || !course) {
-      return;
-    }
-
-    setError(null);
-    setMessage(null);
-
-    if (!validateEditionDates(editingEditionStartDate, editingEditionEndDate)) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      await updateCourseOfferings(courseId, {
-        title: course.title,
-        status: course.status,
-        start_date: editingEditionStartDate || null,
-        end_date: editingEditionEndDate || null,
-        capacity: editingEditionCapacity ? Number(editingEditionCapacity) : null,
-        enrollment_open: editingEditionEnrollmentOpen,
-        requires_approval: true,
-      });
-
-      setMessage("Enrollment settings updated.");
-      await loadCourse();
-    } catch (caughtError) {
-      setError(
-        getErrorMessage(caughtError, "Could not update enrollment settings."),
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleAssignInstructor = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!selectedInstructorId || !user) {
-      return;
-    }
-
-    setError(null);
-    setMessage(null);
-    setIsSubmitting(true);
-
-    try {
-      await assignCourseInstructor(courseId, selectedInstructorId, user.id);
-      const nextAssignedInstructors = await listCourseInstructors(courseId);
-      setMessage("Instructor assigned.");
-      setAssignedInstructors(nextAssignedInstructors);
-      setSelectedInstructorId(
-        instructors.find(
-          (instructor) =>
-            !nextAssignedInstructors.some(
-              (assignment) => assignment.instructor_id === instructor.id,
-            ),
-        )?.id ?? "",
-      );
-    } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not assign instructor."));
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const deleteCourse = async () => {
@@ -602,44 +556,18 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
             </div>
           </div>
 
+          <form
+            className="course-setup-form"
+            id="course-setup-form"
+            onSubmit={handleSaveCourseSetup}
+          >
           <div className="course-overview-grid">
             <section className="details-block details-block-main">
               <div className="subsection-heading">
                 <h3>Course details</h3>
-                <div className="panel-actions">
-                  {!isEditingCourse ? (
-                    <button type="button" onClick={() => setIsEditingCourse(true)}>
-                      Edit
-                    </button>
-                  ) : (
-                    <>
-                      <button type="submit" form="course-details-form" disabled={isSubmitting}>
-                        Save
-                      </button>
-                      <button type="button" onClick={handleCancelEditCourse}>
-                        Cancel
-                      </button>
-                    </>
-                  )}
-                  <button
-                    className="danger-action"
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={() =>
-                      setPendingDelete({
-                        type: "course",
-                        title: course.title,
-                      })
-                    }
-                  >
-                    Delete
-                  </button>
-                </div>
               </div>
-              <form
+              <div
                 className="stacked-form"
-                id="course-details-form"
-                onSubmit={handleSubmit}
               >
                 <div className="form-grid">
                   <label>
@@ -677,7 +605,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     onChange={(event) => setDescription(event.target.value)}
                   />
                 </label>
-              </form>
+              </div>
             </section>
 
             <section className="details-block">
@@ -685,14 +613,14 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 <h3>Enrollment</h3>
               </div>
             {primaryOffering ? (
-              <form
+              <div
                 className="stacked-form"
-                onSubmit={handleUpdatePrimaryOffering}
               >
                 <div className="form-grid">
                   <label>
                     Start date
                     <input
+                      disabled={!isEditingCourse}
                       type="date"
                       value={editingEditionStartDate}
                       onChange={(event) =>
@@ -703,6 +631,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                   <label>
                     End date
                     <input
+                      disabled={!isEditingCourse}
                       type="date"
                       value={editingEditionEndDate}
                       onChange={(event) =>
@@ -714,6 +643,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 <label>
                   Capacity
                   <input
+                    disabled={!isEditingCourse}
                     min="1"
                     type="number"
                     value={editingEditionCapacity}
@@ -726,6 +656,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                   <label className="checkbox-row enrollment-open-row">
                     <input
                       checked={editingEditionEnrollmentOpen}
+                      disabled={!isEditingCourse}
                       type="checkbox"
                       onChange={(event) =>
                         setEditingEditionEnrollmentOpen(event.target.checked)
@@ -734,12 +665,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     Enrollment open
                   </label>
                 </div>
-                <div className="inline-actions">
-                  <button type="submit" disabled={isSubmitting}>
-                    Save enrollment settings
-                  </button>
-                </div>
-              </form>
+              </div>
             ) : (
               <div className="empty-builder">
                 <strong>No enrollment settings yet</strong>
@@ -752,11 +678,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               <div className="subsection-heading">
                 <h3>Instructors</h3>
               </div>
-            <form className="stacked-form" onSubmit={handleAssignInstructor}>
+            <div className="stacked-form">
               <label>
                 Assign instructor
                 <select
-                  disabled={instructors.length === 0}
+                  disabled={!isEditingCourse || instructors.length === 0}
                   value={selectedInstructorId}
                   onChange={(event) => setSelectedInstructorId(event.target.value)}
                 >
@@ -770,20 +696,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                   ))}
                 </select>
               </label>
-              <button
-                type="submit"
-                disabled={
-                  isSubmitting ||
-                  !selectedInstructorId ||
-                  assignedInstructors.some(
-                    (assignment) =>
-                      assignment.instructor_id === selectedInstructorId,
-                  )
-                }
-              >
-                Assign instructor
-              </button>
-            </form>
+            </div>
             <div className="mini-list instructor-list">
               {assignedInstructors.length === 0 ? (
                 <span>No instructors assigned</span>
@@ -796,6 +709,44 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
             </div>
             </section>
           </div>
+          <div className="course-setup-actions">
+            {!isEditingCourse ? (
+              <button
+                className="primary-action"
+                type="button"
+                onClick={() => setIsEditingCourse(true)}
+              >
+                Edit
+              </button>
+            ) : (
+              <>
+                <button type="button" onClick={handleCancelEditCourse}>
+                  Cancel
+                </button>
+                <button
+                  className="primary-action"
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  Save
+                </button>
+              </>
+            )}
+            <button
+              className="danger-action"
+              type="button"
+              disabled={isSubmitting}
+              onClick={() =>
+                setPendingDelete({
+                  type: "course",
+                  title: course.title,
+                })
+              }
+            >
+              Delete
+            </button>
+          </div>
+          </form>
         </section>
       ) : null}
 
