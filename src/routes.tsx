@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { AdminCoursesPage } from "./pages/AdminCoursesPage";
 import { AdminSettingsPage } from "./pages/AdminSettingsPage";
 import { AdminUsersPage } from "./pages/AdminUsersPage";
+import { AssignmentReviewPage } from "./pages/AssignmentReviewPage";
 import { CoursesPage } from "./pages/CoursesPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { EnrollmentReviewPage } from "./pages/EnrollmentReviewPage";
@@ -49,9 +50,16 @@ export const appRoutes: AppRoute[] = [
     navGroup: "instructor",
   },
   {
+    path: "/teaching",
+    label: "Teaching Courses",
+    Component: TeachingCoursesPage,
+    allowedRoles: ["admin", "instructor"],
+    navGroup: "instructor",
+  },
+  {
     path: "/assignments",
     label: "Assignments",
-    Component: TeachingCoursesPage,
+    Component: AssignmentReviewPage,
     allowedRoles: ["admin", "instructor"],
     navGroup: "instructor",
   },

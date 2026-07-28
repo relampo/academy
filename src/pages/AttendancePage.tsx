@@ -180,7 +180,7 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
           <h1>{course?.title ?? "Attendance"}</h1>
           <p>Confirm attendance and full-class participation by lesson.</p>
         </div>
-        <a className="text-link" href="#/assignments">
+        <a className="text-link" href="#/teaching">
           Back to teaching
         </a>
       </div>

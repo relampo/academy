@@ -37,7 +37,7 @@ function renderDynamicRoute(path: string): DynamicRoute | null {
     return {
       allowedRoles: ["admin", "instructor"],
       element: <AttendancePage courseId={attendanceMatch[1]} />,
-      navPath: "/assignments",
+      navPath: "/teaching",
     };
   }
 
