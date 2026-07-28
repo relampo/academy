@@ -667,8 +667,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </select>
                   </label>
                 </div>
-                <div className="toggle-row single-toggle-row">
-                  <label className="switch-row">
+                <div className="toggle-row">
+                  <label className="checkbox-row enrollment-open-row">
                     <input
                       checked={editingEditionEnrollmentOpen}
                       type="checkbox"
@@ -676,10 +676,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                         setEditingEditionEnrollmentOpen(event.target.checked)
                       }
                     />
-                    <span>
-                      <strong className="switch-title">Enrollment open</strong>
-                      <small>Requests always require approval.</small>
-                    </span>
+                    Enrollment open
                   </label>
                 </div>
                 <div className="inline-actions">
