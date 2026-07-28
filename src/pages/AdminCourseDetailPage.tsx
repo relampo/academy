@@ -790,16 +790,18 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               {assignedInstructors.map((assignment) => (
                 <span className="removable-chip" key={assignment.instructor_id}>
                   {getProfileName(assignment.profiles)}
-                  <button
-                    aria-label={`Remove ${getProfileName(assignment.profiles)}`}
-                    disabled={isSubmitting}
-                    type="button"
-                    onClick={() =>
-                      void handleRemoveInstructor(assignment.instructor_id)
-                    }
-                  >
-                    x
-                  </button>
+                  {isEditingCourse ? (
+                    <button
+                      aria-label={`Remove ${getProfileName(assignment.profiles)}`}
+                      disabled={isSubmitting}
+                      type="button"
+                      onClick={() =>
+                        void handleRemoveInstructor(assignment.instructor_id)
+                      }
+                    >
+                      x
+                    </button>
+                  ) : null}
                 </span>
               ))}
             </div>
