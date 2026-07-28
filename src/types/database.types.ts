@@ -83,6 +83,73 @@ export type Database = {
           },
         ]
       }
+      assignment_submissions: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          points_awarded: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          submission_url: string | null
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          points_awarded?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id: string
+          submission_url?: string | null
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          points_awarded?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string
+          submission_url?: string | null
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_editions: {
         Row: {
           archived_at: string | null
@@ -442,6 +509,50 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_assignments: {
+        Row: {
+          assignment_type: string
+          created_at: string
+          description: string | null
+          id: string
+          lesson_id: string
+          points: number
+          required: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_id: string
+          points?: number
+          required?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_id?: string
+          points?: number
+          required?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_assignments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: true
+            referencedRelation: "lessons"
             referencedColumns: ["id"]
           },
         ]

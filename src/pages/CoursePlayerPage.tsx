@@ -3,6 +3,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  ClipboardCheck,
   Circle,
   Clock3,
   File,
@@ -15,11 +16,15 @@ import {
 } from "lucide-react";
 import {
   listLessonAttendance,
+  listLessonAssignments,
   listLessonProgress,
+  listAssignmentSubmissionsByAssignmentIds,
   listCourseContent,
   markLessonViewed,
   unmarkLessonViewed,
+  type AssignmentSubmission,
   type LessonAttendance,
+  type LessonAssignment,
   type Resource,
   type ModuleWithLessons,
 } from "../services/content";
@@ -97,6 +102,10 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     () => new Set(),
   );
   const [attendance, setAttendance] = useState<LessonAttendance[]>([]);
+  const [assignments, setAssignments] = useState<LessonAssignment[]>([]);
+  const [assignmentSubmissions, setAssignmentSubmissions] = useState<
+    AssignmentSubmission[]
+  >([]);
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -112,6 +121,15 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
   const attendanceByLesson = new Map(
     attendance.map((record) => [record.lesson_id, record]),
+  );
+  const assignmentByLesson = new Map(
+    assignments.map((assignment) => [assignment.lesson_id, assignment]),
+  );
+  const submissionByAssignment = new Map(
+    assignmentSubmissions.map((submission) => [
+      submission.assignment_id,
+      submission,
+    ]),
   );
 
   const toggleLessonComplete = async (lessonId: string) => {
@@ -194,6 +212,15 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         const nextAttendance = user
           ? await listLessonAttendance(courseId, user.id).catch(() => [])
           : [];
+        const nextAssignments = await listLessonAssignments(courseId).catch(
+          () => [],
+        );
+        const nextAssignmentSubmissions = user
+          ? await listAssignmentSubmissionsByAssignmentIds(
+              nextAssignments.map((assignment) => assignment.id),
+              user.id,
+            ).catch(() => [])
+          : [];
 
         setCourse(nextCourse);
         setModules(nextModules);
@@ -201,6 +228,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
           new Set(nextProgress.map((progressItem) => progressItem.lesson_id)),
         );
         setAttendance(nextAttendance);
+        setAssignments(nextAssignments);
+        setAssignmentSubmissions(nextAssignmentSubmissions);
         setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
       } catch (caughtError) {
         setError(
@@ -255,7 +284,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
             <div>
               <small>Instructor confirms attendance</small>
               <small>Student completes quiz</small>
-              <small>Assignment reviewed when required</small>
+              <small>Assignment reviewed</small>
             </div>
           </div>
         </section>
@@ -297,6 +326,22 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                   ) : null}
                   {module.lessons.map((lesson, lessonIndex) => {
                     const attendanceRecord = attendanceByLesson.get(lesson.id);
+                    const assignment = assignmentByLesson.get(lesson.id);
+                    const submission = assignment
+                      ? submissionByAssignment.get(assignment.id)
+                      : null;
+                    const assignmentStatusClass =
+                      submission?.status === "reviewed"
+                        ? "is-confirmed"
+                        : submission
+                          ? "is-submitted"
+                          : "";
+                    const assignmentStatusLabel =
+                      submission?.status === "reviewed"
+                        ? "Assignment reviewed"
+                        : submission
+                          ? "Assignment submitted"
+                          : "Assignment pending";
 
                     return (
                     <article
@@ -346,7 +391,14 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               : "Attendance pending"}
                           </span>
                           <span>Quiz pending</span>
-                          <span>Assignment not required</span>
+                          <span className={assignmentStatusClass}>
+                            <ClipboardCheck
+                              aria-hidden="true"
+                              size={14}
+                              strokeWidth={2.4}
+                            />
+                            {assignmentStatusLabel}
+                          </span>
                         </div>
                         {lesson.description ? (
                           <span>{lesson.description}</span>

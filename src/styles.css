@@ -1341,6 +1341,7 @@ p {
 .student-status-row span {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   min-height: 28px;
   border-radius: 999px;
   background: #eef3f8;
@@ -1353,6 +1354,11 @@ p {
 .student-status-row .is-confirmed {
   background: #e5f8ed;
   color: #1f7a45;
+}
+
+.student-status-row .is-submitted {
+  background: #fff5d6;
+  color: #7a5a00;
 }
 
 .student-resource-list {

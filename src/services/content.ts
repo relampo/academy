@@ -8,7 +8,9 @@ import type {
 export type Module = Tables<"modules">;
 export type Lesson = Tables<"lessons">;
 export type LessonAttendance = Tables<"lesson_attendance">;
+export type LessonAssignment = Tables<"lesson_assignments">;
 export type LessonProgress = Tables<"lesson_progress">;
+export type AssignmentSubmission = Tables<"assignment_submissions">;
 export type Resource = Tables<"resources">;
 
 export type LessonWithResources = Lesson & {
@@ -291,6 +293,74 @@ export async function saveLessonAttendance(input: {
         confirmed_at: new Date().toISOString(),
       },
       { onConflict: "lesson_id,student_id" },
+    )
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function listLessonAssignments(courseId: string) {
+  const { data, error } = await supabase
+    .from("lesson_assignments")
+    .select("*, lessons!inner(course_id)")
+    .eq("lessons.course_id", courseId);
+
+  if (error) {
+    throw error;
+  }
+
+  return data as LessonAssignment[];
+}
+
+export async function listAssignmentSubmissionsByAssignmentIds(
+  assignmentIds: string[],
+  studentId?: string,
+) {
+  if (assignmentIds.length === 0) {
+    return [];
+  }
+
+  let query = supabase
+    .from("assignment_submissions")
+    .select("*")
+    .in("assignment_id", assignmentIds);
+
+  if (studentId) {
+    query = query.eq("student_id", studentId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
+
+  return data as AssignmentSubmission[];
+}
+
+export async function submitAssignment(input: {
+  assignmentId: string;
+  studentId: string;
+  submissionUrl?: string | null;
+  notes?: string | null;
+}) {
+  const { data, error } = await supabase
+    .from("assignment_submissions")
+    .upsert(
+      {
+        assignment_id: input.assignmentId,
+        student_id: input.studentId,
+        submission_url: input.submissionUrl ?? null,
+        notes: input.notes ?? null,
+        status: "submitted",
+        submitted_at: new Date().toISOString(),
+      },
+      { onConflict: "assignment_id,student_id" },
     )
     .select()
     .single();
