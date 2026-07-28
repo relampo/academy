@@ -254,8 +254,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
             <span>Course completion requires</span>
             <div>
               <small>Instructor confirms attendance</small>
-              <small>Instructor confirms full class</small>
               <small>Student completes quiz</small>
+              <small>Assignment reviewed when required</small>
             </div>
           </div>
         </section>
@@ -345,18 +345,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               ? "Attendance confirmed"
                               : "Attendance pending"}
                           </span>
-                          <span
-                            className={
-                              attendanceRecord?.stayed_until_end
-                                ? "is-confirmed"
-                                : ""
-                            }
-                          >
-                            {attendanceRecord?.stayed_until_end
-                              ? "Full class confirmed"
-                              : "Full class pending"}
-                          </span>
                           <span>Quiz pending</span>
+                          <span>Assignment not required</span>
                         </div>
                         {lesson.description ? (
                           <span>{lesson.description}</span>
