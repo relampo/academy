@@ -13,9 +13,12 @@ import {
   createLesson,
   createModule,
   createResource,
+  deleteResource,
   getNextModulePosition,
   listCourseContent,
+  updateLesson,
   updateModule,
+  type LessonWithResources,
   type ModuleWithLessons,
   type Resource,
 } from "../services/content";
@@ -61,7 +64,11 @@ function getResourceIcon(resourceType: string) {
   return resourceTypeIcons[resourceType] ?? File;
 }
 
-function renderResourceChip(resource: Resource) {
+function renderResourceChip(
+  resource: Resource,
+  onRemove: (resourceId: string) => void,
+  isDisabled: boolean,
+) {
   const ResourceIcon = getResourceIcon(resource.resource_type);
   const resourceLabel = `${
     resourceTypeLabels[resource.resource_type] ?? resource.resource_type
@@ -69,22 +76,35 @@ function renderResourceChip(resource: Resource) {
   const chipContent = (
     <>
       <ResourceIcon aria-hidden="true" size={16} strokeWidth={2.2} />
-      <span>{resource.title}</span>
+      {resource.external_url ? (
+        <a
+          aria-label={resourceLabel}
+          className="resource-chip-link"
+          href={resource.external_url}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {resource.title}
+        </a>
+      ) : (
+        <span>{resource.title}</span>
+      )}
+      <button
+        aria-label={`Remove ${resource.title}`}
+        disabled={isDisabled}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onRemove(resource.id);
+        }}
+        type="button"
+      >
+        ×
+      </button>
     </>
   );
 
-  return resource.external_url ? (
-    <a
-      aria-label={resourceLabel}
-      className="resource-chip"
-      href={resource.external_url}
-      key={resource.id}
-      rel="noreferrer"
-      target="_blank"
-    >
-      {chipContent}
-    </a>
-  ) : (
+  return (
     <div aria-label={resourceLabel} className="resource-chip" key={resource.id}>
       {chipContent}
     </div>
@@ -126,7 +146,8 @@ type AdminCourseDetailPageProps = {
 
 type PendingDelete =
   | { type: "course"; title: string }
-  | { type: "module"; module: ModuleWithLessons };
+  | { type: "module"; module: ModuleWithLessons }
+  | { type: "lesson"; lesson: LessonWithResources };
 
 export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) {
   const { user } = useAuth();
@@ -168,6 +189,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const [editingModuleTitle, setEditingModuleTitle] = useState("");
   const [editingModuleDescription, setEditingModuleDescription] = useState("");
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [editingLessonTitle, setEditingLessonTitle] = useState("");
+  const [editingLessonDescription, setEditingLessonDescription] = useState("");
+  const [editingLessonContent, setEditingLessonContent] = useState("");
+  const [editingLessonVideoUrl, setEditingLessonVideoUrl] = useState("");
+  const [editingLessonDuration, setEditingLessonDuration] = useState("");
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -595,6 +622,96 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     }
   };
 
+  const startEditLesson = (lesson: LessonWithResources) => {
+    setEditingLessonId(lesson.id);
+    setEditingLessonTitle(lesson.title);
+    setEditingLessonDescription(lesson.description ?? "");
+    setEditingLessonContent(lesson.content ?? "");
+    setEditingLessonVideoUrl(lesson.video_url ?? "");
+    setEditingLessonDuration(
+      lesson.duration_minutes ? String(lesson.duration_minutes) : "",
+    );
+    setCollapsedLessonIds((current) => {
+      const next = new Set(current);
+      next.delete(lesson.id);
+      return next;
+    });
+  };
+
+  const handleUpdateLesson = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!editingLessonId) {
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await updateLesson(editingLessonId, {
+        title: editingLessonTitle,
+        slug: slugify(editingLessonTitle),
+        description: editingLessonDescription || null,
+        content: editingLessonContent || null,
+        video_url: editingLessonVideoUrl || null,
+        duration_minutes: editingLessonDuration
+          ? Number(editingLessonDuration)
+          : null,
+      });
+
+      setEditingLessonId(null);
+      setMessage("Lesson updated.");
+      await loadCourse();
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError, "Could not update lesson."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteLesson = async (lesson: LessonWithResources) => {
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await updateLesson(lesson.id, {
+        title: lesson.title,
+        slug: lesson.slug,
+        description: lesson.description,
+        content: lesson.content,
+        video_url: lesson.video_url,
+        duration_minutes: lesson.duration_minutes,
+        status: "archived",
+      });
+
+      setMessage("Lesson deleted.");
+      await loadCourse();
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError, "Could not delete lesson."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteResource = async (resourceId: string) => {
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await deleteResource(resourceId);
+      setMessage("Resource removed.");
+      await loadCourse();
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError, "Could not remove resource."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const deleteModule = async (module: ModuleWithLessons) => {
     setError(null);
     setMessage(null);
@@ -627,8 +744,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
 
     if (pendingDelete.type === "course") {
       await deleteCourse();
-    } else {
+    } else if (pendingDelete.type === "module") {
       await deleteModule(pendingDelete.module);
+    } else {
+      await deleteLesson(pendingDelete.lesson);
     }
 
     setPendingDelete(null);
@@ -1140,27 +1259,125 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 <strong>{lesson.title}</strong>
                               </div>
                             </button>
-                            <button
-                              className="subtle-action"
-                              type="button"
-                              onClick={() => {
-                                setResourceLessonId(lesson.id);
-                                setCollapsedLessonIds((current) => {
-                                  const next = new Set(current);
-                                  next.delete(lesson.id);
-                                  return next;
-                                });
-                                setActiveResourceLessonId(
-                                  activeResourceLessonId === lesson.id
-                                    ? null
-                                    : lesson.id,
-                                );
-                              }}
-                            >
-                              Add resource
-                            </button>
+                            <div className="lesson-actions">
+                              <button
+                                type="button"
+                                onClick={() => startEditLesson(lesson)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="subtle-action"
+                                type="button"
+                                onClick={() => {
+                                  setResourceLessonId(lesson.id);
+                                  setCollapsedLessonIds((current) => {
+                                    const next = new Set(current);
+                                    next.delete(lesson.id);
+                                    return next;
+                                  });
+                                  setActiveResourceLessonId(
+                                    activeResourceLessonId === lesson.id
+                                      ? null
+                                      : lesson.id,
+                                  );
+                                }}
+                              >
+                                Add resource
+                              </button>
+                              <button
+                                className="danger-action"
+                                type="button"
+                                disabled={isSubmitting || lesson.status === "archived"}
+                                onClick={() =>
+                                  setPendingDelete({
+                                    type: "lesson",
+                                    lesson,
+                                  })
+                                }
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
-                          {!collapsedLessonIds.has(lesson.id) ? (
+                          {!collapsedLessonIds.has(lesson.id) &&
+                          editingLessonId === lesson.id ? (
+                            <form
+                              className="inline-builder-form lesson-edit-form"
+                              onSubmit={handleUpdateLesson}
+                            >
+                              <label>
+                                Lesson title
+                                <input
+                                  required
+                                  value={editingLessonTitle}
+                                  onChange={(event) =>
+                                    setEditingLessonTitle(event.target.value)
+                                  }
+                                />
+                              </label>
+                              <label>
+                                Description
+                                <textarea
+                                  value={editingLessonDescription}
+                                  onChange={(event) =>
+                                    setEditingLessonDescription(
+                                      event.target.value,
+                                    )
+                                  }
+                                />
+                              </label>
+                              <label>
+                                Content
+                                <textarea
+                                  value={editingLessonContent}
+                                  onChange={(event) =>
+                                    setEditingLessonContent(event.target.value)
+                                  }
+                                />
+                              </label>
+                              <div className="form-grid">
+                                <label>
+                                  Video URL
+                                  <input
+                                    type="url"
+                                    value={editingLessonVideoUrl}
+                                    onChange={(event) =>
+                                      setEditingLessonVideoUrl(
+                                        event.target.value,
+                                      )
+                                    }
+                                  />
+                                </label>
+                                <label>
+                                  Minutes
+                                  <input
+                                    min="1"
+                                    type="number"
+                                    value={editingLessonDuration}
+                                    onChange={(event) =>
+                                      setEditingLessonDuration(
+                                        event.target.value,
+                                      )
+                                    }
+                                  />
+                                </label>
+                              </div>
+                              <div className="inline-actions">
+                                <button type="submit" disabled={isSubmitting}>
+                                  Save lesson
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingLessonId(null)}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </form>
+                          ) : null}
+                          {!collapsedLessonIds.has(lesson.id) &&
+                          editingLessonId !== lesson.id ? (
                             <div className="lesson-details">
                               <span>
                                 {lesson.description || "No description yet."}
@@ -1182,7 +1399,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 {lesson.resources.length > 0 ? (
                                   <div className="resource-list">
                                     {lesson.resources.map((resource) =>
-                                      renderResourceChip(resource),
+                                      renderResourceChip(
+                                        resource,
+                                        handleDeleteResource,
+                                        isSubmitting,
+                                      ),
                                     )}
                                   </div>
                                 ) : null}
@@ -1272,7 +1493,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 Delete{" "}
                 {pendingDelete.type === "course"
                   ? pendingDelete.title
-                  : pendingDelete.module.title}
+                  : pendingDelete.type === "module"
+                    ? pendingDelete.module.title
+                    : pendingDelete.lesson.title}
                 ?
               </h2>
               <p>

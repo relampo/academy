@@ -707,6 +707,10 @@ p {
   margin-top: 8px;
 }
 
+.lesson-support-row .mini-list {
+  margin-top: 0;
+}
+
 .lesson-heading button,
 .secondary-action {
   display: inline-flex;
@@ -745,6 +749,26 @@ p {
   background: #ffffff;
   color: #5f4700;
   margin-left: auto;
+}
+
+.lesson-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.lesson-actions .subtle-action {
+  margin-left: 0;
+}
+
+.lesson-heading .danger-action {
+  border-color: #e5b6ad;
+  background: #ffffff;
+  color: #8f2f23;
 }
 
 .lesson-heading .subtle-action:hover,
@@ -830,6 +854,10 @@ p {
 .lesson-form {
   margin-left: 0;
   padding-left: 62px;
+}
+
+.lesson-edit-form {
+  padding-left: 48px;
 }
 
 .resource-form {
@@ -926,6 +954,45 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.resource-chip-link {
+  overflow: hidden;
+  color: inherit;
+  text-overflow: ellipsis;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.resource-chip-link:hover,
+.resource-chip-link:focus-visible {
+  color: var(--brand-text);
+  outline: none;
+  text-decoration: underline;
+}
+
+.resource-chip button {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #d9e0ea;
+  color: #39465a;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 0;
+}
+
+.resource-chip button:hover,
+.resource-chip button:focus-visible {
+  background: #e5b6ad;
+  color: #8f2f23;
+  outline: none;
 }
 
 .resource-chip:hover,
@@ -1055,12 +1122,15 @@ p {
 }
 
 .mini-list span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
   border-radius: 999px;
   background: #eef3f8;
   color: #526176;
   font-size: 0.82rem;
-  font-weight: 700;
-  padding: 5px 9px;
+  font-weight: 800;
+  padding: 5px 10px;
 }
 
 .mini-list .removable-chip {

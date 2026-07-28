@@ -189,3 +189,14 @@ export async function updateResource(
 
   return data;
 }
+
+export async function deleteResource(resourceId: string) {
+  const { error } = await supabase
+    .from("resources")
+    .delete()
+    .eq("id", resourceId);
+
+  if (error) {
+    throw error;
+  }
+}
