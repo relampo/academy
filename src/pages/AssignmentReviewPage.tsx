@@ -206,6 +206,15 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
       return;
     }
 
+    const pointsValue = pointsBySubmission[submission.id]?.trim() ?? "";
+    const pointsAwarded = Number(pointsValue);
+
+    if (!pointsValue || !Number.isFinite(pointsAwarded) || pointsAwarded < 0) {
+      setError("Points are required before marking an assignment.");
+      setMessage(null);
+      return;
+    }
+
     setError(null);
     setMessage(null);
     setReviewingSubmissionId(submission.id);
@@ -214,10 +223,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
       const reviewedSubmission = await reviewAssignmentSubmission({
         submissionId: submission.id,
         status,
-        pointsAwarded:
-          status === "reviewed" && pointsBySubmission[submission.id]
-            ? Number(pointsBySubmission[submission.id])
-            : null,
+        pointsAwarded,
         reviewedBy: user.id,
       });
 
@@ -357,12 +363,21 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                           const submission = submissionByStudentAndAssignment.get(
                             `${student.student_id}:${column.assignment.id}`,
                           );
+                          const pointsValue = submission
+                            ? (pointsBySubmission[submission.id] ?? "")
+                            : "";
+                          const hasReviewPoints =
+                            pointsValue.trim() !== "" &&
+                            Number.isFinite(Number(pointsValue)) &&
+                            Number(pointsValue) >= 0;
 
                           return (
                             <td key={column.assignment.id}>
                               {submission ? (
                                 <div
-                                  className={`assignment-cell is-${submission.status}`}
+                                  className={`assignment-cell is-${submission.status}${
+                                    hasReviewPoints ? "" : " is-missing-points"
+                                  }`}
                                 >
                                   <div className="assignment-cell-top">
                                     <span>{formatStatus(submission.status)}</span>
@@ -385,8 +400,9 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                                     Points
                                     <input
                                       min="0"
+                                      required
                                       type="number"
-                                      value={pointsBySubmission[submission.id] ?? ""}
+                                      value={pointsValue}
                                       onChange={(event) =>
                                         setPointsBySubmission((current) => ({
                                           ...current,
@@ -398,7 +414,8 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                                   <div className="assignment-cell-actions">
                                     <button
                                       disabled={
-                                        reviewingSubmissionId === submission.id
+                                        reviewingSubmissionId === submission.id ||
+                                        !hasReviewPoints
                                       }
                                       type="button"
                                       onClick={() =>
@@ -414,7 +431,8 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                                     </button>
                                     <button
                                       disabled={
-                                        reviewingSubmissionId === submission.id
+                                        reviewingSubmissionId === submission.id ||
+                                        !hasReviewPoints
                                       }
                                       type="button"
                                       onClick={() =>

@@ -1935,6 +1935,11 @@ p {
   background: #fff7f5;
 }
 
+.assignment-cell.is-missing-points input {
+  border-color: #d8bd3d;
+  background: #fffdf3;
+}
+
 .assignment-cell-top {
   display: flex;
   align-items: center;
@@ -1994,6 +1999,11 @@ p {
   font-size: 0.74rem;
   font-weight: 900;
   padding: 0 7px;
+}
+
+.assignment-cell-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .assignment-cell-actions button:first-child {
