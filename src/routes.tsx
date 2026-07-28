@@ -5,8 +5,8 @@ import { AdminUsersPage } from "./pages/AdminUsersPage";
 import { AssignmentsPage } from "./pages/AssignmentsPage";
 import { CoursesPage } from "./pages/CoursesPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { EnrollmentReviewPage } from "./pages/EnrollmentReviewPage";
 import { ProfilePage } from "./pages/ProfilePage";
-import { StudentsPage } from "./pages/StudentsPage";
 import type { Enums } from "./types/database.types";
 
 export type UserRole = Enums<"user_role">;
@@ -42,9 +42,9 @@ export const appRoutes: AppRoute[] = [
     navGroup: "student",
   },
   {
-    path: "/students",
-    label: "Students",
-    Component: StudentsPage,
+    path: "/enrollments",
+    label: "Enrollment Review",
+    Component: EnrollmentReviewPage,
     allowedRoles: ["admin", "instructor"],
     navGroup: "instructor",
   },

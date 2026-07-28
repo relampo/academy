@@ -34,7 +34,7 @@ function formatStatus(value: string) {
   return value.replace(/_/g, " ");
 }
 
-export function StudentsPage() {
+export function EnrollmentReviewPage() {
   const { user } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrollmentReviewItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<"all" | EnrollmentStatus>(
@@ -119,7 +119,7 @@ export function StudentsPage() {
       <div className="page-header">
         <div>
           <p className="eyebrow">Instructor</p>
-          <h1>Students</h1>
+          <h1>Enrollment Review</h1>
         </div>
       </div>
 
