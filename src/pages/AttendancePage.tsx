@@ -68,11 +68,6 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
     [attendance, selectedLessonId],
   );
 
-  const loadAttendance = async () => {
-    const nextAttendance = await listLessonAttendance(courseId);
-    setAttendance(nextAttendance);
-  };
-
   useEffect(() => {
     const loadPage = async () => {
       setError(null);
@@ -115,21 +110,58 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
     }
 
     const key = `${selectedLessonId}:${studentId}`;
+    const now = new Date().toISOString();
+    const previousAttendance = attendance;
+    const existingRecord = attendanceByStudent.get(studentId);
+    const optimisticRecord: LessonAttendance = {
+      id: existingRecord?.id ?? key,
+      lesson_id: selectedLessonId,
+      student_id: studentId,
+      attended: nextValues.attended,
+      stayed_until_end: nextValues.attended && nextValues.stayedUntilEnd,
+      confirmed_by: user.id,
+      confirmed_at: now,
+      created_at: existingRecord?.created_at ?? now,
+      updated_at: now,
+    };
+
+    setAttendance((current) => {
+      const withoutCurrent = current.filter(
+        (record) =>
+          !(
+            record.lesson_id === selectedLessonId &&
+            record.student_id === studentId
+          ),
+      );
+
+      return [...withoutCurrent, optimisticRecord];
+    });
     setSavingKey(key);
     setError(null);
     setMessage(null);
 
     try {
-      await saveLessonAttendance({
+      const savedRecord = await saveLessonAttendance({
         lessonId: selectedLessonId,
         studentId,
         attended: nextValues.attended,
         stayedUntilEnd: nextValues.stayedUntilEnd,
         confirmedBy: user.id,
       });
-      await loadAttendance();
+      setAttendance((current) => {
+        const withoutCurrent = current.filter(
+          (record) =>
+            !(
+              record.lesson_id === selectedLessonId &&
+              record.student_id === studentId
+            ),
+        );
+
+        return [...withoutCurrent, savedRecord];
+      });
       setMessage("Attendance updated.");
     } catch (caughtError) {
+      setAttendance(previousAttendance);
       setError(
         caughtError instanceof Error
           ? caughtError.message
