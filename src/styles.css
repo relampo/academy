@@ -886,32 +886,46 @@ p {
 }
 
 .resource-list {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   margin-top: 14px;
   padding-left: 0;
 }
 
-.resource-list a,
-.resource-item {
-  display: flex;
+.resource-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  border: 0;
-  color: #18212f;
-  padding: 4px 0;
+  gap: 7px;
+  max-width: 100%;
+  min-height: 32px;
+  border: 1px solid #d9e0ea;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #39465a;
+  font-weight: 800;
+  padding: 6px 10px;
   text-decoration: none;
 }
 
-.resource-list a span,
-.resource-item span {
-  border-radius: 999px;
-  background: #eef3f8;
-  color: #526176;
-  font-size: 0.76rem;
-  font-weight: 800;
-  padding: 4px 8px;
-  text-transform: uppercase;
+.resource-chip svg {
+  flex: 0 0 auto;
+  color: #a77c00;
+}
+
+.resource-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-chip:hover,
+.resource-chip:focus-visible {
+  border-color: #d8bd3d;
+  background: var(--brand-soft);
+  color: var(--brand-text);
+  outline: none;
 }
 
 .course-list {

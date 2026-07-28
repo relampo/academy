@@ -1,5 +1,15 @@
 import { useEffect, useState, type FormEvent } from "react";
 import {
+  ChartNoAxesColumn,
+  Code2,
+  File,
+  FileText,
+  Link,
+  Package,
+  Presentation,
+  type LucideIcon,
+} from "lucide-react";
+import {
   createLesson,
   createModule,
   createResource,
@@ -36,6 +46,19 @@ const resourceTypeLabels: Record<string, string> = {
   script: "Script",
   report: "Report",
 };
+
+const resourceTypeIcons: Record<string, LucideIcon> = {
+  external_link: Link,
+  pdf: FileText,
+  slides: Presentation,
+  zip: Package,
+  script: Code2,
+  report: ChartNoAxesColumn,
+};
+
+function getResourceIcon(resourceType: string) {
+  return resourceTypeIcons[resourceType] ?? File;
+}
 
 function getErrorMessage(caughtError: unknown, fallback: string) {
   if (caughtError instanceof Error) {
@@ -1189,28 +1212,47 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                           lesson.resources.length > 0 ? (
                             <div className="resource-list">
                               {lesson.resources.map((resource) => (
-                                resource.external_url ? (
-                                  <a
-                                    href={resource.external_url}
-                                    key={resource.id}
-                                    rel="noreferrer"
-                                    target="_blank"
-                                >
-                                  <span>
-                                    {resourceTypeLabels[resource.resource_type] ??
-                                      resource.resource_type}
-                                  </span>
-                                  {resource.title}
-                                </a>
-                              ) : (
-                                  <div className="resource-item" key={resource.id}>
-                                    <span>
-                                      {resourceTypeLabels[resource.resource_type] ??
-                                        resource.resource_type}
-                                    </span>
-                                    {resource.title}
-                                  </div>
-                                )
+                                (() => {
+                                  const ResourceIcon = getResourceIcon(
+                                    resource.resource_type,
+                                  );
+                                  const resourceLabel = `${
+                                    resourceTypeLabels[
+                                      resource.resource_type
+                                    ] ?? resource.resource_type
+                                  }: ${resource.title}`;
+                                  const chipContent = (
+                                    <>
+                                      <ResourceIcon
+                                        aria-hidden="true"
+                                        size={16}
+                                        strokeWidth={2.2}
+                                      />
+                                      <span>{resource.title}</span>
+                                    </>
+                                  );
+
+                                  return resource.external_url ? (
+                                    <a
+                                      aria-label={resourceLabel}
+                                      className="resource-chip"
+                                      href={resource.external_url}
+                                      key={resource.id}
+                                      rel="noreferrer"
+                                      target="_blank"
+                                    >
+                                      {chipContent}
+                                    </a>
+                                  ) : (
+                                    <div
+                                      aria-label={resourceLabel}
+                                      className="resource-chip"
+                                      key={resource.id}
+                                    >
+                                      {chipContent}
+                                    </div>
+                                  );
+                                })()
                               ))}
                             </div>
                           ) : null}
