@@ -34,9 +34,15 @@ function formatStatus(value: string) {
   return value.replace(/_/g, " ");
 }
 
+function getCourseIdFilter() {
+  const hashQuery = window.location.hash.split("?")[1] ?? "";
+  return new URLSearchParams(hashQuery).get("courseId");
+}
+
 export function EnrollmentReviewPage() {
   const { user } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrollmentReviewItem[]>([]);
+  const [courseIdFilter, setCourseIdFilter] = useState(getCourseIdFilter);
   const [statusFilter, setStatusFilter] = useState<"all" | EnrollmentStatus>(
     "pending",
   );
@@ -68,18 +74,42 @@ export function EnrollmentReviewPage() {
     void loadEnrollments();
   }, []);
 
+  useEffect(() => {
+    const handleHashChange = () => setCourseIdFilter(getCourseIdFilter());
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
   const filteredEnrollments = useMemo(() => {
-    if (statusFilter === "all") {
-      return enrollments;
-    }
+    return enrollments.filter((enrollment) => {
+      const matchesCourse =
+        !courseIdFilter ||
+        enrollment.course_editions?.course_id === courseIdFilter;
+      const matchesStatus =
+        statusFilter === "all" || enrollment.status === statusFilter;
 
-    return enrollments.filter((enrollment) => enrollment.status === statusFilter);
-  }, [enrollments, statusFilter]);
+      return matchesCourse && matchesStatus;
+    });
+  }, [courseIdFilter, enrollments, statusFilter]);
 
-  const pendingCount = enrollments.filter(
+  const scopedEnrollments = useMemo(
+    () =>
+      courseIdFilter
+        ? enrollments.filter(
+            (enrollment) =>
+              enrollment.course_editions?.course_id === courseIdFilter,
+          )
+        : enrollments,
+    [courseIdFilter, enrollments],
+  );
+
+  const selectedCourseTitle =
+    scopedEnrollments[0]?.course_editions?.courses?.title ?? null;
+
+  const pendingCount = scopedEnrollments.filter(
     (enrollment) => enrollment.status === "pending",
   ).length;
-  const approvedCount = enrollments.filter(
+  const approvedCount = scopedEnrollments.filter(
     (enrollment) => enrollment.status === "approved",
   ).length;
 
@@ -119,8 +149,16 @@ export function EnrollmentReviewPage() {
       <div className="page-header">
         <div>
           <p className="eyebrow">Instructor</p>
-          <h1>Enrollment Review</h1>
+          <h1>{selectedCourseTitle ?? "Enrollment Review"}</h1>
+          {courseIdFilter ? (
+            <p>Enrollment requests for this course.</p>
+          ) : null}
         </div>
+        {courseIdFilter ? (
+          <a className="text-link" href="#/enrollments">
+            All requests
+          </a>
+        ) : null}
       </div>
 
       {error ? <p className="form-message error">{error}</p> : null}
@@ -141,7 +179,7 @@ export function EnrollmentReviewPage() {
         <div className="panel-heading">
           <div>
             <p className="eyebrow">Enrollment review</p>
-            <h2>Requests</h2>
+            <h2>{courseIdFilter ? "Course requests" : "Requests"}</h2>
           </div>
           <select
             className="compact-select"

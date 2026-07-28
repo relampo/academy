@@ -83,7 +83,10 @@ export function TeachingCoursesPage() {
                 <a className="action-link" href={`#/admin/courses/${course.id}`}>
                   Open
                 </a>
-                <a className="secondary-action" href="#/enrollments">
+                <a
+                  className="secondary-action"
+                  href={`#/enrollments?courseId=${course.id}`}
+                >
                   Requests
                 </a>
               </div>
