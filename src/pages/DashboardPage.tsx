@@ -39,7 +39,7 @@ export function DashboardPage() {
           </div>
           <div>
             <strong>Course operations</strong>
-            <span>Admin course setup, editions and enrollment workflow.</span>
+            <span>Admin course setup, duplication and enrollment workflow.</span>
           </div>
           <div>
             <strong>Learning content</strong>

@@ -79,7 +79,7 @@ export function CoursesPage() {
       {isLoading ? <p>Loading courses...</p> : null}
       {!isLoading && editions.length === 0 ? (
         <section className="content-panel compact">
-          <p>No published course editions are available yet.</p>
+          <p>No published courses are available yet.</p>
         </section>
       ) : null}
 
@@ -96,10 +96,9 @@ export function CoursesPage() {
               <div>
                 <h2>{edition.courses?.title ?? edition.title}</h2>
                 <p>
-                  {edition.courses?.short_description || "Course edition open."}
+                  {edition.courses?.short_description || "Course open."}
                 </p>
                 <div className="mini-list">
-                  <span>{edition.title}</span>
                   {edition.start_date ? (
                     <span>Starts {edition.start_date}</span>
                   ) : null}

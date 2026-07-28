@@ -175,9 +175,7 @@ export function EnrollmentReviewPage() {
               <article className="enrollment-row" key={enrollment.id}>
                 <div>
                   <strong>{getStudentName(enrollment)}</strong>
-                  <span>
-                    {courseTitle} · {edition?.title ?? "Edition"}
-                  </span>
+                  <span>{courseTitle}</span>
                   <div className="mini-list">
                     <span>{formatStatus(enrollment.status)}</span>
                     <span>

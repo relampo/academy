@@ -9,11 +9,13 @@ Included:
 - Role-aware navigation entry for admins and instructors.
 - Enrollment request filtering by status.
 - Approve and reject actions backed by Supabase RLS.
+- Course-only UX decision: editions/cohorts are hidden from users for now.
+- Course duplication copies modules, lessons and resources into a new draft course.
 
 Current permissions:
 
 - Admins can review every enrollment.
-- Instructors can review enrollments only for assigned course editions.
+- Instructors can review enrollments only for assigned courses.
 - Students continue to see and request enrollments from the course catalog.
 
 Next:

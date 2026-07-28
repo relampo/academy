@@ -9,13 +9,11 @@ import {
   type ModuleWithLessons,
 } from "../services/content";
 import {
-  createCourseEdition,
+  duplicateCourse,
   getCourseWithEditions,
-  getUniqueEditionSlug,
   slugify,
   updateCourse,
   updateCourseEdition,
-  type CourseEdition,
   type CourseWithEditions,
 } from "../services/courses";
 import type { Enums } from "../types/database.types";
@@ -31,10 +29,6 @@ const resourceTypeLabels: Record<string, string> = {
   script: "Script",
   report: "Report",
 };
-
-function formatStatus(value: string) {
-  return value.replace(/_/g, " ");
-}
 
 function getErrorMessage(caughtError: unknown, fallback: string) {
   if (caughtError instanceof Error) {
@@ -68,16 +62,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<CourseStatus>("draft");
   const [isEditingCourse, setIsEditingCourse] = useState(false);
-  const [isAddingEdition, setIsAddingEdition] = useState(false);
-  const [editionTitle, setEditionTitle] = useState("");
-  const [editionStartDate, setEditionStartDate] = useState("");
-  const [editionEndDate, setEditionEndDate] = useState("");
-  const [editionCapacity, setEditionCapacity] = useState("");
-  const [editionStatus, setEditionStatus] = useState<CourseStatus>("draft");
-  const [editionEnrollmentOpen, setEditionEnrollmentOpen] = useState(false);
-  const [editionRequiresApproval, setEditionRequiresApproval] = useState(true);
-  const [editingEditionId, setEditingEditionId] = useState<string | null>(null);
-  const [editingEditionTitle, setEditingEditionTitle] = useState("");
   const [editingEditionStartDate, setEditingEditionStartDate] = useState("");
   const [editingEditionEndDate, setEditingEditionEndDate] = useState("");
   const [editingEditionCapacity, setEditingEditionCapacity] = useState("");
@@ -120,6 +104,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     () => new Set(),
   );
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [isDuplicating, setIsDuplicating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -146,6 +131,15 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setDescription(nextCourse.description ?? nextCourse.short_description ?? "");
       setStatus(nextCourse.status);
       setIsEditingCourse(false);
+      const primaryOffering = nextCourse.course_editions[0];
+      setEditingEditionStartDate(primaryOffering?.start_date ?? "");
+      setEditingEditionEndDate(primaryOffering?.end_date ?? "");
+      setEditingEditionCapacity(
+        primaryOffering?.capacity ? String(primaryOffering.capacity) : "",
+      );
+      setEditingEditionStatus(primaryOffering?.status ?? "draft");
+      setEditingEditionEnrollmentOpen(primaryOffering?.enrollment_open ?? false);
+      setEditingEditionRequiresApproval(primaryOffering?.requires_approval ?? true);
       setLessonModuleId((current) => current || nextModules[0]?.id || "");
       setResourceLessonId(
         (current) => current || nextModules[0]?.lessons[0]?.id || "",
@@ -202,16 +196,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setIsEditingCourse(false);
   };
 
-  const resetEditionForm = () => {
-    setEditionTitle("");
-    setEditionStartDate("");
-    setEditionEndDate("");
-    setEditionCapacity("");
-    setEditionStatus("draft");
-    setEditionEnrollmentOpen(false);
-    setEditionRequiresApproval(true);
-  };
-
   const validateEditionDates = (startDate: string, endDate: string) => {
     if (startDate && endDate && endDate < startDate) {
       setError("End date must be after the start date.");
@@ -221,58 +205,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     return true;
   };
 
-  const handleCreateEdition = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError(null);
-    setMessage(null);
-
-    if (!validateEditionDates(editionStartDate, editionEndDate)) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const slug = await getUniqueEditionSlug(courseId, editionTitle);
-
-      await createCourseEdition({
-        course_id: courseId,
-        title: editionTitle,
-        slug,
-        status: editionStatus,
-        start_date: editionStartDate || null,
-        end_date: editionEndDate || null,
-        capacity: editionCapacity ? Number(editionCapacity) : null,
-        enrollment_open: editionEnrollmentOpen,
-        requires_approval: editionRequiresApproval,
-      });
-
-      resetEditionForm();
-      setIsAddingEdition(false);
-      setMessage("Edition created.");
-      await loadCourse();
-    } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not create edition."));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const startEditEdition = (edition: CourseEdition) => {
-    setEditingEditionId(edition.id);
-    setEditingEditionTitle(edition.title);
-    setEditingEditionStartDate(edition.start_date ?? "");
-    setEditingEditionEndDate(edition.end_date ?? "");
-    setEditingEditionCapacity(edition.capacity ? String(edition.capacity) : "");
-    setEditingEditionStatus(edition.status);
-    setEditingEditionEnrollmentOpen(edition.enrollment_open);
-    setEditingEditionRequiresApproval(edition.requires_approval);
-  };
-
-  const handleUpdateEdition = async (event: FormEvent<HTMLFormElement>) => {
+  const handleUpdatePrimaryOffering = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
 
-    if (!editingEditionId) {
+    if (!primaryOffering || !course) {
       return;
     }
 
@@ -286,8 +224,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setIsSubmitting(true);
 
     try {
-      await updateCourseEdition(editingEditionId, {
-        title: editingEditionTitle,
+      await updateCourseEdition(primaryOffering.id, {
+        title: course.title,
         status: editingEditionStatus,
         start_date: editingEditionStartDate || null,
         end_date: editingEditionEndDate || null,
@@ -296,11 +234,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         requires_approval: editingEditionRequiresApproval,
       });
 
-      setEditingEditionId(null);
-      setMessage("Edition updated.");
+      setMessage("Enrollment settings updated.");
       await loadCourse();
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not update edition."));
+      setError(
+        getErrorMessage(caughtError, "Could not update enrollment settings."),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -560,6 +499,28 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setPendingDelete(null);
   };
 
+  const handleDuplicateCourse = async () => {
+    setError(null);
+    setMessage(null);
+    setIsDuplicating(true);
+
+    try {
+      const copiedCourse = await duplicateCourse(courseId);
+      setMessage(`Duplicated "${copiedCourse.title}".`);
+      window.location.hash = `/admin/courses/${copiedCourse.id}`;
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Could not duplicate course.",
+      );
+    } finally {
+      setIsDuplicating(false);
+    }
+  };
+
+  const primaryOffering = course?.course_editions[0] ?? null;
+
   return (
     <section className="page">
       <div className="page-header course-detail-header">
@@ -569,7 +530,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
           {course ? (
             <div className="mini-list">
               <span>{course.status}</span>
-              <span>{course.course_editions.length} editions</span>
+              <span>
+                {primaryOffering?.enrollment_open
+                  ? "Enrollment open"
+                  : "Enrollment closed"}
+              </span>
               <span>{modules.length} modules</span>
             </div>
           ) : null}
@@ -606,6 +571,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </button>
                   </>
                 )}
+                <button
+                  type="button"
+                  disabled={isDuplicating}
+                  onClick={() => void handleDuplicateCourse()}
+                >
+                  {isDuplicating ? "Duplicating..." : "Duplicate"}
+                </button>
                 <button
                   className="danger-action"
                   type="button"
@@ -668,42 +640,23 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
           <section className="content-panel compact-panel">
             <div className="panel-heading">
               <div>
-                <p className="eyebrow">Cohorts</p>
-                <h2>Editions</h2>
+                <p className="eyebrow">Enrollment</p>
+                <h2>Enrollment settings</h2>
               </div>
-              <button
-                className="secondary-action"
-                type="button"
-                onClick={() => setIsAddingEdition((current) => !current)}
-              >
-                Add edition
-              </button>
             </div>
-            <p className="helper-copy">
-              Editions are course cohorts. Students see an edition when it is
-              published and enrollment is open.
-            </p>
-            {isAddingEdition ? (
+            {primaryOffering ? (
               <form
-                className="inline-builder-form edition-form"
-                onSubmit={handleCreateEdition}
+                className="stacked-form"
+                onSubmit={handleUpdatePrimaryOffering}
               >
-                <label>
-                  Edition title
-                  <input
-                    required
-                    value={editionTitle}
-                    onChange={(event) => setEditionTitle(event.target.value)}
-                  />
-                </label>
                 <div className="form-grid">
                   <label>
                     Start date
                     <input
                       type="date"
-                      value={editionStartDate}
+                      value={editingEditionStartDate}
                       onChange={(event) =>
-                        setEditionStartDate(event.target.value)
+                        setEditingEditionStartDate(event.target.value)
                       }
                     />
                   </label>
@@ -711,8 +664,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     End date
                     <input
                       type="date"
-                      value={editionEndDate}
-                      onChange={(event) => setEditionEndDate(event.target.value)}
+                      value={editingEditionEndDate}
+                      onChange={(event) =>
+                        setEditingEditionEndDate(event.target.value)
+                      }
                     />
                   </label>
                 </div>
@@ -722,18 +677,18 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     <input
                       min="1"
                       type="number"
-                      value={editionCapacity}
+                      value={editingEditionCapacity}
                       onChange={(event) =>
-                        setEditionCapacity(event.target.value)
+                        setEditingEditionCapacity(event.target.value)
                       }
                     />
                   </label>
                   <label>
                     Status
                     <select
-                      value={editionStatus}
+                      value={editingEditionStatus}
                       onChange={(event) =>
-                        setEditionStatus(event.target.value as CourseStatus)
+                        setEditingEditionStatus(event.target.value as CourseStatus)
                       }
                     >
                       <option value="draft">Draft</option>
@@ -748,20 +703,20 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 <div className="toggle-row">
                   <label>
                     <input
-                      checked={editionEnrollmentOpen}
+                      checked={editingEditionEnrollmentOpen}
                       type="checkbox"
                       onChange={(event) =>
-                        setEditionEnrollmentOpen(event.target.checked)
+                        setEditingEditionEnrollmentOpen(event.target.checked)
                       }
                     />
                     Enrollment open
                   </label>
                   <label>
                     <input
-                      checked={editionRequiresApproval}
+                      checked={editingEditionRequiresApproval}
                       type="checkbox"
                       onChange={(event) =>
-                        setEditionRequiresApproval(event.target.checked)
+                        setEditingEditionRequiresApproval(event.target.checked)
                       }
                     />
                     Requires approval
@@ -769,176 +724,16 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 </div>
                 <div className="inline-actions">
                   <button type="submit" disabled={isSubmitting}>
-                    Save edition
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      resetEditionForm();
-                      setIsAddingEdition(false);
-                    }}
-                  >
-                    Cancel
+                    Save enrollment settings
                   </button>
                 </div>
               </form>
-            ) : null}
-            <div className="edition-list">
-              {course.course_editions.length === 0 ? (
-                <div className="empty-builder">
-                  <strong>No editions yet</strong>
-                  <span>Create the first cohort for this course.</span>
-                </div>
-              ) : (
-                course.course_editions.map((edition) => (
-                  <article className="edition-card" key={edition.id}>
-                    {editingEditionId === edition.id ? (
-                      <form
-                        className="edition-edit-form"
-                        onSubmit={handleUpdateEdition}
-                      >
-                        <label>
-                          Edition title
-                          <input
-                            required
-                            value={editingEditionTitle}
-                            onChange={(event) =>
-                              setEditingEditionTitle(event.target.value)
-                            }
-                          />
-                        </label>
-                        <div className="form-grid">
-                          <label>
-                            Start date
-                            <input
-                              type="date"
-                              value={editingEditionStartDate}
-                              onChange={(event) =>
-                                setEditingEditionStartDate(event.target.value)
-                              }
-                            />
-                          </label>
-                          <label>
-                            End date
-                            <input
-                              type="date"
-                              value={editingEditionEndDate}
-                              onChange={(event) =>
-                                setEditingEditionEndDate(event.target.value)
-                              }
-                            />
-                          </label>
-                        </div>
-                        <div className="form-grid">
-                          <label>
-                            Capacity
-                            <input
-                              min="1"
-                              type="number"
-                              value={editingEditionCapacity}
-                              onChange={(event) =>
-                                setEditingEditionCapacity(event.target.value)
-                              }
-                            />
-                          </label>
-                          <label>
-                            Status
-                            <select
-                              value={editingEditionStatus}
-                              onChange={(event) =>
-                                setEditingEditionStatus(
-                                  event.target.value as CourseStatus,
-                                )
-                              }
-                            >
-                              <option value="draft">Draft</option>
-                              <option value="published">Published</option>
-                              <option value="enrollment_closed">
-                                Enrollment closed
-                              </option>
-                              <option value="completed">Completed</option>
-                            </select>
-                          </label>
-                        </div>
-                        <div className="toggle-row">
-                          <label>
-                            <input
-                              checked={editingEditionEnrollmentOpen}
-                              type="checkbox"
-                              onChange={(event) =>
-                                setEditingEditionEnrollmentOpen(
-                                  event.target.checked,
-                                )
-                              }
-                            />
-                            Enrollment open
-                          </label>
-                          <label>
-                            <input
-                              checked={editingEditionRequiresApproval}
-                              type="checkbox"
-                              onChange={(event) =>
-                                setEditingEditionRequiresApproval(
-                                  event.target.checked,
-                                )
-                              }
-                            />
-                            Requires approval
-                          </label>
-                        </div>
-                        <div className="inline-actions">
-                          <button type="submit" disabled={isSubmitting}>
-                            Save edition
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingEditionId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <>
-                        <div className="edition-card-header">
-                          <div>
-                            <strong>{edition.title}</strong>
-                            <span>
-                              {edition.start_date || "No start date"} to{" "}
-                              {edition.end_date || "no end date"}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => startEditEdition(edition)}
-                          >
-                            Edit
-                          </button>
-                        </div>
-                        <div className="edition-facts">
-                          <span>{formatStatus(edition.status)}</span>
-                          <span>
-                            {edition.enrollment_open
-                              ? "Enrollment open"
-                              : "Enrollment closed"}
-                          </span>
-                          <span>
-                            {edition.requires_approval
-                              ? "Approval required"
-                              : "Auto enrollment"}
-                          </span>
-                          <span>
-                            {edition.capacity
-                              ? `${edition.capacity} seats`
-                              : "No capacity limit"}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </article>
-                ))
-              )}
-            </div>
+            ) : (
+              <div className="empty-builder">
+                <strong>No enrollment settings yet</strong>
+                <span>This course needs enrollment settings before students can join.</span>
+              </div>
+            )}
           </section>
         </div>
       ) : null}

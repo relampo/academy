@@ -63,6 +63,34 @@ export type UpdateEditionInput = Pick<
 
 export type EnrollmentStatus = Enums<"enrollment_status">;
 
+export async function getUniqueCourseSlug(title: string) {
+  const baseSlug = slugify(title) || "course";
+  const { data, error } = await supabase
+    .from("courses")
+    .select("slug")
+    .like("slug", `${baseSlug}%`);
+
+  if (error) {
+    throw error;
+  }
+
+  const existingSlugs = new Set(data.map((course) => course.slug));
+
+  if (!existingSlugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  let suffix = existingSlugs.size + 1;
+  let nextSlug = `${baseSlug}-${suffix}`;
+
+  while (existingSlugs.has(nextSlug)) {
+    suffix += 1;
+    nextSlug = `${baseSlug}-${suffix}`;
+  }
+
+  return nextSlug;
+}
+
 export async function listCoursesWithEditions() {
   const { data, error } = await supabase
     .from("courses")
@@ -116,6 +144,27 @@ export async function createCourse(input: CreateCourseInput) {
   }
 
   return data;
+}
+
+export async function createCourseWithDefaultOffering(
+  input: CreateCourseInput,
+  enrollmentOpen: boolean,
+) {
+  const course = await createCourse(input);
+
+  await createCourseEdition({
+    course_id: course.id,
+    title: course.title,
+    slug: "default",
+    status: input.status ?? "draft",
+    start_date: null,
+    end_date: null,
+    capacity: null,
+    enrollment_open: enrollmentOpen,
+    requires_approval: true,
+  });
+
+  return course;
 }
 
 export async function createCourseEdition(input: CreateEditionInput) {
@@ -249,6 +298,121 @@ export async function updateEnrollmentStatus(
   }
 
   return data;
+}
+
+export async function duplicateCourse(courseId: string) {
+  const source = await getCourseWithEditions(courseId);
+  const copyTitle = `${source.title} Copy`;
+  const copySlug = await getUniqueCourseSlug(copyTitle);
+
+  const { data: copiedCourse, error: courseError } = await supabase
+    .from("courses")
+    .insert({
+      title: copyTitle,
+      slug: copySlug,
+      short_description: source.short_description,
+      description: source.description,
+      cover_url: source.cover_url,
+      status: "draft",
+      source_course_id: source.id,
+    })
+    .select()
+    .single();
+
+  if (courseError) {
+    throw courseError;
+  }
+
+  const primaryOffering = source.course_editions[0];
+
+  await createCourseEdition({
+    course_id: copiedCourse.id,
+    title: copiedCourse.title,
+    slug: "default",
+    status: "draft",
+    start_date: primaryOffering?.start_date ?? null,
+    end_date: primaryOffering?.end_date ?? null,
+    capacity: primaryOffering?.capacity ?? null,
+    enrollment_open: false,
+    requires_approval: primaryOffering?.requires_approval ?? true,
+  });
+
+  const { data: modules, error: modulesError } = await supabase
+    .from("modules")
+    .select("*, lessons(*, resources(*))")
+    .eq("course_id", source.id)
+    .neq("status", "archived")
+    .order("position", { ascending: true })
+    .order("position", { referencedTable: "lessons", ascending: true })
+    .order("position", { referencedTable: "lessons.resources", ascending: true });
+
+  if (modulesError) {
+    throw modulesError;
+  }
+
+  for (const module of modules ?? []) {
+    const { data: copiedModule, error: moduleError } = await supabase
+      .from("modules")
+      .insert({
+        course_id: copiedCourse.id,
+        title: module.title,
+        description: module.description,
+        position: module.position,
+        status: module.status,
+      })
+      .select()
+      .single();
+
+    if (moduleError) {
+      throw moduleError;
+    }
+
+    for (const lesson of module.lessons ?? []) {
+      const { data: copiedLesson, error: lessonError } = await supabase
+        .from("lessons")
+        .insert({
+          course_id: copiedCourse.id,
+          module_id: copiedModule.id,
+          title: lesson.title,
+          slug: lesson.slug,
+          description: lesson.description,
+          objectives: lesson.objectives,
+          content: lesson.content,
+          video_url: lesson.video_url,
+          scheduled_at: lesson.scheduled_at,
+          duration_minutes: lesson.duration_minutes,
+          position: lesson.position,
+          status: lesson.status,
+          attendance_enabled: lesson.attendance_enabled,
+        })
+        .select()
+        .single();
+
+      if (lessonError) {
+        throw lessonError;
+      }
+
+      for (const resource of lesson.resources ?? []) {
+        const { error: resourceError } = await supabase.from("resources").insert({
+          lesson_id: copiedLesson.id,
+          title: resource.title,
+          description: resource.description,
+          resource_type: resource.resource_type,
+          external_url: resource.external_url,
+          is_downloadable: resource.is_downloadable,
+          unlock_at: resource.unlock_at,
+          requires_enrollment: resource.requires_enrollment,
+          position: resource.position,
+        });
+
+        if (resourceError) {
+          throw resourceError;
+        }
+      }
+    }
+  }
+
+  return copiedCourse;
 }
 
 export function slugify(value: string) {
