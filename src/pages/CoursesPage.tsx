@@ -93,13 +93,33 @@ export function CoursesPage() {
             edition.enrollment_open &&
             edition.status === "published" &&
             (!enrollment || canRequestAgain);
-          const buttonLabel = enrollment
-            ? canRequestAgain
-              ? "Request again"
-              : enrollment.status === "approved"
-                ? "Start"
-              : enrollment.status
-            : "Enroll";
+          const buttonLabel = (() => {
+            if (requestingEditionId === edition.id) {
+              return "Requesting...";
+            }
+
+            if (enrollment) {
+              if (canRequestAgain) {
+                return "Request again";
+              }
+
+              if (enrollment.status === "approved") {
+                return "Start";
+              }
+
+              return enrollment.status;
+            }
+
+            if (edition.status !== "published") {
+              return edition.status === "completed" ? "Completed" : "Not available";
+            }
+
+            if (!edition.enrollment_open) {
+              return "Enrollment closed";
+            }
+
+            return "Enroll";
+          })();
 
           return (
             <article className="course-row" key={edition.id}>
@@ -132,9 +152,7 @@ export function CoursesPage() {
                     disabled={!canRequest || requestingEditionId === edition.id}
                     onClick={() => void handleRequestEnrollment(edition.id)}
                   >
-                    {requestingEditionId === edition.id
-                      ? "Requesting..."
-                      : buttonLabel}
+                    {buttonLabel}
                   </button>
                 )}
               </div>
