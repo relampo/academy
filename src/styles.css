@@ -606,14 +606,14 @@ p {
   display: grid;
   gap: 10px;
   margin: 0;
-  padding: 0 18px 18px 58px;
+  padding: 0 18px 18px 28px;
 }
 
 .lesson-list::before {
   position: absolute;
   top: 0;
   bottom: 24px;
-  left: 36px;
+  left: 12px;
   width: 2px;
   background: #e7edf5;
   content: "";
@@ -630,7 +630,7 @@ p {
 .lesson-heading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 16px;
   padding: 12px 14px;
   min-height: 58px;
@@ -658,6 +658,7 @@ p {
   display: flex;
   flex: 1;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
   min-width: 0;
   border: 0;
@@ -695,7 +696,7 @@ p {
 .lesson-details {
   margin-top: 0;
   border-top: 0;
-  padding: 0 14px 14px 48px;
+  padding: 0 14px 14px 42px;
 }
 
 .lesson-heading button,
@@ -734,6 +735,7 @@ p {
   border-color: #d8bd3d;
   background: #ffffff;
   color: #5f4700;
+  margin-left: auto;
 }
 
 .lesson-heading .subtle-action:hover,
