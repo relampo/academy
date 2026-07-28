@@ -12,7 +12,7 @@ import {
   getCourseWithEditions,
   slugify,
   updateCourse,
-  updateCourseEdition,
+  updateCourseOfferings,
   type CourseWithEditions,
 } from "../services/courses";
 import type { Enums } from "../types/database.types";
@@ -160,7 +160,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       });
 
       if (primaryOffering) {
-        await updateCourseEdition(primaryOffering.id, {
+        await updateCourseOfferings(courseId, {
           title,
           status,
         });
@@ -218,8 +218,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setIsSubmitting(true);
 
     try {
-      await updateCourseEdition(primaryOffering.id, {
+      await updateCourseOfferings(courseId, {
         title: course.title,
+        status: course.status,
         start_date: editingEditionStartDate || null,
         end_date: editingEditionEndDate || null,
         capacity: editingEditionCapacity ? Number(editingEditionCapacity) : null,

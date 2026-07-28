@@ -254,6 +254,23 @@ export async function updateCourseEdition(
   return data;
 }
 
+export async function updateCourseOfferings(
+  courseId: string,
+  input: UpdateEditionInput,
+) {
+  const { data, error } = await supabase
+    .from("course_editions")
+    .update(input)
+    .eq("course_id", courseId)
+    .select();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export async function requestEnrollment(courseEditionId: string, studentId: string) {
   const { data: existingEnrollment, error: existingError } = await supabase
     .from("enrollments")
