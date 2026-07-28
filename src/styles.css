@@ -756,8 +756,9 @@ p {
   gap: 2px;
 }
 
-.switch-row strong {
+.switch-title {
   color: #18212f;
+  line-height: 1.2;
 }
 
 .switch-row small {

@@ -677,7 +677,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       }
                     />
                     <span>
-                      <strong>Enrollment open</strong>
+                      <strong className="switch-title">Enrollment open</strong>
                       <small>Requests always require approval.</small>
                     </span>
                   </label>
