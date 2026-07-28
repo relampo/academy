@@ -145,7 +145,14 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setModules(nextModules);
       setInstructors(nextInstructors);
       setAssignedInstructors(nextAssignedInstructors);
-      setSelectedInstructorId((current) => current || nextInstructors[0]?.id || "");
+      setSelectedInstructorId(
+        nextInstructors.find(
+          (instructor) =>
+            !nextAssignedInstructors.some(
+              (assignment) => assignment.instructor_id === instructor.id,
+            ),
+        )?.id ?? "",
+      );
       setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
       setCollapsedLessonIds(
         new Set(
@@ -519,6 +526,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   };
 
   const primaryOffering = course?.course_editions[0] ?? null;
+  const availableInstructors = instructors.filter(
+    (instructor) =>
+      !assignedInstructors.some(
+        (assignment) => assignment.instructor_id === instructor.id,
+      ),
+  );
 
   return (
     <section className="page">
@@ -682,14 +695,18 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               <label>
                 Assign instructor
                 <select
-                  disabled={!isEditingCourse || instructors.length === 0}
+                  disabled={!isEditingCourse || availableInstructors.length === 0}
                   value={selectedInstructorId}
                   onChange={(event) => setSelectedInstructorId(event.target.value)}
                 >
-                  {instructors.length === 0 ? (
-                    <option value="">No active instructors</option>
+                  {availableInstructors.length === 0 ? (
+                    <option value="">
+                      {instructors.length === 0
+                        ? "No active instructors"
+                        : "All instructors assigned"}
+                    </option>
                   ) : null}
-                  {instructors.map((instructor) => (
+                  {availableInstructors.map((instructor) => (
                     <option key={instructor.id} value={instructor.id}>
                       {getProfileName(instructor)}
                     </option>
