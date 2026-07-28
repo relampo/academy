@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react";
 import {
+  CheckCircle2,
+  Circle,
+  Clock3,
+  File,
+  FileText,
+  Link,
+  Package,
+  PlayCircle,
+  Presentation,
+  type LucideIcon,
+} from "lucide-react";
+import {
   listCourseContent,
+  type Resource,
   type ModuleWithLessons,
 } from "../services/content";
 import {
@@ -22,11 +35,77 @@ const resourceTypeLabels: Record<string, string> = {
   report: "Report",
 };
 
+const resourceTypeIcons: Record<string, LucideIcon> = {
+  external_link: Link,
+  video: PlayCircle,
+  pdf: FileText,
+  slides: Presentation,
+  zip: Package,
+  script: File,
+  report: FileText,
+};
+
+function getResourceIcon(resourceType: string) {
+  return resourceTypeIcons[resourceType] ?? File;
+}
+
+function renderStudentResource(resource: Resource) {
+  const ResourceIcon = getResourceIcon(resource.resource_type);
+  const label = resourceTypeLabels[resource.resource_type] ?? resource.resource_type;
+  const content = (
+    <>
+      <ResourceIcon aria-hidden="true" size={16} strokeWidth={2.2} />
+      <span>{resource.title}</span>
+      <small>{label}</small>
+    </>
+  );
+
+  return resource.external_url ? (
+    <a
+      className="student-resource-chip"
+      href={resource.external_url}
+      key={resource.id}
+      rel="noreferrer"
+      target="_blank"
+    >
+      {content}
+    </a>
+  ) : (
+    <div className="student-resource-chip" key={resource.id}>
+      {content}
+    </div>
+  );
+}
+
 export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [course, setCourse] = useState<CourseWithEditions | null>(null);
   const [modules, setModules] = useState<ModuleWithLessons[]>([]);
+  const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const lessons = modules.flatMap((module) => module.lessons);
+  const completedCount = lessons.filter((lesson) =>
+    completedLessonIds.has(lesson.id),
+  ).length;
+  const progress =
+    lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
+
+  const toggleLessonComplete = (lessonId: string) => {
+    setCompletedLessonIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(lessonId)) {
+        next.delete(lessonId);
+      } else {
+        next.add(lessonId);
+      }
+
+      return next;
+    });
+  };
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -57,7 +136,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
 
   return (
     <section className="page">
-      <div className="page-header course-detail-header">
+      <div className="page-header course-detail-header student-course-header">
         <div>
           <p className="eyebrow">Course</p>
           <h1>{course?.title ?? "Course"}</h1>
@@ -77,73 +156,89 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         </section>
       ) : null}
 
-      <div className="content-tree">
+      {!isLoading && modules.length > 0 ? (
+        <section className="student-progress-panel">
+          <div>
+            <span>Progress</span>
+            <strong>{progress}%</strong>
+          </div>
+          <div className="student-progress-track">
+            <span style={{ width: `${progress}%` }} />
+          </div>
+          <p>
+            {completedCount} of {lessons.length} lessons completed
+          </p>
+        </section>
+      ) : null}
+
+      <div className="student-course-shell">
         {modules.map((module, moduleIndex) => (
-          <article className="module-block" key={module.id}>
-            <div className="module-heading">
+          <article className="student-module" key={module.id}>
+            <header className="student-module-header">
+              <span>Module {moduleIndex + 1}</span>
               <div>
-                <h2>
-                  Module {moduleIndex + 1}: <span>{module.title}</span>
-                </h2>
+                <h2>{module.title}</h2>
                 <p>{module.description || "No description yet."}</p>
               </div>
-            </div>
-            <div className="lesson-list">
+            </header>
+            <div className="student-lesson-list">
               {module.lessons.length === 0 ? (
                 <p className="tree-empty">No lessons in this module.</p>
               ) : null}
               {module.lessons.map((lesson, lessonIndex) => (
-                <div className="lesson-row" key={lesson.id}>
-                  <div className="lesson-heading">
+                <article className="student-lesson" key={lesson.id}>
+                  <header className="student-lesson-header">
+                    <button
+                      aria-label={
+                        completedLessonIds.has(lesson.id)
+                          ? "Mark lesson incomplete"
+                          : "Mark lesson complete"
+                      }
+                      className="student-complete-toggle"
+                      type="button"
+                      onClick={() => toggleLessonComplete(lesson.id)}
+                    >
+                      {completedLessonIds.has(lesson.id) ? (
+                        <CheckCircle2 aria-hidden="true" size={22} />
+                      ) : (
+                        <Circle aria-hidden="true" size={22} />
+                      )}
+                    </button>
                     <div>
-                      <strong>
-                        Lesson {lessonIndex + 1}: <span>{lesson.title}</span>
-                      </strong>
+                      <span>Lesson {lessonIndex + 1}</span>
+                      <h3>{lesson.title}</h3>
                     </div>
-                  </div>
-                  <div className="lesson-details">
+                    {lesson.duration_minutes ? (
+                      <span className="student-duration">
+                        <Clock3 aria-hidden="true" size={15} />
+                        {lesson.duration_minutes} min
+                      </span>
+                    ) : null}
+                  </header>
+                  <div className="student-lesson-body">
                     {lesson.description ? <span>{lesson.description}</span> : null}
                     {lesson.content ? <p>{lesson.content}</p> : null}
-                    <div className="mini-list">
-                      {lesson.duration_minutes ? (
-                        <span>{lesson.duration_minutes} min</span>
-                      ) : null}
-                      {lesson.video_url ? (
-                        <a href={lesson.video_url} rel="noreferrer" target="_blank">
-                          Video
-                        </a>
-                      ) : null}
-                    </div>
-                    {lesson.resources.length > 0 ? (
-                      <div className="resource-list">
+                    {lesson.video_url || lesson.resources.length > 0 ? (
+                      <div className="student-resource-list">
+                        {lesson.video_url ? (
+                          <a
+                            className="student-resource-chip"
+                            href={lesson.video_url}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            <PlayCircle aria-hidden="true" size={16} />
+                            <span>Lesson video</span>
+                            <small>Video</small>
+                          </a>
+                        ) : null}
                         {lesson.resources.map((resource) =>
-                          resource.external_url ? (
-                            <a
-                              href={resource.external_url}
-                              key={resource.id}
-                              rel="noreferrer"
-                              target="_blank"
-                            >
-                              <span>
-                                {resourceTypeLabels[resource.resource_type] ??
-                                  resource.resource_type}
-                              </span>
-                              {resource.title}
-                            </a>
-                          ) : (
-                            <div className="resource-item" key={resource.id}>
-                              <span>
-                                {resourceTypeLabels[resource.resource_type] ??
-                                  resource.resource_type}
-                              </span>
-                              {resource.title}
-                            </div>
-                          ),
+                          renderStudentResource(resource),
                         )}
                       </div>
                     ) : null}
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           </article>
