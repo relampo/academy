@@ -1082,7 +1082,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               </span>
                               <div>
                                 <strong>
-                                  Lecture {lessonIndex + 1}:{" "}
+                                  Lesson {lessonIndex + 1}:{" "}
                                   <span>{lesson.title}</span>
                                 </strong>
                               </div>

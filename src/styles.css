@@ -499,26 +499,25 @@ p {
 
 .content-tree {
   display: grid;
-  gap: 18px;
+  gap: 12px;
   margin-top: 18px;
-  border: 0;
-  border-radius: 0;
+  border-top: 1px solid #edf1f6;
   overflow: visible;
 }
 
 .module-block {
-  border: 1px solid #cbd5e1;
-  border-radius: 0;
-  background: #ffffff;
+  border: 0;
+  border-bottom: 1px solid #edf1f6;
+  background: transparent;
 }
 
 .module-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #f7f8fb;
-  padding: 16px 18px;
+  background: transparent;
+  padding: 16px 0;
 }
 
 .module-toggle {
@@ -537,8 +536,8 @@ p {
 
 .module-toggle > span {
   display: grid;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid #cbd5e1;
@@ -550,7 +549,7 @@ p {
 }
 
 .module-toggle h2 {
-  font-size: 1rem;
+  font-size: 1.02rem;
 }
 
 .module-toggle h2 span {
@@ -582,15 +581,28 @@ p {
 }
 
 .lesson-list {
+  position: relative;
   display: grid;
-  gap: 14px;
+  gap: 0;
   margin-top: 0;
-  padding: 14px 16px 18px 62px;
+  margin-left: 12px;
+  padding: 0 0 16px 34px;
+}
+
+.lesson-list::before {
+  position: absolute;
+  top: 4px;
+  bottom: 18px;
+  left: 11px;
+  width: 1px;
+  background: #d9e0ea;
+  content: "";
 }
 
 .lesson-row {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
+  border: 0;
+  border-top: 1px solid #edf1f6;
+  background: transparent;
   padding: 0;
 }
 
@@ -608,8 +620,8 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 14px;
-  min-height: 54px;
+  padding: 12px 0;
+  min-height: 48px;
 }
 
 .lesson-heading strong {
@@ -637,8 +649,8 @@ p {
 
 .lesson-toggle > span {
   display: grid;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid #cbd5e1;
@@ -661,8 +673,8 @@ p {
 
 .lesson-details {
   margin-top: 0;
-  border-top: 1px solid #d9e0ea;
-  padding: 14px 18px 18px 46px;
+  border-top: 0;
+  padding: 0 0 14px 32px;
 }
 
 .lesson-heading button,
@@ -927,13 +939,19 @@ p {
 
 .row-actions button {
   min-height: 36px;
-  border: 0;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  background: var(--brand);
-  color: var(--brand-text);
+  background: #ffffff;
+  color: #39465a;
   cursor: pointer;
   font-weight: 800;
   padding: 0 14px;
+}
+
+.module-heading .row-actions button:nth-child(2) {
+  border-color: transparent;
+  background: var(--brand);
+  color: var(--brand-text);
 }
 
 .row-actions .danger-action {
