@@ -497,22 +497,25 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                     </a>
                                   ) : null}
                                 </div>
-                                <button
-                                  className="secondary-action student-submit-action"
-                                  type="button"
-                                  onClick={() =>
-                                    startAssignmentSubmission(
-                                      lesson.id,
-                                      submission ?? null,
-                                    )
-                                  }
-                                >
-                                  {submission?.status === "needs_revision"
-                                    ? "Resubmit"
-                                    : submission
-                                      ? "Update"
-                                      : "Submit"}
-                                </button>
+                                {submission?.status === "reviewed" ||
+                                submission?.status === "needs_revision" ? (
+                                  <span className="student-assignment-locked">
+                                    Locked
+                                  </span>
+                                ) : (
+                                  <button
+                                    className="secondary-action student-submit-action"
+                                    type="button"
+                                    onClick={() =>
+                                      startAssignmentSubmission(
+                                        lesson.id,
+                                        submission ?? null,
+                                      )
+                                    }
+                                  >
+                                    {submission ? "Update" : "Submit"}
+                                  </button>
+                                )}
                               </div>
                             ) : (
                               <form

@@ -1539,6 +1539,18 @@ p {
   padding: 0 10px;
 }
 
+.student-assignment-locked {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 8px;
+  background: #eef3f8;
+  color: #526176;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 0 10px;
+}
+
 .student-resource-list {
   display: flex;
   flex-wrap: wrap;
