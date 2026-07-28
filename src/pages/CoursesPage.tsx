@@ -24,7 +24,7 @@ export function CoursesPage() {
       setError(null);
 
       try {
-        const nextEditions = await listPublishedCourseEditions();
+        const nextEditions = await listPublishedCourseEditions(user?.id);
         setEditions(nextEditions);
       } catch (caughtError) {
         setError(
@@ -38,7 +38,7 @@ export function CoursesPage() {
     };
 
     void loadEditions();
-  }, []);
+  }, [user?.id]);
 
   const handleRequestEnrollment = async (courseEditionId: string) => {
     if (!user) {
@@ -52,7 +52,7 @@ export function CoursesPage() {
     try {
       await requestEnrollment(courseEditionId, user.id);
       setMessage("Enrollment requested.");
-      const nextEditions = await listPublishedCourseEditions();
+      const nextEditions = await listPublishedCourseEditions(user.id);
       setEditions(nextEditions);
     } catch (caughtError) {
       setError(

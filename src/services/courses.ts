@@ -118,7 +118,7 @@ export async function getCourseWithEditions(courseId: string) {
   return data as CourseWithEditions;
 }
 
-export async function listPublishedCourseEditions() {
+export async function listPublishedCourseEditions(studentId?: string) {
   const { data, error } = await supabase
     .from("course_editions")
     .select("*, courses(*), enrollments(*)")
@@ -129,7 +129,18 @@ export async function listPublishedCourseEditions() {
     throw error;
   }
 
-  return data as PublishedEditionWithCourseAndEnrollment[];
+  const editions = data as PublishedEditionWithCourseAndEnrollment[];
+
+  if (!studentId) {
+    return editions.map((edition) => ({ ...edition, enrollments: [] }));
+  }
+
+  return editions.map((edition) => ({
+    ...edition,
+    enrollments: edition.enrollments.filter(
+      (enrollment) => enrollment.student_id === studentId,
+    ),
+  }));
 }
 
 export async function createCourse(input: CreateCourseInput) {
