@@ -131,18 +131,53 @@ export async function listPublishedCourseEditions(studentId?: string) {
     throw error;
   }
 
-  const editions = data as PublishedEditionWithCourseAndEnrollment[];
+  const editions = (data as PublishedEditionWithCourseAndEnrollment[]).map((edition) => ({
+    ...edition,
+    enrollments: studentId
+      ? edition.enrollments.filter(
+          (enrollment) => enrollment.student_id === studentId,
+        )
+      : [],
+  }));
 
-  if (!studentId) {
-    return editions.map((edition) => ({ ...edition, enrollments: [] }));
+  return Array.from(
+    editions
+      .reduce((courseMap, edition) => {
+        const courseId = edition.course_id;
+        const currentEdition = courseMap.get(courseId);
+
+        if (!currentEdition || shouldPreferCourseOffering(edition, currentEdition)) {
+          courseMap.set(courseId, edition);
+        }
+
+        return courseMap;
+      }, new Map<string, PublishedEditionWithCourseAndEnrollment>())
+      .values(),
+  );
+}
+
+function shouldPreferCourseOffering(
+  nextEdition: PublishedEditionWithCourseAndEnrollment,
+  currentEdition: PublishedEditionWithCourseAndEnrollment,
+) {
+  const nextHasEnrollment = nextEdition.enrollments.length > 0;
+  const currentHasEnrollment = currentEdition.enrollments.length > 0;
+
+  if (nextHasEnrollment !== currentHasEnrollment) {
+    return nextHasEnrollment;
   }
 
-  return editions.map((edition) => ({
-    ...edition,
-    enrollments: edition.enrollments.filter(
-      (enrollment) => enrollment.student_id === studentId,
-    ),
-  }));
+  const nextIsOpen =
+    nextEdition.status === "published" && nextEdition.enrollment_open;
+  const currentIsOpen =
+    currentEdition.status === "published" && currentEdition.enrollment_open;
+
+  if (nextIsOpen !== currentIsOpen) {
+    return nextIsOpen;
+  }
+
+  return new Date(nextEdition.created_at).getTime() >
+    new Date(currentEdition.created_at).getTime();
 }
 
 export async function createCourse(input: CreateCourseInput) {
