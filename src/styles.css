@@ -537,7 +537,7 @@ p {
 .module-toggle {
   display: flex;
   flex: 1;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   min-width: 0;
   border: 0;
@@ -657,7 +657,7 @@ p {
 .lesson-toggle {
   display: flex;
   flex: 1;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   min-width: 0;
   border: 0;
