@@ -393,15 +393,19 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                     const assignmentStatusClass =
                       submission?.status === "reviewed"
                         ? "is-confirmed"
-                        : submission
-                          ? "is-submitted"
-                          : "";
+                        : submission?.status === "needs_revision"
+                          ? "is-needs-revision"
+                          : submission
+                            ? "is-submitted"
+                            : "";
                     const assignmentStatusLabel =
                       submission?.status === "reviewed"
                         ? "Assignment reviewed"
-                        : submission
-                          ? "Assignment submitted"
-                          : "Assignment pending";
+                        : submission?.status === "needs_revision"
+                          ? "Assignment needs revision"
+                          : submission
+                            ? "Assignment submitted"
+                            : "Assignment pending";
 
                     return (
                     <article
@@ -483,6 +487,15 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               <div className="student-assignment-side">
                                 <div className="student-assignment-meta">
                                   <span>{assignment.assignment_type}</span>
+                                  {submission?.submission_url ? (
+                                    <a
+                                      href={submission.submission_url}
+                                      rel="noreferrer"
+                                      target="_blank"
+                                    >
+                                      Submitted link
+                                    </a>
+                                  ) : null}
                                 </div>
                                 <button
                                   className="secondary-action student-submit-action"

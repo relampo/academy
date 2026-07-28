@@ -1416,6 +1416,11 @@ p {
   color: #7a5a00;
 }
 
+.student-status-row .is-needs-revision {
+  background: #fff0ed;
+  color: #8f2f23;
+}
+
 .student-assignment-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1479,7 +1484,8 @@ p {
   gap: 8px;
 }
 
-.student-assignment-meta span {
+.student-assignment-meta span,
+.student-assignment-meta a {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
@@ -1489,6 +1495,13 @@ p {
   font-size: 0.75rem;
   font-weight: 900;
   padding: 0 9px;
+  text-decoration: none;
+}
+
+.student-assignment-meta a {
+  border: 1px solid #d9e0ea;
+  background: #ffffff;
+  color: #8a6900;
 }
 
 .student-assignment-form {
