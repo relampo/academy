@@ -9,7 +9,6 @@ import {
   type ModuleWithLessons,
 } from "../services/content";
 import {
-  duplicateCourse,
   getCourseWithEditions,
   slugify,
   updateCourse,
@@ -104,7 +103,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     () => new Set(),
   );
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
-  const [isDuplicating, setIsDuplicating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -499,26 +497,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setPendingDelete(null);
   };
 
-  const handleDuplicateCourse = async () => {
-    setError(null);
-    setMessage(null);
-    setIsDuplicating(true);
-
-    try {
-      const copiedCourse = await duplicateCourse(courseId);
-      setMessage(`Duplicated "${copiedCourse.title}".`);
-      window.location.hash = `/admin/courses/${copiedCourse.id}`;
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Could not duplicate course.",
-      );
-    } finally {
-      setIsDuplicating(false);
-    }
-  };
-
   const primaryOffering = course?.course_editions[0] ?? null;
 
   return (
@@ -571,13 +549,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </button>
                   </>
                 )}
-                <button
-                  type="button"
-                  disabled={isDuplicating}
-                  onClick={() => void handleDuplicateCourse()}
-                >
-                  {isDuplicating ? "Duplicating..." : "Duplicate"}
-                </button>
                 <button
                   className="danger-action"
                   type="button"

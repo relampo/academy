@@ -789,6 +789,34 @@ p {
   gap: 12px;
 }
 
+.course-admin-grid {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.course-create-panel {
+  position: sticky;
+  top: 24px;
+}
+
+.course-inventory-panel {
+  min-width: 0;
+}
+
+.compact-course-form {
+  gap: 12px;
+}
+
+.compact-course-form textarea {
+  min-height: 72px;
+}
+
+.compact-course-form button {
+  margin-top: 2px;
+}
+
 .course-row {
   display: flex;
   align-items: center;
@@ -1138,6 +1166,14 @@ p {
 
   .split-grid {
     grid-template-columns: 1fr;
+  }
+
+  .course-admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .course-create-panel {
+    position: static;
   }
 
   .course-overview-grid {

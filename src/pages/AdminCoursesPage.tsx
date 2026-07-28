@@ -112,26 +112,29 @@ export function AdminCoursesPage() {
       {error ? <p className="form-message error">{error}</p> : null}
       {message ? <p className="form-message success">{message}</p> : null}
 
-      <section className="content-panel compact">
-        <h2>Create course</h2>
-        <form className="stacked-form" onSubmit={handleCreateCourse}>
-          <label>
-            Title
-            <input
-              required
-              type="text"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-            />
-          </label>
-          <label>
-            Short description
-            <textarea
-              value={shortDescription}
-              onChange={(event) => setShortDescription(event.target.value)}
-            />
-          </label>
-          <div className="form-grid">
+      <div className="course-admin-grid">
+        <section className="content-panel compact-panel course-create-panel">
+          <h2>Create course</h2>
+          <form
+            className="stacked-form compact-course-form"
+            onSubmit={handleCreateCourse}
+          >
+            <label>
+              Title
+              <input
+                required
+                type="text"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+              />
+            </label>
+            <label>
+              Short description
+              <textarea
+                value={shortDescription}
+                onChange={(event) => setShortDescription(event.target.value)}
+              />
+            </label>
             <label>
               Status
               <select
@@ -154,56 +157,58 @@ export function AdminCoursesPage() {
               />
               Enrollment open
             </label>
-          </div>
-          <button type="submit" disabled={isSubmitting}>
-            Create course
-          </button>
-        </form>
-      </section>
+            <button type="submit" disabled={isSubmitting}>
+              Create course
+            </button>
+          </form>
+        </section>
 
-      <section className="content-panel">
-        <h2>Course inventory</h2>
-        {isLoading ? <p>Loading courses...</p> : null}
-        {!isLoading && courses.length === 0 ? <p>No courses created yet.</p> : null}
-        <div className="course-list">
-          {courses.map((course) => {
-            const offering = course.course_editions[0];
+        <section className="content-panel course-inventory-panel">
+          <h2>Course inventory</h2>
+          {isLoading ? <p>Loading courses...</p> : null}
+          {!isLoading && courses.length === 0 ? <p>No courses created yet.</p> : null}
+          <div className="course-list">
+            {courses.map((course) => {
+              const offering = course.course_editions[0];
 
-            return (
-              <article className="course-row" key={course.id}>
-                <div>
-                  <h2>{course.title}</h2>
-                  <p>{course.short_description || "No description yet."}</p>
-                  <div className="mini-list">
-                    <span>{course.status}</span>
-                    <span>
-                      {offering?.enrollment_open
-                        ? "Enrollment open"
-                        : "Enrollment closed"}
-                    </span>
-                    {offering?.capacity ? (
-                      <span>{offering.capacity} seats</span>
-                    ) : null}
+              return (
+                <article className="course-row" key={course.id}>
+                  <div>
+                    <h2>{course.title}</h2>
+                    <p>{course.short_description || "No description yet."}</p>
+                    <div className="mini-list">
+                      <span>{course.status}</span>
+                      <span>
+                        {offering?.enrollment_open
+                          ? "Enrollment open"
+                          : "Enrollment closed"}
+                      </span>
+                      {offering?.capacity ? (
+                        <span>{offering.capacity} seats</span>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-                <div className="row-actions">
-                  <button
-                    className="secondary-action"
-                    type="button"
-                    disabled={duplicatingCourseId === course.id}
-                    onClick={() => void handleDuplicateCourse(course.id)}
-                  >
-                    {duplicatingCourseId === course.id ? "Duplicating..." : "Duplicate"}
-                  </button>
-                  <a className="action-link" href={`#/admin/courses/${course.id}`}>
-                    Open
-                  </a>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </section>
+                  <div className="row-actions">
+                    <button
+                      className="secondary-action"
+                      type="button"
+                      disabled={duplicatingCourseId === course.id}
+                      onClick={() => void handleDuplicateCourse(course.id)}
+                    >
+                      {duplicatingCourseId === course.id
+                        ? "Duplicating..."
+                        : "Duplicate"}
+                    </button>
+                    <a className="action-link" href={`#/admin/courses/${course.id}`}>
+                      Open
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      </div>
     </section>
   );
 }
