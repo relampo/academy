@@ -6,7 +6,11 @@ import {
   FileText,
   Link,
   Package,
+  Paperclip,
+  Pencil,
   Presentation,
+  Plus,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -1097,11 +1101,18 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       <p>{module.description || "No description yet."}</p>
                     </div>
                   </button>
-                  <div className="row-actions">
-                    <button type="button" onClick={() => startEditModule(module)}>
-                      Edit
+                  <div className="row-actions curriculum-actions">
+                    <button
+                      aria-label="Edit module"
+                      title="Edit module"
+                      type="button"
+                      onClick={() => startEditModule(module)}
+                    >
+                      <Pencil aria-hidden="true" size={17} strokeWidth={2.2} />
                     </button>
                     <button
+                      aria-label="Add lesson"
+                      title="Add lesson"
                       type="button"
                       onClick={() => {
                         setLessonModuleId(module.id);
@@ -1115,10 +1126,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                         );
                       }}
                     >
-                      Add lesson
+                      <Plus aria-hidden="true" size={18} strokeWidth={2.2} />
                     </button>
                     <button
                       className="danger-action"
+                      aria-label="Delete module"
+                      title="Delete module"
                       type="button"
                       disabled={isSubmitting || module.status === "archived"}
                       onClick={() =>
@@ -1128,7 +1141,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                         })
                       }
                     >
-                      Delete
+                      <Trash2 aria-hidden="true" size={17} strokeWidth={2.2} />
                     </button>
                   </div>
                 </div>
@@ -1261,13 +1274,21 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                             </button>
                             <div className="lesson-actions">
                               <button
+                                aria-label="Edit lesson"
+                                title="Edit lesson"
                                 type="button"
                                 onClick={() => startEditLesson(lesson)}
                               >
-                                Edit
+                                <Pencil
+                                  aria-hidden="true"
+                                  size={17}
+                                  strokeWidth={2.2}
+                                />
                               </button>
                               <button
                                 className="subtle-action"
+                                aria-label="Add resource"
+                                title="Add resource"
                                 type="button"
                                 onClick={() => {
                                   setResourceLessonId(lesson.id);
@@ -1283,12 +1304,20 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                   );
                                 }}
                               >
-                                Add resource
+                                <Paperclip
+                                  aria-hidden="true"
+                                  size={17}
+                                  strokeWidth={2.2}
+                                />
                               </button>
                               <button
                                 className="danger-action"
+                                aria-label="Delete lesson"
+                                title="Delete lesson"
                                 type="button"
-                                disabled={isSubmitting || lesson.status === "archived"}
+                                disabled={
+                                  isSubmitting || lesson.status === "archived"
+                                }
                                 onClick={() =>
                                   setPendingDelete({
                                     type: "lesson",
@@ -1296,7 +1325,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                   })
                                 }
                               >
-                                Delete
+                                <Trash2
+                                  aria-hidden="true"
+                                  size={17}
+                                  strokeWidth={2.2}
+                                />
                               </button>
                             </div>
                           </div>

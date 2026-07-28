@@ -771,6 +771,58 @@ p {
   color: #8f2f23;
 }
 
+.curriculum-actions,
+.lesson-actions {
+  gap: 8px;
+}
+
+.curriculum-actions button,
+.lesson-actions button {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  place-items: center;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #526176;
+  padding: 0;
+}
+
+.module-heading .curriculum-actions button:nth-child(2),
+.lesson-actions .subtle-action {
+  border-color: #d9e0ea;
+  background: #ffffff;
+  color: #8a6900;
+}
+
+.curriculum-actions .danger-action,
+.lesson-actions .danger-action {
+  border-color: #ead0cb;
+  background: #ffffff;
+  color: #8f2f23;
+}
+
+.curriculum-actions button:hover,
+.curriculum-actions button:focus-visible,
+.lesson-actions button:hover,
+.lesson-actions button:focus-visible {
+  border-color: #d8bd3d;
+  background: #fff8db;
+  color: #5f4700;
+  outline: none;
+}
+
+.curriculum-actions .danger-action:hover,
+.curriculum-actions .danger-action:focus-visible,
+.lesson-actions .danger-action:hover,
+.lesson-actions .danger-action:focus-visible {
+  border-color: #e5b6ad;
+  background: #fff5f3;
+  color: #8f2f23;
+}
+
 .lesson-heading .subtle-action:hover,
 .lesson-heading .subtle-action:focus-visible {
   background: var(--brand-soft);
@@ -1067,9 +1119,38 @@ p {
   color: var(--brand-text);
 }
 
+.module-heading .curriculum-actions button:nth-child(2) {
+  border-color: #d9e0ea;
+  background: #ffffff;
+  color: #8a6900;
+}
+
 .row-actions .danger-action {
   border: 1px solid #e5b6ad;
   background: #ffffff;
+  color: #8f2f23;
+}
+
+.module-heading .curriculum-actions button {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  place-items: center;
+  border-color: #d9e0ea;
+  background: #ffffff;
+  color: #526176;
+  padding: 0;
+}
+
+.module-heading .curriculum-actions button:nth-child(2) {
+  border-color: #d9e0ea;
+  background: #ffffff;
+  color: #8a6900;
+}
+
+.module-heading .curriculum-actions .danger-action {
+  border-color: #ead0cb;
   color: #8f2f23;
 }
 
