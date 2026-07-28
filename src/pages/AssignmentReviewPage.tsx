@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Check, ExternalLink, RotateCcw } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import {
   listAssignmentReviewItems,
@@ -24,9 +25,13 @@ function getStudentName(submission: AssignmentReviewItem) {
   );
 }
 
+const pageSize = 20;
+
 export function AssignmentReviewPage() {
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState<AssignmentReviewItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [pointsBySubmission, setPointsBySubmission] = useState<
     Record<string, string>
   >({});
@@ -115,6 +120,30 @@ export function AssignmentReviewPage() {
     }
   };
 
+  const filteredSubmissions = submissions.filter((submission) => {
+    const assignment = submission.lesson_assignments;
+    const lesson = assignment?.lessons;
+    const searchableText = [
+      assignment?.title,
+      lesson?.title,
+      lesson?.modules?.title,
+      getStudentName(submission),
+      submission.status,
+      submission.notes,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(searchTerm.trim().toLowerCase());
+  });
+  const pageCount = Math.max(1, Math.ceil(filteredSubmissions.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, pageCount);
+  const paginatedSubmissions = filteredSubmissions.slice(
+    (safeCurrentPage - 1) * pageSize,
+    safeCurrentPage * pageSize,
+  );
+
   return (
     <section className="page">
       <div className="page-header">
@@ -135,23 +164,38 @@ export function AssignmentReviewPage() {
               <p className="eyebrow">Review</p>
               <h2>Student submissions</h2>
             </div>
+            <label className="assignment-search">
+              <span>Search</span>
+              <input
+                placeholder="Student, lesson or status"
+                type="search"
+                value={searchTerm}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </label>
           </div>
 
           {submissions.length === 0 ? (
             <p>No assignment submissions yet.</p>
+          ) : filteredSubmissions.length === 0 ? (
+            <p>No submissions match your search.</p>
           ) : (
-            <div className="assignment-review-list">
-              {submissions.map((submission) => {
+            <>
+            <div className="assignment-review-grid">
+              {paginatedSubmissions.map((submission) => {
                 const assignment = submission.lesson_assignments;
                 const lesson = assignment?.lessons;
 
                 return (
                   <article
-                    className="assignment-review-row"
+                    className={`assignment-review-card is-${submission.status}`}
                     key={submission.id}
                   >
                     <div>
-                      <div className="mini-list">
+                      <div className="assignment-card-meta">
                         <span>{formatStatus(submission.status)}</span>
                         {lesson?.modules?.title ? (
                           <span>{lesson.modules.title}</span>
@@ -164,12 +208,17 @@ export function AssignmentReviewPage() {
                       </p>
                       {submission.submission_url ? (
                         <a
-                          className="text-link"
+                          className="assignment-open-link"
                           href={submission.submission_url}
                           rel="noreferrer"
                           target="_blank"
                         >
-                          Open submission
+                          <ExternalLink
+                            aria-hidden="true"
+                            size={14}
+                            strokeWidth={2.4}
+                          />
+                          Open
                         </a>
                       ) : null}
                       {submission.notes ? <p>{submission.notes}</p> : null}
@@ -195,6 +244,7 @@ export function AssignmentReviewPage() {
                         type="button"
                         onClick={() => void handleReview(submission, "reviewed")}
                       >
+                        <Check aria-hidden="true" size={15} strokeWidth={2.5} />
                         Approve
                       </button>
                       <button
@@ -205,13 +255,47 @@ export function AssignmentReviewPage() {
                           void handleReview(submission, "needs_revision")
                         }
                       >
-                        Needs revision
+                        <RotateCcw
+                          aria-hidden="true"
+                          size={15}
+                          strokeWidth={2.4}
+                        />
+                        Revision
                       </button>
                     </div>
                   </article>
                 );
               })}
             </div>
+            <div className="assignment-pagination">
+              <span>
+                {filteredSubmissions.length} submissions · page{" "}
+                {safeCurrentPage} of {pageCount}
+              </span>
+              <div>
+                <button
+                  disabled={safeCurrentPage === 1}
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((current) => Math.max(1, current - 1))
+                  }
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={safeCurrentPage === pageCount}
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((current) =>
+                      Math.min(pageCount, current + 1),
+                    )
+                  }
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+            </>
           )}
         </section>
       ) : null}

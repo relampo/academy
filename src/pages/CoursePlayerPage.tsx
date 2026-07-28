@@ -528,7 +528,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               </form>
                             ) : (
                               <button
-                                className="secondary-action"
+                                className="secondary-action student-submit-action"
                                 type="button"
                                 onClick={() =>
                                   startAssignmentSubmission(
