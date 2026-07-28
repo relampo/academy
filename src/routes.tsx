@@ -2,11 +2,11 @@ import type { ComponentType } from "react";
 import { AdminCoursesPage } from "./pages/AdminCoursesPage";
 import { AdminSettingsPage } from "./pages/AdminSettingsPage";
 import { AdminUsersPage } from "./pages/AdminUsersPage";
-import { AssignmentsPage } from "./pages/AssignmentsPage";
 import { CoursesPage } from "./pages/CoursesPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { EnrollmentReviewPage } from "./pages/EnrollmentReviewPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { TeachingCoursesPage } from "./pages/TeachingCoursesPage";
 import type { Enums } from "./types/database.types";
 
 export type UserRole = Enums<"user_role">;
@@ -50,8 +50,8 @@ export const appRoutes: AppRoute[] = [
   },
   {
     path: "/assignments",
-    label: "Assignments",
-    Component: AssignmentsPage,
+    label: "Teaching",
+    Component: TeachingCoursesPage,
     allowedRoles: ["admin", "instructor"],
     navGroup: "instructor",
   },
