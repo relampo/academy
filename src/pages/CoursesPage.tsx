@@ -96,6 +96,8 @@ export function CoursesPage() {
           const buttonLabel = enrollment
             ? canRequestAgain
               ? "Request again"
+              : enrollment.status === "approved"
+                ? "Start"
               : enrollment.status
             : "Enroll";
 
@@ -120,15 +122,21 @@ export function CoursesPage() {
               </div>
               <div className="row-actions">
                 <span className="status-chip">{edition.status}</span>
-                <button
-                  type="button"
-                  disabled={!canRequest || requestingEditionId === edition.id}
-                  onClick={() => void handleRequestEnrollment(edition.id)}
-                >
-                  {requestingEditionId === edition.id
-                    ? "Requesting..."
-                    : buttonLabel}
-                </button>
+                {enrollment?.status === "approved" && edition.courses ? (
+                  <a className="action-link" href={`#/courses/${edition.courses.id}`}>
+                    Start
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={!canRequest || requestingEditionId === edition.id}
+                    onClick={() => void handleRequestEnrollment(edition.id)}
+                  >
+                    {requestingEditionId === edition.id
+                      ? "Requesting..."
+                      : buttonLabel}
+                  </button>
+                )}
               </div>
             </article>
           );

@@ -3,6 +3,7 @@ import { BrandMark } from "./components/BrandMark";
 import { AppLayout } from "./layouts/AppLayout";
 import { useAuth } from "./hooks/useAuth";
 import { AdminCourseDetailPage } from "./pages/AdminCourseDetailPage";
+import { CoursePlayerPage } from "./pages/CoursePlayerPage";
 import { LoginPage } from "./pages/LoginPage";
 import { UnauthorizedPage } from "./pages/UnauthorizedPage";
 import { getRoute, type AppRoute, type UserRole } from "./routes";
@@ -15,6 +16,7 @@ function getHashPath() {
 type DynamicRoute = {
   allowedRoles: UserRole[];
   element: ReactNode;
+  navPath: string;
 };
 
 function renderDynamicRoute(path: string): DynamicRoute | null {
@@ -24,6 +26,17 @@ function renderDynamicRoute(path: string): DynamicRoute | null {
     return {
       allowedRoles: ["admin"],
       element: <AdminCourseDetailPage courseId={adminCourseMatch[1]} />,
+      navPath: "/admin/courses",
+    };
+  }
+
+  const courseMatch = path.match(/^\/courses\/([^/]+)$/);
+
+  if (courseMatch?.[1]) {
+    return {
+      allowedRoles: ["admin", "instructor", "student"],
+      element: <CoursePlayerPage courseId={courseMatch[1]} />,
+      navPath: "/courses",
     };
   }
 
@@ -90,7 +103,7 @@ export function App() {
     }
 
     if ("element" in route) {
-      return <AppLayout currentPath="/admin/courses">{route.element}</AppLayout>;
+      return <AppLayout currentPath={route.navPath}>{route.element}</AppLayout>;
     }
 
     const Page = route.Component;
