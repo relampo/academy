@@ -18,7 +18,6 @@ import {
 import type { Enums } from "../types/database.types";
 
 type CourseStatus = Enums<"course_status">;
-type LessonStatus = Enums<"lesson_status">;
 
 const resourceTypeLabels: Record<string, string> = {
   external_link: "External link",
@@ -68,14 +67,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     useState(false);
   const [moduleTitle, setModuleTitle] = useState("");
   const [moduleDescription, setModuleDescription] = useState("");
-  const [moduleStatus, setModuleStatus] = useState<LessonStatus>("draft");
   const [lessonModuleId, setLessonModuleId] = useState("");
   const [lessonTitle, setLessonTitle] = useState("");
   const [lessonDescription, setLessonDescription] = useState("");
   const [lessonContent, setLessonContent] = useState("");
   const [lessonVideoUrl, setLessonVideoUrl] = useState("");
   const [lessonDuration, setLessonDuration] = useState("");
-  const [lessonStatus, setLessonStatus] = useState<LessonStatus>("draft");
   const [resourceLessonId, setResourceLessonId] = useState("");
   const [resourceTitle, setResourceTitle] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
@@ -90,8 +87,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
   const [editingModuleTitle, setEditingModuleTitle] = useState("");
   const [editingModuleDescription, setEditingModuleDescription] = useState("");
-  const [editingModuleStatus, setEditingModuleStatus] =
-    useState<LessonStatus>("draft");
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -284,12 +279,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         title: moduleTitle,
         description: moduleDescription || null,
         position: nextPosition,
-        status: moduleStatus,
+        status: "published",
       });
 
       setModuleTitle("");
       setModuleDescription("");
-      setModuleStatus("draft");
       setIsAddingModule(false);
       setMessage("Module created.");
       await loadCourse();
@@ -325,7 +319,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         video_url: lessonVideoUrl || null,
         duration_minutes: lessonDuration ? Number(lessonDuration) : null,
         position: nextPosition,
-        status: lessonStatus,
+        status: "published",
       });
 
       setLessonTitle("");
@@ -333,7 +327,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setLessonContent("");
       setLessonVideoUrl("");
       setLessonDuration("");
-      setLessonStatus("draft");
       setActiveLessonModuleId(null);
       setMessage("Lesson created.");
       await loadCourse();
@@ -418,7 +411,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setEditingModuleId(module.id);
     setEditingModuleTitle(module.title);
     setEditingModuleDescription(module.description ?? "");
-    setEditingModuleStatus(module.status);
     setCollapsedModuleIds((current) => {
       const next = new Set(current);
       next.delete(module.id);
@@ -441,7 +433,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       await updateModule(editingModuleId, {
         title: editingModuleTitle,
         description: editingModuleDescription || null,
-        status: editingModuleStatus,
       });
 
       setEditingModuleId(null);
@@ -702,29 +693,14 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               className="inline-builder-form module-form"
               onSubmit={handleCreateModule}
             >
-              <div className="form-grid">
-                <label>
-                  Module title
-                  <input
-                    required
-                    value={moduleTitle}
-                    onChange={(event) => setModuleTitle(event.target.value)}
-                  />
-                </label>
-                <label>
-                  Status
-                  <select
-                    value={moduleStatus}
-                    onChange={(event) =>
-                      setModuleStatus(event.target.value as LessonStatus)
-                    }
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="hidden">Hidden</option>
-                  </select>
-                </label>
-              </div>
+              <label>
+                Module title
+                <input
+                  required
+                  value={moduleTitle}
+                  onChange={(event) => setModuleTitle(event.target.value)}
+                />
+              </label>
               <label>
                 Description
                 <textarea
@@ -773,7 +749,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </div>
                   </button>
                   <div className="row-actions">
-                    <span className="status-chip">{module.status}</span>
                     <button type="button" onClick={() => startEditModule(module)}>
                       Edit
                     </button>
@@ -813,33 +788,16 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     className="inline-builder-form module-edit-form"
                     onSubmit={handleUpdateModule}
                   >
-                    <div className="form-grid">
-                      <label>
-                        Module title
-                        <input
-                          required
-                          value={editingModuleTitle}
-                          onChange={(event) =>
-                            setEditingModuleTitle(event.target.value)
-                          }
-                        />
-                      </label>
-                      <label>
-                        Status
-                        <select
-                          value={editingModuleStatus}
-                          onChange={(event) =>
-                            setEditingModuleStatus(
-                              event.target.value as LessonStatus,
-                            )
-                          }
-                        >
-                          <option value="draft">Draft</option>
-                          <option value="published">Published</option>
-                          <option value="hidden">Hidden</option>
-                        </select>
-                      </label>
-                    </div>
+                    <label>
+                      Module title
+                      <input
+                        required
+                        value={editingModuleTitle}
+                        onChange={(event) =>
+                          setEditingModuleTitle(event.target.value)
+                        }
+                      />
+                    </label>
                     <label>
                       Description
                       <textarea
@@ -915,19 +873,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                         />
                       </label>
                     </div>
-                    <label>
-                      Status
-                      <select
-                        value={lessonStatus}
-                        onChange={(event) =>
-                          setLessonStatus(event.target.value as LessonStatus)
-                        }
-                      >
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                        <option value="hidden">Hidden</option>
-                      </select>
-                    </label>
                     <div className="inline-actions">
                       <button type="submit" disabled={isSubmitting}>
                         Save lesson
@@ -991,7 +936,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 {lesson.description || "No description yet."}
                               </span>
                               <div className="mini-list">
-                                <span>{lesson.status}</span>
                                 {lesson.duration_minutes ? (
                                   <span>{lesson.duration_minutes} min</span>
                                 ) : null}
@@ -1043,7 +987,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 </label>
                               </div>
                               <label>
-                                External URL
+                                External URL optional
                                 <input
                                   type="url"
                                   value={resourceUrl}
