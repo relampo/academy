@@ -661,6 +661,9 @@ p {
 
 .lesson-heading button,
 .secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 36px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
@@ -669,6 +672,7 @@ p {
   cursor: pointer;
   font-weight: 800;
   padding: 0 12px;
+  text-decoration: none;
 }
 
 .lesson-heading .lesson-toggle {
