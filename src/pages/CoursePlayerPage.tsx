@@ -5,6 +5,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   Circle,
+  CircleHelp,
   Clock3,
   File,
   FileText,
@@ -18,16 +19,22 @@ import {
   listLessonAttendance,
   listLessonAssignments,
   listLessonProgress,
+  listLessonQuizzes,
   listAssignmentSubmissionsByAssignmentIds,
   listCourseContent,
+  listQuizAttemptsByQuizIds,
   markLessonViewed,
   submitAssignment,
+  submitQuizAttempt,
   unmarkLessonViewed,
   type AssignmentSubmission,
   type LessonAttendance,
   type LessonAssignment,
+  type LessonQuizWithQuestions,
   type Resource,
   type ModuleWithLessons,
+  type QuizAnswerInput,
+  type QuizAttempt,
 } from "../services/content";
 import {
   getCourseWithEditions,
@@ -107,6 +114,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [assignmentSubmissions, setAssignmentSubmissions] = useState<
     AssignmentSubmission[]
   >([]);
+  const [quizzes, setQuizzes] = useState<LessonQuizWithQuestions[]>([]);
+  const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -119,6 +128,14 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [savingAssignmentId, setSavingAssignmentId] = useState<string | null>(
     null,
   );
+  const [activeQuizLessonId, setActiveQuizLessonId] = useState<string | null>(
+    null,
+  );
+  const [activeQuizQuestionIndex, setActiveQuizQuestionIndex] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState<QuizAnswerInput[]>([]);
+  const [selectedQuizOption, setSelectedQuizOption] = useState("");
+  const [questionStartedAt, setQuestionStartedAt] = useState<number | null>(null);
+  const [savingQuizId, setSavingQuizId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -139,6 +156,10 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       submission.assignment_id,
       submission,
     ]),
+  );
+  const quizByLesson = new Map(quizzes.map((quiz) => [quiz.lesson_id, quiz]));
+  const attemptByQuiz = new Map(
+    quizAttempts.map((attempt) => [attempt.quiz_id, attempt]),
   );
 
   const toggleLessonComplete = async (lessonId: string) => {
@@ -256,6 +277,69 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     }
   };
 
+  const startQuiz = (lessonId: string) => {
+    setActiveQuizLessonId(lessonId);
+    setActiveQuizQuestionIndex(0);
+    setQuizAnswers([]);
+    setSelectedQuizOption("");
+    setQuestionStartedAt(Date.now());
+  };
+
+  const handleQuizAnswer = async (quiz: LessonQuizWithQuestions) => {
+    if (!user || !selectedQuizOption || questionStartedAt === null) {
+      return;
+    }
+
+    const question = quiz.quiz_questions[activeQuizQuestionIndex];
+    const nextAnswers = [
+      ...quizAnswers,
+      {
+        questionId: question.id,
+        selectedOption: selectedQuizOption,
+        secondsSpent: (Date.now() - questionStartedAt) / 1000,
+      },
+    ];
+    const nextQuestionIndex = activeQuizQuestionIndex + 1;
+
+    if (nextQuestionIndex < quiz.quiz_questions.length) {
+      setQuizAnswers(nextAnswers);
+      setActiveQuizQuestionIndex(nextQuestionIndex);
+      setSelectedQuizOption("");
+      setQuestionStartedAt(Date.now());
+      return;
+    }
+
+    setSavingQuizId(quiz.id);
+    setError(null);
+
+    try {
+      const attempt = await submitQuizAttempt({
+        quiz,
+        studentId: user.id,
+        answers: nextAnswers,
+      });
+
+      setQuizAttempts((current) => {
+        const withoutCurrent = current.filter(
+          (currentAttempt) => currentAttempt.quiz_id !== quiz.id,
+        );
+        return [...withoutCurrent, attempt];
+      });
+      setActiveQuizLessonId(null);
+      setQuizAnswers([]);
+      setSelectedQuizOption("");
+      setQuestionStartedAt(null);
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Could not submit quiz.",
+      );
+    } finally {
+      setSavingQuizId(null);
+    }
+  };
+
   useEffect(() => {
     const loadCourse = async () => {
       setError(null);
@@ -275,9 +359,16 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         const nextAssignments = await listLessonAssignments(courseId).catch(
           () => [],
         );
+        const nextQuizzes = await listLessonQuizzes(courseId).catch(() => []);
         const nextAssignmentSubmissions = user
           ? await listAssignmentSubmissionsByAssignmentIds(
               nextAssignments.map((assignment) => assignment.id),
+              user.id,
+            ).catch(() => [])
+          : [];
+        const nextQuizAttempts = user
+          ? await listQuizAttemptsByQuizIds(
+              nextQuizzes.map((quiz) => quiz.id),
               user.id,
             ).catch(() => [])
           : [];
@@ -290,6 +381,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         setAttendance(nextAttendance);
         setAssignments(nextAssignments);
         setAssignmentSubmissions(nextAssignmentSubmissions);
+        setQuizzes(nextQuizzes);
+        setQuizAttempts(nextQuizAttempts);
         setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
       } catch (caughtError) {
         setError(
@@ -387,9 +480,23 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                   {module.lessons.map((lesson, lessonIndex) => {
                     const attendanceRecord = attendanceByLesson.get(lesson.id);
                     const assignment = assignmentByLesson.get(lesson.id);
+                    const quiz = quizByLesson.get(lesson.id);
+                    const quizAttempt = quiz ? attemptByQuiz.get(quiz.id) : null;
+                    const isQuizReady =
+                      (quiz?.quiz_questions.length ?? 0) === 10;
                     const submission = assignment
                       ? submissionByAssignment.get(assignment.id)
                       : null;
+                    const quizStatusClass = quizAttempt
+                      ? "is-confirmed"
+                      : isQuizReady
+                        ? ""
+                        : "is-needs-revision";
+                    const quizStatusLabel = quizAttempt
+                      ? "Quiz completed"
+                      : isQuizReady
+                        ? "Quiz pending"
+                        : "Quiz setup pending";
                     const assignmentStatusClass =
                       submission?.status === "reviewed"
                         ? "is-confirmed"
@@ -454,7 +561,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               ? "Attendance confirmed"
                               : "Attendance pending"}
                           </span>
-                          <span>Quiz pending</span>
+                          <span className={quizStatusClass}>
+                            {quizStatusLabel}
+                          </span>
                           <span className={assignmentStatusClass}>
                             <ClipboardCheck
                               aria-hidden="true"
@@ -567,6 +676,108 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                   </button>
                                 </div>
                               </form>
+                            )}
+                          </section>
+                        ) : null}
+                        {quiz ? (
+                          <section className="student-quiz-panel">
+                            <div className="student-assignment-main">
+                              <CircleHelp
+                                aria-hidden="true"
+                                size={17}
+                                strokeWidth={2.4}
+                              />
+                              <div>
+                                <small>Quiz</small>
+                                <strong>{quiz.title}</strong>
+                                <p>10 questions. Score changes by response time.</p>
+                              </div>
+                            </div>
+                            {quizAttempt ? (
+                              <span className="student-quiz-result">
+                                Completed
+                              </span>
+                            ) : activeQuizLessonId === lesson.id &&
+                              isQuizReady ? (
+                              <div className="student-quiz-runner">
+                                {(() => {
+                                  const question =
+                                    quiz.quiz_questions[activeQuizQuestionIndex];
+
+                                  return (
+                                    <>
+                                      <div className="student-quiz-progress">
+                                        <span>
+                                          Question {activeQuizQuestionIndex + 1}/
+                                          {quiz.quiz_questions.length}
+                                        </span>
+                                      </div>
+                                      <strong>{question.question_text}</strong>
+                                      <div className="student-quiz-options">
+                                        {(["a", "b", "c", "d"] as const).map(
+                                          (option) => (
+                                            <label key={option}>
+                                              <input
+                                                checked={
+                                                  selectedQuizOption === option
+                                                }
+                                                name={`quiz-${quiz.id}`}
+                                                type="radio"
+                                                value={option}
+                                                onChange={(event) =>
+                                                  setSelectedQuizOption(
+                                                    event.target.value,
+                                                  )
+                                                }
+                                              />
+                                              {
+                                                question[
+                                                  `option_${option}` as keyof typeof question
+                                                ] as string
+                                              }
+                                            </label>
+                                          ),
+                                        )}
+                                      </div>
+                                      <div className="inline-actions">
+                                        <button
+                                          className="primary-action"
+                                          disabled={
+                                            !selectedQuizOption ||
+                                            savingQuizId === quiz.id
+                                          }
+                                          type="button"
+                                          onClick={() =>
+                                            void handleQuizAnswer(quiz)
+                                          }
+                                        >
+                                          {activeQuizQuestionIndex ===
+                                          quiz.quiz_questions.length - 1
+                                            ? "Finish quiz"
+                                            : "Next question"}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setActiveQuizLessonId(null)
+                                          }
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            ) : (
+                              <button
+                                className="secondary-action student-submit-action"
+                                disabled={!isQuizReady}
+                                type="button"
+                                onClick={() => startQuiz(lesson.id)}
+                              >
+                                {isQuizReady ? "Start quiz" : "Quiz pending"}
+                              </button>
                             )}
                           </section>
                         ) : null}

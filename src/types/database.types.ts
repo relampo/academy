@@ -599,6 +599,41 @@ export type Database = {
           },
         ]
       }
+      lesson_quizzes: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string
+          required: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id: string
+          required?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          required?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_quizzes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: true
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modules: {
         Row: {
           course_id: string
@@ -690,6 +725,152 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      quiz_answers: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          points_awarded: number
+          question_id: string
+          seconds_spent: number
+          selected_option: string
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          is_correct: boolean
+          points_awarded?: number
+          question_id: string
+          seconds_spent?: number
+          selected_option: string
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          points_awarded?: number
+          question_id?: string
+          seconds_spent?: number
+          selected_option?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_attempts: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          quiz_id: string
+          student_id: string
+          total_score: number
+          total_seconds: number
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          quiz_id: string
+          student_id: string
+          total_score?: number
+          total_seconds?: number
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          quiz_id?: string
+          student_id?: string
+          total_score?: number
+          total_seconds?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_attempts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          correct_option: string
+          created_at: string
+          id: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          position: number
+          question_text: string
+          quiz_id: string
+          updated_at: string
+        }
+        Insert: {
+          correct_option: string
+          created_at?: string
+          id?: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          position: number
+          question_text: string
+          quiz_id: string
+          updated_at?: string
+        }
+        Update: {
+          correct_option?: string
+          created_at?: string
+          id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          position?: number
+          question_text?: string
+          quiz_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resources: {
         Row: {

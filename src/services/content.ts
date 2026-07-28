@@ -10,6 +10,10 @@ export type Lesson = Tables<"lessons">;
 export type LessonAttendance = Tables<"lesson_attendance">;
 export type LessonAssignment = Tables<"lesson_assignments">;
 export type LessonProgress = Tables<"lesson_progress">;
+export type LessonQuiz = Tables<"lesson_quizzes">;
+export type QuizQuestion = Tables<"quiz_questions">;
+export type QuizAttempt = Tables<"quiz_attempts">;
+export type QuizAnswer = Tables<"quiz_answers">;
 export type AssignmentSubmission = Tables<"assignment_submissions">;
 export type Resource = Tables<"resources">;
 
@@ -35,6 +39,16 @@ export type LessonWithResources = Lesson & {
 
 export type ModuleWithLessons = Module & {
   lessons: LessonWithResources[];
+};
+
+export type LessonQuizWithQuestions = LessonQuiz & {
+  quiz_questions: QuizQuestion[];
+};
+
+export type QuizAnswerInput = {
+  questionId: string;
+  selectedOption: string;
+  secondsSpent: number;
 };
 
 export type CreateModuleInput = Pick<
@@ -361,6 +375,182 @@ export async function listLessonAssignments(courseId: string) {
   }
 
   return data as LessonAssignment[];
+}
+
+export async function listLessonQuizzes(courseId: string) {
+  const { data, error } = await supabase
+    .from("lesson_quizzes")
+    .select("*, quiz_questions(*), lessons!inner(course_id)")
+    .eq("lessons.course_id", courseId)
+    .order("created_at", { ascending: true })
+    .order("position", {
+      referencedTable: "quiz_questions",
+      ascending: true,
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as LessonQuizWithQuestions[];
+}
+
+export async function upsertLessonQuizQuestions(input: {
+  lessonId: string;
+  title: string;
+  questions: Array<{
+    questionText: string;
+    optionA: string;
+    optionB: string;
+    optionC: string;
+    optionD: string;
+    correctOption: string;
+    position: number;
+  }>;
+}) {
+  const { data: quiz, error: quizError } = await supabase
+    .from("lesson_quizzes")
+    .upsert(
+      {
+        lesson_id: input.lessonId,
+        title: input.title,
+        required: true,
+      },
+      { onConflict: "lesson_id" },
+    )
+    .select()
+    .single();
+
+  if (quizError) {
+    throw quizError;
+  }
+
+  const { data, error } = await supabase
+    .from("quiz_questions")
+    .upsert(
+      input.questions.map((question) => ({
+        quiz_id: quiz.id,
+        question_text: question.questionText,
+        option_a: question.optionA,
+        option_b: question.optionB,
+        option_c: question.optionC,
+        option_d: question.optionD,
+        correct_option: question.correctOption,
+        position: question.position,
+      })),
+      { onConflict: "quiz_id,position" },
+    )
+    .select()
+    .order("position", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return { ...quiz, quiz_questions: data } as LessonQuizWithQuestions;
+}
+
+export async function listQuizAttemptsByQuizIds(
+  quizIds: string[],
+  studentId?: string,
+) {
+  if (quizIds.length === 0) {
+    return [];
+  }
+
+  let query = supabase.from("quiz_attempts").select("*").in("quiz_id", quizIds);
+
+  if (studentId) {
+    query = query.eq("student_id", studentId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
+
+  return data as QuizAttempt[];
+}
+
+function getQuizPoints(isCorrect: boolean, secondsSpent: number) {
+  if (!isCorrect) {
+    return 0;
+  }
+
+  if (secondsSpent <= 30) {
+    return 2;
+  }
+
+  if (secondsSpent <= 60) {
+    return 1.5;
+  }
+
+  return 1;
+}
+
+export async function submitQuizAttempt(input: {
+  quiz: LessonQuizWithQuestions;
+  studentId: string;
+  answers: QuizAnswerInput[];
+}) {
+  const questionById = new Map(
+    input.quiz.quiz_questions.map((question) => [question.id, question]),
+  );
+  const answers = input.answers.map((answer) => {
+    const question = questionById.get(answer.questionId);
+    const isCorrect = question?.correct_option === answer.selectedOption;
+    const secondsSpent = Math.max(0, Math.round(answer.secondsSpent));
+
+    return {
+      question_id: answer.questionId,
+      selected_option: answer.selectedOption,
+      is_correct: isCorrect,
+      seconds_spent: secondsSpent,
+      points_awarded: getQuizPoints(isCorrect, secondsSpent),
+    };
+  });
+  const totalScore = answers.reduce(
+    (sum, answer) => sum + answer.points_awarded,
+    0,
+  );
+  const totalSeconds = answers.reduce(
+    (sum, answer) => sum + answer.seconds_spent,
+    0,
+  );
+
+  const { data: attempt, error: attemptError } = await supabase
+    .from("quiz_attempts")
+    .upsert(
+      {
+        quiz_id: input.quiz.id,
+        student_id: input.studentId,
+        total_score: totalScore,
+        total_seconds: totalSeconds,
+        completed_at: new Date().toISOString(),
+      },
+      { onConflict: "quiz_id,student_id" },
+    )
+    .select()
+    .single();
+
+  if (attemptError) {
+    throw attemptError;
+  }
+
+  const { error: answersError } = await supabase.from("quiz_answers").upsert(
+    answers.map((answer) => ({
+      attempt_id: attempt.id,
+      ...answer,
+    })),
+    { onConflict: "attempt_id,question_id" },
+  );
+
+  if (answersError) {
+    throw answersError;
+  }
+
+  return attempt as QuizAttempt;
 }
 
 export async function listAssignmentSubmissionsByAssignmentIds(

@@ -10,6 +10,7 @@ import {
   Pencil,
   Presentation,
   Plus,
+  CircleHelp,
   Trash2,
   Video,
   type LucideIcon,
@@ -21,11 +22,14 @@ import {
   deleteResource,
   getNextModulePosition,
   listLessonAssignments,
+  listLessonQuizzes,
   listCourseContent,
   updateLesson,
   updateModule,
   upsertLessonAssignment,
+  upsertLessonQuizQuestions,
   type LessonAssignment,
+  type LessonQuizWithQuestions,
   type LessonWithResources,
   type ModuleWithLessons,
   type Resource,
@@ -159,6 +163,28 @@ type PendingDelete =
   | { type: "module"; module: ModuleWithLessons }
   | { type: "lesson"; lesson: LessonWithResources };
 
+type QuizQuestionDraft = {
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctOption: string;
+  position: number;
+};
+
+function createBlankQuizQuestions(): QuizQuestionDraft[] {
+  return Array.from({ length: 10 }, (_, index) => ({
+    questionText: "",
+    optionA: "",
+    optionB: "",
+    optionC: "",
+    optionD: "",
+    correctOption: "a",
+    position: index + 1,
+  }));
+}
+
 export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) {
   const { user } = useAuth();
   const [course, setCourse] = useState<CourseWithEditions | null>(null);
@@ -168,6 +194,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     CourseInstructorAssignment[]
   >([]);
   const [lessonAssignments, setLessonAssignments] = useState<LessonAssignment[]>(
+    [],
+  );
+  const [lessonQuizzes, setLessonQuizzes] = useState<LessonQuizWithQuestions[]>(
     [],
   );
   const [selectedInstructorId, setSelectedInstructorId] = useState("");
@@ -215,6 +244,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [editingAssignmentDescription, setEditingAssignmentDescription] =
     useState("");
   const [editingAssignmentType, setEditingAssignmentType] = useState("report");
+  const [editingQuizLessonId, setEditingQuizLessonId] = useState<string | null>(
+    null,
+  );
+  const [editingQuizTitle, setEditingQuizTitle] = useState("");
+  const [editingQuizQuestions, setEditingQuizQuestions] = useState<
+    QuizQuestionDraft[]
+  >(() => createBlankQuizQuestions());
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -228,12 +264,14 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [error, setError] = useState<string | null>(null);
 
   const refreshCourseContent = async () => {
-    const [nextModules, nextAssignments] = await Promise.all([
+    const [nextModules, nextAssignments, nextQuizzes] = await Promise.all([
       listCourseContent(courseId),
       listLessonAssignments(courseId),
+      listLessonQuizzes(courseId),
     ]);
     setModules(nextModules);
     setLessonAssignments(nextAssignments);
+    setLessonQuizzes(nextQuizzes);
   };
 
   const loadCourse = async () => {
@@ -245,18 +283,21 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         nextCourse,
         nextModules,
         nextLessonAssignments,
+        nextLessonQuizzes,
         nextInstructors,
         nextAssignedInstructors,
       ] = await Promise.all([
         getCourseWithEditions(courseId),
         listCourseContent(courseId),
         listLessonAssignments(courseId),
+        listLessonQuizzes(courseId),
         listInstructorProfiles(),
         listCourseInstructors(courseId),
       ]);
       setCourse(nextCourse);
       setModules(nextModules);
       setLessonAssignments(nextLessonAssignments);
+      setLessonQuizzes(nextLessonQuizzes);
       setInstructors(nextInstructors);
       setAssignedInstructors(nextAssignedInstructors);
       setSelectedInstructorId(
@@ -695,6 +736,96 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     });
   };
 
+  const startEditQuiz = (lesson: LessonWithResources) => {
+    const quiz = lessonQuizzes.find((currentQuiz) => currentQuiz.lesson_id === lesson.id);
+    const existingQuestions = quiz?.quiz_questions ?? [];
+    const questionDrafts = createBlankQuizQuestions().map((blankQuestion) => {
+      const existingQuestion = existingQuestions.find(
+        (question) => question.position === blankQuestion.position,
+      );
+
+      return existingQuestion
+        ? {
+            questionText: existingQuestion.question_text,
+            optionA: existingQuestion.option_a,
+            optionB: existingQuestion.option_b,
+            optionC: existingQuestion.option_c,
+            optionD: existingQuestion.option_d,
+            correctOption: existingQuestion.correct_option,
+            position: existingQuestion.position,
+          }
+        : blankQuestion;
+    });
+
+    setEditingQuizLessonId(lesson.id);
+    setEditingQuizTitle(quiz?.title ?? `Quiz - ${lesson.title}`);
+    setEditingQuizQuestions(questionDrafts);
+    setCollapsedLessonIds((current) => {
+      const next = new Set(current);
+      next.delete(lesson.id);
+      return next;
+    });
+  };
+
+  const updateQuizQuestionDraft = (
+    position: number,
+    field: keyof QuizQuestionDraft,
+    value: string,
+  ) => {
+    setEditingQuizQuestions((current) =>
+      current.map((question) =>
+        question.position === position ? { ...question, [field]: value } : question,
+      ),
+    );
+  };
+
+  const handleUpdateQuiz = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!editingQuizLessonId) {
+      return;
+    }
+
+    const hasEmptyQuestion = editingQuizQuestions.some(
+      (question) =>
+        !question.questionText.trim() ||
+        !question.optionA.trim() ||
+        !question.optionB.trim() ||
+        !question.optionC.trim() ||
+        !question.optionD.trim(),
+    );
+
+    if (editingQuizQuestions.length !== 10 || hasEmptyQuestion) {
+      setError("Quiz requires exactly 10 complete questions.");
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      const quiz = await upsertLessonQuizQuestions({
+        lessonId: editingQuizLessonId,
+        title: editingQuizTitle,
+        questions: editingQuizQuestions,
+      });
+
+      setLessonQuizzes((current) => {
+        const withoutCurrent = current.filter(
+          (currentQuiz) => currentQuiz.lesson_id !== editingQuizLessonId,
+        );
+        return [...withoutCurrent, quiz];
+      });
+      setEditingQuizLessonId(null);
+      setMessage("Quiz updated.");
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError, "Could not update quiz."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleUpdateAssignment = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -852,6 +983,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const primaryOffering = course?.course_editions[0] ?? null;
   const assignmentByLesson = new Map(
     lessonAssignments.map((assignment) => [assignment.lesson_id, assignment]),
+  );
+  const quizByLesson = new Map(
+    lessonQuizzes.map((quiz) => [quiz.lesson_id, quiz]),
   );
   const availableInstructors = instructors.filter(
     (instructor) =>
@@ -1398,6 +1532,18 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </button>
                               <button
+                                aria-label="Edit quiz"
+                                title="Edit quiz"
+                                type="button"
+                                onClick={() => startEditQuiz(lesson)}
+                              >
+                                <CircleHelp
+                                  aria-hidden="true"
+                                  size={17}
+                                  strokeWidth={2.2}
+                                />
+                              </button>
+                              <button
                                 className="subtle-action"
                                 aria-label="Add resource"
                                 title="Add resource"
@@ -1554,6 +1700,30 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                   );
                                 })()}
                               </div>
+                              <div className="assignment-summary quiz-summary">
+                                {(() => {
+                                  const quiz = quizByLesson.get(lesson.id);
+                                  const questionCount =
+                                    quiz?.quiz_questions.length ?? 0;
+
+                                  return (
+                                    <>
+                                      <CircleHelp
+                                        aria-hidden="true"
+                                        size={17}
+                                        strokeWidth={2.2}
+                                      />
+                                      <div>
+                                        <small>Required quiz</small>
+                                        <strong>
+                                          {quiz?.title ?? `Quiz - ${lesson.title}`}
+                                        </strong>
+                                      </div>
+                                      <span>{questionCount}/10 questions</span>
+                                    </>
+                                  );
+                                })()}
+                              </div>
                               <div className="lesson-support-row">
                                 <div className="mini-list">
                                   {lesson.duration_minutes ? (
@@ -1581,6 +1751,135 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 ) : null}
                               </div>
                             </div>
+                          ) : null}
+                          {!collapsedLessonIds.has(lesson.id) &&
+                          editingQuizLessonId === lesson.id ? (
+                            <form
+                              className="inline-builder-form quiz-form"
+                              onSubmit={handleUpdateQuiz}
+                            >
+                              <label>
+                                Quiz title
+                                <input
+                                  required
+                                  value={editingQuizTitle}
+                                  onChange={(event) =>
+                                    setEditingQuizTitle(event.target.value)
+                                  }
+                                />
+                              </label>
+                              <div className="quiz-question-grid">
+                                {editingQuizQuestions.map((question) => (
+                                  <fieldset
+                                    className="quiz-question-editor"
+                                    key={question.position}
+                                  >
+                                    <legend>Question {question.position}</legend>
+                                    <label>
+                                      Question
+                                      <input
+                                        required
+                                        value={question.questionText}
+                                        onChange={(event) =>
+                                          updateQuizQuestionDraft(
+                                            question.position,
+                                            "questionText",
+                                            event.target.value,
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                    <div className="form-grid">
+                                      <label>
+                                        A
+                                        <input
+                                          required
+                                          value={question.optionA}
+                                          onChange={(event) =>
+                                            updateQuizQuestionDraft(
+                                              question.position,
+                                              "optionA",
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                      <label>
+                                        B
+                                        <input
+                                          required
+                                          value={question.optionB}
+                                          onChange={(event) =>
+                                            updateQuizQuestionDraft(
+                                              question.position,
+                                              "optionB",
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                      <label>
+                                        C
+                                        <input
+                                          required
+                                          value={question.optionC}
+                                          onChange={(event) =>
+                                            updateQuizQuestionDraft(
+                                              question.position,
+                                              "optionC",
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                      <label>
+                                        D
+                                        <input
+                                          required
+                                          value={question.optionD}
+                                          onChange={(event) =>
+                                            updateQuizQuestionDraft(
+                                              question.position,
+                                              "optionD",
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                    </div>
+                                    <label>
+                                      Correct answer
+                                      <select
+                                        value={question.correctOption}
+                                        onChange={(event) =>
+                                          updateQuizQuestionDraft(
+                                            question.position,
+                                            "correctOption",
+                                            event.target.value,
+                                          )
+                                        }
+                                      >
+                                        <option value="a">A</option>
+                                        <option value="b">B</option>
+                                        <option value="c">C</option>
+                                        <option value="d">D</option>
+                                      </select>
+                                    </label>
+                                  </fieldset>
+                                ))}
+                              </div>
+                              <div className="inline-actions">
+                                <button type="submit" disabled={isSubmitting}>
+                                  Save quiz
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingQuizLessonId(null)}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </form>
                           ) : null}
                           {!collapsedLessonIds.has(lesson.id) &&
                           editingAssignmentLessonId === lesson.id ? (
