@@ -507,7 +507,11 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                     )
                                   }
                                 >
-                                  {submission ? "Update" : "Submit"}
+                                  {submission?.status === "needs_revision"
+                                    ? "Resubmit"
+                                    : submission
+                                      ? "Update"
+                                      : "Submit"}
                                 </button>
                               </div>
                             ) : (
