@@ -14,7 +14,7 @@ export async function listInstructorProfiles() {
   const { data, error } = await supabase
     .from("profiles")
     .select("id, display_name, first_name, last_name")
-    .eq("role", "instructor")
+    .in("role", ["admin", "instructor"])
     .eq("status", "active")
     .order("display_name", { ascending: true, nullsFirst: false });
 
