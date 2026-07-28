@@ -11,6 +11,7 @@ import {
   Presentation,
   Plus,
   Trash2,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -48,6 +49,7 @@ type CourseStatus = Enums<"course_status">;
 
 const resourceTypeLabels: Record<string, string> = {
   external_link: "External link",
+  video: "Video",
   pdf: "PDF",
   slides: "Slides",
   zip: "ZIP",
@@ -57,6 +59,7 @@ const resourceTypeLabels: Record<string, string> = {
 
 const resourceTypeIcons: Record<string, LucideIcon> = {
   external_link: Link,
+  video: Video,
   pdf: FileText,
   slides: Presentation,
   zip: Package,
@@ -1481,6 +1484,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                     <option value="external_link">
                                       External link
                                     </option>
+                                    <option value="video">Video</option>
                                     <option value="pdf">PDF</option>
                                     <option value="slides">Slides</option>
                                     <option value="zip">ZIP</option>

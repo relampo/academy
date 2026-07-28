@@ -14,6 +14,7 @@ type CoursePlayerPageProps = {
 
 const resourceTypeLabels: Record<string, string> = {
   external_link: "External link",
+  video: "Video",
   pdf: "PDF",
   slides: "Slides",
   zip: "ZIP",
