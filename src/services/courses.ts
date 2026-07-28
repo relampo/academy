@@ -124,6 +124,7 @@ export async function listPublishedCourseEditions(studentId?: string) {
     .from("course_editions")
     .select("*, courses!inner(*), enrollments(*)")
     .in("status", ["published", "enrollment_closed", "completed"])
+    .is("archived_at", null)
     .neq("courses.status", "archived")
     .order("start_date", { ascending: true, nullsFirst: false });
 
