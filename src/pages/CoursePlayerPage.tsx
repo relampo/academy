@@ -483,7 +483,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               <div className="student-assignment-side">
                                 <div className="student-assignment-meta">
                                   <span>{assignment.assignment_type}</span>
-                                  <span>{assignment.points} pts</span>
                                 </div>
                                 <button
                                   className="secondary-action student-submit-action"

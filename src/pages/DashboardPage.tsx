@@ -4,7 +4,6 @@ const dashboardStats = [
   { label: "Active courses", value: "0" },
   { label: "Pending assignments", value: "0" },
   { label: "Progress", value: "0%" },
-  { label: "Academy points", value: "0" },
 ];
 
 export function DashboardPage() {

@@ -215,7 +215,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [editingAssignmentDescription, setEditingAssignmentDescription] =
     useState("");
   const [editingAssignmentType, setEditingAssignmentType] = useState("report");
-  const [editingAssignmentPoints, setEditingAssignmentPoints] = useState("10");
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -689,7 +688,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       assignment?.description ?? "Submit the required evidence for this class.",
     );
     setEditingAssignmentType(assignment?.assignment_type ?? "report");
-    setEditingAssignmentPoints(String(assignment?.points ?? 10));
     setCollapsedLessonIds((current) => {
       const next = new Set(current);
       next.delete(lesson.id);
@@ -709,12 +707,15 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setIsSubmitting(true);
 
     try {
+      const existingAssignment = lessonAssignments.find(
+        (assignment) => assignment.lesson_id === editingAssignmentLessonId,
+      );
       const assignment = await upsertLessonAssignment({
         lessonId: editingAssignmentLessonId,
         title: editingAssignmentTitle,
         description: editingAssignmentDescription || null,
         assignmentType: editingAssignmentType,
-        points: editingAssignmentPoints ? Number(editingAssignmentPoints) : 10,
+        points: existingAssignment?.points ?? 10,
       });
 
       setLessonAssignments((current) => {
@@ -1549,7 +1550,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                       <span>
                                         {assignment?.assignment_type ?? "report"}
                                       </span>
-                                      <span>{assignment?.points ?? 10} pts</span>
                                     </>
                                   );
                                 })()}
@@ -1609,41 +1609,24 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                   }
                                 />
                               </label>
-                              <div className="form-grid">
-                                <label>
-                                  Type
-                                  <select
-                                    value={editingAssignmentType}
-                                    onChange={(event) =>
-                                      setEditingAssignmentType(
-                                        event.target.value,
-                                      )
-                                    }
-                                  >
-                                    <option value="report">Report/link</option>
-                                    <option value="script">
-                                      Script validation
-                                    </option>
-                                    <option value="document">Document</option>
-                                    <option value="drive_link">
-                                      Google Drive link
-                                    </option>
-                                  </select>
-                                </label>
-                                <label>
-                                  Points
-                                  <input
-                                    min="0"
-                                    type="number"
-                                    value={editingAssignmentPoints}
-                                    onChange={(event) =>
-                                      setEditingAssignmentPoints(
-                                        event.target.value,
-                                      )
-                                    }
-                                  />
-                                </label>
-                              </div>
+                              <label>
+                                Type
+                                <select
+                                  value={editingAssignmentType}
+                                  onChange={(event) =>
+                                    setEditingAssignmentType(event.target.value)
+                                  }
+                                >
+                                  <option value="report">Report/link</option>
+                                  <option value="script">
+                                    Script validation
+                                  </option>
+                                  <option value="document">Document</option>
+                                  <option value="drive_link">
+                                    Google Drive link
+                                  </option>
+                                </select>
+                              </label>
                               <div className="inline-actions">
                                 <button type="submit" disabled={isSubmitting}>
                                   Save assignment

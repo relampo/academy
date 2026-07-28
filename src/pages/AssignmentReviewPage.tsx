@@ -32,9 +32,6 @@ export function AssignmentReviewPage() {
   const [submissions, setSubmissions] = useState<AssignmentReviewItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pointsBySubmission, setPointsBySubmission] = useState<
-    Record<string, string>
-  >({});
   const [reviewingSubmissionId, setReviewingSubmissionId] = useState<
     string | null
   >(null);
@@ -50,16 +47,6 @@ export function AssignmentReviewPage() {
       try {
         const nextSubmissions = await listAssignmentReviewItems();
         setSubmissions(nextSubmissions);
-        setPointsBySubmission(
-          Object.fromEntries(
-            nextSubmissions.map((submission) => [
-              submission.id,
-              submission.points_awarded?.toString() ??
-                submission.lesson_assignments?.points?.toString() ??
-                "10",
-            ]),
-          ),
-        );
       } catch (caughtError) {
         setError(
           caughtError instanceof Error
@@ -91,8 +78,8 @@ export function AssignmentReviewPage() {
         submissionId: submission.id,
         status,
         pointsAwarded:
-          status === "reviewed" && pointsBySubmission[submission.id]
-            ? Number(pointsBySubmission[submission.id])
+          status === "reviewed"
+            ? (submission.lesson_assignments?.points ?? 10)
             : null,
         reviewedBy: user.id,
       });
@@ -224,20 +211,6 @@ export function AssignmentReviewPage() {
                       {submission.notes ? <p>{submission.notes}</p> : null}
                     </div>
                     <div className="assignment-review-actions">
-                      <label>
-                        Points
-                        <input
-                          min="0"
-                          type="number"
-                          value={pointsBySubmission[submission.id] ?? ""}
-                          onChange={(event) =>
-                            setPointsBySubmission((current) => ({
-                              ...current,
-                              [submission.id]: event.target.value,
-                            }))
-                          }
-                        />
-                      </label>
                       <button
                         className="primary-action"
                         disabled={reviewingSubmissionId === submission.id}
