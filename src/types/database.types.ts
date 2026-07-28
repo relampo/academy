@@ -942,6 +942,26 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      get_course_leaderboard: {
+        Args: { target_course_id: string }
+        Returns: {
+          avatar_url: string | null
+          display_name: string
+          level: string
+          max_score: number
+          score_ratio: number
+          student_id: string
+          total_score: number
+        }[]
+      }
+      get_generated_leaderboard_alias: {
+        Args: { target_user_id: string }
+        Returns: string
+      }
+      get_leaderboard_level: {
+        Args: { score_ratio: number }
+        Returns: string
+      }
       is_admin: { Args: never; Returns: boolean }
       is_enrolled_in_course: {
         Args: { target_course_id: string }

@@ -244,6 +244,20 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         return `Lesson ${index + 1}: ${summary.label}\n${summary.tooltip}`;
       })
       .join("\n\n");
+  const coursePointSummaries = lessons.map((lesson) =>
+    getLessonPointSummary(lesson.id),
+  );
+  const courseEarnedPoints = coursePointSummaries.reduce(
+    (sum, summary) => sum + summary.earned,
+    0,
+  );
+  const courseMaxPoints = coursePointSummaries.reduce(
+    (sum, summary) => sum + summary.max,
+    0,
+  );
+  const courseHasPendingPoints = coursePointSummaries.some((summary) =>
+    summary.label.includes("pending"),
+  );
 
   const toggleLessonComplete = async (lessonId: string) => {
     if (!user) {
@@ -516,11 +530,21 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
             {completedCount} of {lessons.length} lessons viewed
           </p>
           <div className="student-requirements">
-            <span>Course completion requires</span>
             <div>
-              <small>Instructor confirms attendance</small>
-              <small>Student completes quiz</small>
-              <small>Assignment reviewed</small>
+              <span>Course completion requires</span>
+              <div>
+                <small>Instructor confirms attendance</small>
+                <small>Student completes quiz</small>
+                <small>Assignment reviewed</small>
+              </div>
+            </div>
+            <div className="student-course-points">
+              <span>Total accumulated</span>
+              <strong>
+                {formatPoints(courseEarnedPoints)}/
+                {formatPoints(courseMaxPoints)} pts
+              </strong>
+              {courseHasPendingPoints ? <small>Some items pending</small> : null}
             </div>
           </div>
         </section>
