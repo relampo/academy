@@ -594,93 +594,96 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       {isLoading ? <p>Loading course...</p> : null}
 
       {!isLoading && course ? (
-        <div className="course-overview-grid">
-          <section className="content-panel compact-panel">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Details</p>
-                <h2>Course details</h2>
-              </div>
-              <div className="panel-actions">
-                {!isEditingCourse ? (
-                  <button type="button" onClick={() => setIsEditingCourse(true)}>
-                    Edit
-                  </button>
-                ) : (
-                  <>
-                    <button type="submit" form="course-details-form" disabled={isSubmitting}>
-                      Save
-                    </button>
-                    <button type="button" onClick={handleCancelEditCourse}>
-                      Cancel
-                    </button>
-                  </>
-                )}
-                <button
-                  className="danger-action"
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() =>
-                    setPendingDelete({
-                      type: "course",
-                      title: course.title,
-                    })
-                  }
-                >
-                  Delete
-                </button>
-              </div>
+        <section className="content-panel course-details-panel">
+          <div className="panel-heading">
+            <div>
+              <p className="eyebrow">Details</p>
+              <h2>Course setup</h2>
             </div>
-            <form
-              className="stacked-form"
-              id="course-details-form"
-              onSubmit={handleSubmit}
-            >
-              <div className="form-grid">
-                <label>
-                  Title
-                  <input
-                    disabled={!isEditingCourse}
-                    required
-                    type="text"
-                    value={title}
-                    onChange={(event) => setTitle(event.target.value)}
-                  />
-                </label>
-                <label>
-                  Status
-                  <select
-                    disabled={!isEditingCourse}
-                    value={status}
-                    onChange={(event) =>
-                      setStatus(event.target.value as CourseStatus)
+          </div>
+
+          <div className="course-overview-grid">
+            <section className="details-block details-block-main">
+              <div className="subsection-heading">
+                <h3>Course details</h3>
+                <div className="panel-actions">
+                  {!isEditingCourse ? (
+                    <button type="button" onClick={() => setIsEditingCourse(true)}>
+                      Edit
+                    </button>
+                  ) : (
+                    <>
+                      <button type="submit" form="course-details-form" disabled={isSubmitting}>
+                        Save
+                      </button>
+                      <button type="button" onClick={handleCancelEditCourse}>
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                  <button
+                    className="danger-action"
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() =>
+                      setPendingDelete({
+                        type: "course",
+                        title: course.title,
+                      })
                     }
                   >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="enrollment_closed">Enrollment closed</option>
-                    <option value="completed">Completed</option>
-                  </select>
+                    Delete
+                  </button>
+                </div>
+              </div>
+              <form
+                className="stacked-form"
+                id="course-details-form"
+                onSubmit={handleSubmit}
+              >
+                <div className="form-grid">
+                  <label>
+                    Title
+                    <input
+                      disabled={!isEditingCourse}
+                      required
+                      type="text"
+                      value={title}
+                      onChange={(event) => setTitle(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Status
+                    <select
+                      disabled={!isEditingCourse}
+                      value={status}
+                      onChange={(event) =>
+                        setStatus(event.target.value as CourseStatus)
+                      }
+                    >
+                      <option value="draft">Draft</option>
+                      <option value="published">Published</option>
+                      <option value="enrollment_closed">Enrollment closed</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </label>
+                </div>
+                <label>
+                  Description
+                  <textarea
+                    className="compact-textarea"
+                    disabled={!isEditingCourse}
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                  />
                 </label>
-              </div>
-              <label>
-                Description
-                <textarea
-                  className="compact-textarea"
-                  disabled={!isEditingCourse}
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                />
-              </label>
-            </form>
-          </section>
+              </form>
+            </section>
 
-          <section className="content-panel compact-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Enrollment</h2>
+            <section className="details-block">
+              <div className="subsection-heading">
+                <h3>Enrollment</h3>
               </div>
-            </div>
             {primaryOffering ? (
               <form
                 className="stacked-form"
@@ -743,14 +746,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 <span>This course needs enrollment settings before students can join.</span>
               </div>
             )}
-          </section>
+            </section>
 
-          <section className="content-panel compact-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Instructors</h2>
+            <section className="details-block">
+              <div className="subsection-heading">
+                <h3>Instructors</h3>
               </div>
-            </div>
             <form className="stacked-form" onSubmit={handleAssignInstructor}>
               <label>
                 Assign instructor
@@ -793,8 +794,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 </span>
               ))}
             </div>
-          </section>
-        </div>
+            </section>
+          </div>
+        </section>
       ) : null}
 
       {!isLoading && course ? (
