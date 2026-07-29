@@ -4,6 +4,16 @@ import { sendPasswordReset } from "../services/users";
 
 type AuthMode = "sign-in" | "sign-up";
 
+function getFriendlyAuthError(errorMessage: string) {
+  const normalizedMessage = errorMessage.toLowerCase();
+
+  if (normalizedMessage.includes("email rate limit exceeded")) {
+    return "Se alcanzó el límite de correos por ahora. Intenta nuevamente más tarde.";
+  }
+
+  return errorMessage;
+}
+
 function getInitialMode(): AuthMode {
   const storedMode = window.sessionStorage.getItem("relampo:authMode");
 
@@ -57,7 +67,7 @@ export function LoginPage() {
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
-          ? caughtError.message
+          ? getFriendlyAuthError(caughtError.message)
           : "No se pudo autenticar.",
       );
     } finally {
@@ -82,7 +92,7 @@ export function LoginPage() {
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
-          ? caughtError.message
+          ? getFriendlyAuthError(caughtError.message)
           : "No se pudo enviar el correo de recuperación.",
       );
     } finally {
