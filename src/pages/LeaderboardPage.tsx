@@ -570,7 +570,6 @@ export function LeaderboardPage() {
     <section className="page leaderboard-page">
       <div className="page-header leaderboard-hero">
         <div>
-          <p className="eyebrow">Relampo League</p>
           <h1>Leaderboard</h1>
           <div className="leaderboard-prize-callout">
             <strong>Premio para los 3 primeros lugares</strong>
@@ -607,8 +606,10 @@ export function LeaderboardPage() {
         <div className="content-panel leaderboard-panel leaderboard-arena">
           <div className="page-header compact-header">
             <div>
-              <p className="eyebrow">Relampo League</p>
-              <h2>Leaderboard - Top 10</h2>
+              <h2>Leaderboard del curso</h2>
+              <span className="leaderboard-count">
+                {leaderboard.length} estudiante{leaderboard.length === 1 ? "" : "s"}
+              </span>
             </div>
             <label className="assignment-search">
               <span>Curso</span>
@@ -729,7 +730,7 @@ export function LeaderboardPage() {
                 <div>
                   <Zap aria-hidden="true" size={18} strokeWidth={2.3} />
                   <div>
-                    <strong>Premio Relampo League</strong>
+                    <strong>Premio del curso</strong>
                     <span>
                       Top 3: licencia Relampo con 1000+ usuarios gratis durante
                       2 meses.

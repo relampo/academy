@@ -8,12 +8,24 @@ import { AttendancePage } from "./pages/AttendancePage";
 import { CoursePlayerPage } from "./pages/CoursePlayerPage";
 import { EnrollPage } from "./pages/EnrollPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { supabase } from "./services/supabase";
 import { UnauthorizedPage } from "./pages/UnauthorizedPage";
 import { getRoute, type AppRoute, type UserRole } from "./routes";
 
 function getHashPath() {
   const hashPath = window.location.hash.replace(/^#/, "");
+  const isPasswordRecovery =
+    window.sessionStorage.getItem("relampo:passwordRecovery") === "true" ||
+    window.location.search.includes("reset-password=1") ||
+    hashPath.includes("type=recovery") ||
+    window.location.href.includes("type=recovery");
+
+  if (isPasswordRecovery) {
+    window.sessionStorage.setItem("relampo:passwordRecovery", "true");
+    return "/reset-password";
+  }
+
   return hashPath.startsWith("/") ? hashPath : "/";
 }
 
@@ -32,6 +44,15 @@ function renderDynamicRoute(path: string): DynamicRoute | null {
       allowedRoles: ["admin", "instructor", "student"],
       element: <EnrollPage courseRef={decodeURIComponent(enrollmentMatch[1])} />,
       navPath: "/courses",
+      isPublic: true,
+    };
+  }
+
+  if (path === "/reset-password") {
+    return {
+      allowedRoles: ["admin", "instructor", "student"],
+      element: <ResetPasswordPage />,
+      navPath: "/profile",
       isPublic: true,
     };
   }
@@ -86,8 +107,31 @@ export function App() {
 
   useEffect(() => {
     const handleHashChange = () => setPath(getHashPath());
+    const handlePasswordRecovery = () => setPath("/reset-password");
     window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    window.addEventListener("relampo:password-recovery", handlePasswordRecovery);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+      window.removeEventListener(
+        "relampo:password-recovery",
+        handlePasswordRecovery,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        window.sessionStorage.setItem("relampo:passwordRecovery", "true");
+        setPath("/reset-password");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -96,6 +140,16 @@ export function App() {
 
     if (!isLoading && !session && path !== "/login" && !isPublicRoute) {
       window.location.hash = "/login";
+    }
+
+    if (
+      !isLoading &&
+      session &&
+      path === "/login" &&
+      window.sessionStorage.getItem("relampo:passwordRecovery") === "true"
+    ) {
+      setPath("/reset-password");
+      return;
     }
 
     if (!isLoading && session && path === "/login") {
@@ -173,6 +227,10 @@ export function App() {
 
     if (path === "/login") {
       return <LoginPage />;
+    }
+
+    if (path === "/reset-password") {
+      return <ResetPasswordPage />;
     }
 
     const staticRoute = getRoute(path);

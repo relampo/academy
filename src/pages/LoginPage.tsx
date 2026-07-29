@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { sendPasswordReset } from "../services/users";
 
 type AuthMode = "sign-in" | "sign-up";
 
@@ -30,6 +31,7 @@ export function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const isSignUp = mode === "sign-up";
 
@@ -60,6 +62,31 @@ export function LoginPage() {
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    setError(null);
+    setMessage(null);
+
+    if (!email.trim()) {
+      setError("Escribe tu email para enviarte el enlace de recuperación.");
+      return;
+    }
+
+    setIsSendingReset(true);
+
+    try {
+      await sendPasswordReset(email.trim());
+      setMessage("Te enviamos un correo para restablecer tu contraseña.");
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "No se pudo enviar el correo de recuperación.",
+      );
+    } finally {
+      setIsSendingReset(false);
     }
   };
 
@@ -138,6 +165,19 @@ export function LoginPage() {
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
+          {!isSignUp ? (
+            <div className="auth-helper-row">
+              <span>¿No puedes entrar?</span>
+              <button
+                className="auth-reset-button"
+                disabled={isSendingReset}
+                onClick={handlePasswordReset}
+                type="button"
+              >
+                {isSendingReset ? "Enviando..." : "Restablecer contraseña"}
+              </button>
+            </div>
+          ) : null}
           {error ? <p className="form-message error">{error}</p> : null}
           {message ? <p className="form-message success">{message}</p> : null}
           <button type="submit" disabled={isSubmitting}>

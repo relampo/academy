@@ -682,6 +682,7 @@ export type Database = {
           created_at: string
           discord_username: string | null
           display_name: string | null
+          email: string | null
           first_name: string
           id: string
           last_name: string
@@ -698,6 +699,7 @@ export type Database = {
           created_at?: string
           discord_username?: string | null
           display_name?: string | null
+          email?: string | null
           first_name?: string
           id: string
           last_name?: string
@@ -714,6 +716,7 @@ export type Database = {
           created_at?: string
           discord_username?: string | null
           display_name?: string | null
+          email?: string | null
           first_name?: string
           id?: string
           last_name?: string

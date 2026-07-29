@@ -42,7 +42,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadProfile = useCallback(async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string, email?: string) => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -51,6 +51,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (error) {
       throw error;
+    }
+
+    if (email && "email" in data && data.email !== email) {
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from("profiles")
+        .update({ email })
+        .eq("id", userId)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setProfile(updatedProfile);
+      return;
     }
 
     setProfile(data);
@@ -66,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    await loadProfile(activeSession.user.id);
+    await loadProfile(activeSession.user.id, activeSession.user.email);
   }, [loadProfile]);
 
   useEffect(() => {
@@ -84,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSession(activeSession);
 
       if (activeSession?.user) {
-        await loadProfile(activeSession.user.id);
+        await loadProfile(activeSession.user.id, activeSession.user.email);
       } else {
         setProfile(null);
       }
@@ -98,7 +114,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "PASSWORD_RECOVERY") {
+        window.sessionStorage.setItem("relampo:passwordRecovery", "true");
+        window.dispatchEvent(new CustomEvent("relampo:password-recovery"));
+      }
+
       setSession(nextSession);
 
       if (!nextSession?.user) {
@@ -107,7 +128,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      void loadProfile(nextSession.user.id).finally(() => setIsLoading(false));
+      void loadProfile(nextSession.user.id, nextSession.user.email).finally(() =>
+        setIsLoading(false),
+      );
     });
 
     return () => {
@@ -136,6 +159,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           first_name: input.firstName,
           last_name: input.lastName,
           display_name: `${input.firstName} ${input.lastName}`.trim(),
+          email: input.email,
         },
       },
     });
