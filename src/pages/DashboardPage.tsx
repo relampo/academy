@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type CSSProperties,
-  type FormEvent,
-} from "react";
-import { RefreshCw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import {
   listEnrollmentReviews,
@@ -24,265 +17,12 @@ import {
 import { listTeachingCourses } from "../services/instructors";
 import {
   getCourseLeaderboard,
-  updateLeaderboardProfile,
   type LeaderboardEntry,
-  type LeaderboardVisibility,
 } from "../services/leaderboard";
+import { formatPoints } from "../lib/leaderboardIdentity";
 
 const attendancePoints = 10;
 const quizMaxPoints = 20;
-
-const stormAliases = [
-  "Rayo Norte",
-  "Centella Alta",
-  "Trueno Claro",
-  "Nube Ionica",
-  "Chispa Azul",
-  "Vortice Solar",
-  "Pulso Electrico",
-  "Relampago Delta",
-  "Frente de Tormenta",
-  "Arco Plasma",
-];
-
-const avatarPresets = [
-  {
-    label: "Rayo",
-    background: "linear-gradient(135deg, #ffc712 0%, #fff3a3 100%)",
-    radius: "999px",
-    clipPath: "none",
-  },
-  {
-    label: "Centella",
-    background: "linear-gradient(135deg, #36a3ff 0%, #d7efff 100%)",
-    radius: "12px",
-    clipPath: "none",
-  },
-  {
-    label: "Trueno",
-    background: "linear-gradient(135deg, #1f2937 0%, #93a4ba 100%)",
-    radius: "10px",
-    clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-  },
-  {
-    label: "Aurora",
-    background: "linear-gradient(135deg, #37a267 0%, #c8f7df 100%)",
-    radius: "18px 8px 18px 8px",
-    clipPath: "none",
-  },
-  {
-    label: "Plasma",
-    background: "linear-gradient(135deg, #7c5cff 0%, #f3d6ff 100%)",
-    radius: "8px 18px 8px 18px",
-    clipPath: "none",
-  },
-  {
-    label: "Coral",
-    background: "linear-gradient(135deg, #d46b53 0%, #ffe1d8 100%)",
-    radius: "14px",
-    clipPath: "polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0% 50%)",
-  },
-  {
-    label: "Niebla",
-    background: "linear-gradient(135deg, #64748b 0%, #e2e8f0 100%)",
-    radius: "999px 999px 10px 999px",
-    clipPath: "none",
-  },
-  {
-    label: "Solar",
-    background: "linear-gradient(135deg, #f59e0b 0%, #fef3c7 100%)",
-    radius: "8px",
-    clipPath: "none",
-  },
-  {
-    label: "Oceano",
-    background: "linear-gradient(135deg, #0ea5e9 0%, #bae6fd 100%)",
-    radius: "999px 10px 999px 10px",
-    clipPath: "none",
-  },
-  {
-    label: "Magnetico",
-    background: "linear-gradient(135deg, #db2777 0%, #fbcfe8 100%)",
-    radius: "16px",
-    clipPath: "polygon(50% 0%, 96% 28%, 82% 100%, 18% 100%, 4% 28%)",
-  },
-  {
-    label: "Verde Ion",
-    background: "linear-gradient(135deg, #16a34a 0%, #bbf7d0 100%)",
-    radius: "999px",
-    clipPath: "none",
-  },
-  {
-    label: "Cobre",
-    background: "linear-gradient(135deg, #b45309 0%, #fed7aa 100%)",
-    radius: "12px 999px 12px 999px",
-    clipPath: "none",
-  },
-  {
-    label: "Cielo",
-    background: "linear-gradient(135deg, #2563eb 0%, #dbeafe 100%)",
-    radius: "10px",
-    clipPath: "polygon(50% 0%, 100% 35%, 82% 100%, 18% 100%, 0% 35%)",
-  },
-  {
-    label: "Lima",
-    background: "linear-gradient(135deg, #84cc16 0%, #ecfccb 100%)",
-    radius: "20px 8px 20px 8px",
-    clipPath: "none",
-  },
-  {
-    label: "Violeta",
-    background: "linear-gradient(135deg, #9333ea 0%, #e9d5ff 100%)",
-    radius: "8px 20px 8px 20px",
-    clipPath: "none",
-  },
-  {
-    label: "Grafito",
-    background: "linear-gradient(135deg, #111827 0%, #cbd5e1 100%)",
-    radius: "8px",
-    clipPath: "none",
-  },
-  {
-    label: "Fuego",
-    background: "linear-gradient(135deg, #ef4444 0%, #fee2e2 100%)",
-    radius: "999px 999px 999px 12px",
-    clipPath: "none",
-  },
-  {
-    label: "Menta",
-    background: "linear-gradient(135deg, #14b8a6 0%, #ccfbf1 100%)",
-    radius: "999px 12px 999px 12px",
-    clipPath: "none",
-  },
-  {
-    label: "Dorado",
-    background: "linear-gradient(135deg, #ca8a04 0%, #fef08a 100%)",
-    radius: "12px",
-    clipPath: "polygon(50% 0%, 92% 18%, 100% 62%, 70% 100%, 30% 100%, 0% 62%, 8% 18%)",
-  },
-  {
-    label: "Noche",
-    background: "linear-gradient(135deg, #312e81 0%, #c7d2fe 100%)",
-    radius: "999px",
-    clipPath: "none",
-  },
-  {
-    label: "Bruma",
-    background: "linear-gradient(135deg, #475569 0%, #f1f5f9 100%)",
-    radius: "18px 18px 8px 8px",
-    clipPath: "none",
-  },
-  {
-    label: "Nucleo",
-    background: "linear-gradient(135deg, #f97316 0%, #ffedd5 100%)",
-    radius: "999px",
-    clipPath: "polygon(50% 0%, 88% 12%, 100% 50%, 88% 88%, 50% 100%, 12% 88%, 0% 50%, 12% 12%)",
-  },
-  {
-    label: "Cristal",
-    background: "linear-gradient(135deg, #06b6d4 0%, #cffafe 100%)",
-    radius: "10px",
-    clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-  },
-  {
-    label: "Voltio",
-    background: "linear-gradient(135deg, #eab308 0%, #fef9c3 100%)",
-    radius: "7px 18px 7px 18px",
-    clipPath: "none",
-  },
-  {
-    label: "Nebula",
-    background: "linear-gradient(135deg, #4f46e5 0%, #f0abfc 100%)",
-    radius: "18px 999px 18px 999px",
-    clipPath: "none",
-  },
-  {
-    label: "Terra",
-    background: "linear-gradient(135deg, #15803d 0%, #fef3c7 100%)",
-    radius: "10px 10px 20px 20px",
-    clipPath: "none",
-  },
-  {
-    label: "Lumen",
-    background: "linear-gradient(135deg, #facc15 0%, #f0f9ff 100%)",
-    radius: "999px 999px 999px 6px",
-    clipPath: "none",
-  },
-  {
-    label: "Polar",
-    background: "linear-gradient(135deg, #0284c7 0%, #e0f2fe 100%)",
-    radius: "6px 999px 999px 999px",
-    clipPath: "none",
-  },
-  {
-    label: "Granate",
-    background: "linear-gradient(135deg, #be123c 0%, #ffe4e6 100%)",
-    radius: "13px",
-    clipPath: "polygon(50% 0%, 95% 35%, 78% 100%, 22% 100%, 5% 35%)",
-  },
-  {
-    label: "Prisma",
-    background: "linear-gradient(135deg, #a855f7 0%, #67e8f9 100%)",
-    radius: "14px 6px 14px 6px",
-    clipPath: "none",
-  },
-  {
-    label: "Bosque",
-    background: "linear-gradient(135deg, #166534 0%, #dcfce7 100%)",
-    radius: "999px 8px 999px 8px",
-    clipPath: "none",
-  },
-  {
-    label: "Cobalto",
-    background: "linear-gradient(135deg, #1d4ed8 0%, #bfdbfe 100%)",
-    radius: "8px 8px 999px 999px",
-    clipPath: "none",
-  },
-];
-
-function formatPoints(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-
-function getGeneratedAlias(seed: string) {
-  const total = seed
-    .split("")
-    .reduce((sum, character) => sum + character.charCodeAt(0), 0);
-
-  return stormAliases[total % stormAliases.length];
-}
-
-function getGeneratedAvatarPreset(seed: string) {
-  const total = seed
-    .split("")
-    .reduce((sum, character) => sum + character.charCodeAt(0), 0);
-
-  return avatarPresets[total % avatarPresets.length];
-}
-
-function getAvatarPreset(savedValue: string | null | undefined, seed: string) {
-  return (
-    avatarPresets.find(
-      (preset) =>
-        preset.label === savedValue || preset.background === savedValue,
-    ) || getGeneratedAvatarPreset(seed)
-  );
-}
-
-function getInitials(value: string) {
-  const initials = value
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-
-  return initials || "RA";
-}
-
-function getLevelClass(level: string) {
-  return `is-${level.toLowerCase()}`;
-}
 
 function formatRole(value: string) {
   const labels: Record<string, string> = {
@@ -321,7 +61,7 @@ type InstructorCourseSummary = {
 };
 
 export function DashboardPage() {
-  const { profile, user, refreshProfile } = useAuth();
+  const { profile, user } = useAuth();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [courses, setCourses] = useState<
@@ -333,17 +73,9 @@ export function DashboardPage() {
   const [instructorSummaries, setInstructorSummaries] = useState<
     InstructorCourseSummary[]
   >([]);
-  const [leaderboardName, setLeaderboardName] = useState("");
-  const [leaderboardVisibility, setLeaderboardVisibility] =
-    useState<LeaderboardVisibility>("alias");
-  const [avatarPresetLabel, setAvatarPresetLabel] = useState(
-    avatarPresets[0].label,
-  );
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const name = profile?.first_name || profile?.display_name || "there";
+  const name = profile?.first_name || profile?.display_name || "Relampo";
   const hasStudentCourses = courses.length > 0;
 
   useEffect(() => {
@@ -616,39 +348,11 @@ export function DashboardPage() {
     void loadLeaderboard();
   }, [selectedCourseId]);
 
-  useEffect(() => {
-    if (!profile) {
-      return;
-    }
-
-    setLeaderboardName(
-      profile.leaderboard_name || getGeneratedAlias(profile.id),
-    );
-    setLeaderboardVisibility(
-      profile.leaderboard_visibility === "hidden"
-        ? "alias"
-        : profile.leaderboard_visibility,
-    );
-    setAvatarPresetLabel(getAvatarPreset(profile.avatar_url, profile.id).label);
-  }, [profile]);
-
   const currentEntry = useMemo(
     () => leaderboard.find((entry) => entry.student_id === user?.id),
     [leaderboard, user?.id],
   );
   const currentRank = leaderboard.findIndex((entry) => entry.student_id === user?.id) + 1;
-  const topLeaderboard = leaderboard.slice(0, 10);
-  const selectedAvatarPreset =
-    avatarPresets.find((preset) => preset.label === avatarPresetLabel) ||
-    avatarPresets[0];
-  const previewDisplayName =
-    leaderboardVisibility === "alias"
-      ? leaderboardName
-      : profile?.display_name || name;
-  const scorePercent =
-    currentEntry && currentEntry.max_score > 0
-      ? Math.min(100, Math.round((currentEntry.total_score / currentEntry.max_score) * 100))
-      : 0;
   const startedCourseSummaries = courseSummaries
     .filter((summary) => summary.viewedLessons > 0)
     .slice(0, 2);
@@ -681,41 +385,6 @@ export function DashboardPage() {
     )
     .slice(0, 4);
 
-  const handleSaveLeaderboardProfile = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
-
-    if (!user) {
-      return;
-    }
-
-    setError(null);
-    setMessage(null);
-    setIsSaving(true);
-
-    try {
-      await updateLeaderboardProfile(user.id, {
-        leaderboard_name: leaderboardName || getGeneratedAlias(user.id),
-        leaderboard_visibility: leaderboardVisibility,
-        avatar_url: avatarPresetLabel,
-      });
-      await refreshProfile();
-      if (selectedCourseId) {
-        setLeaderboard(await getCourseLeaderboard(selectedCourseId));
-      }
-      setMessage("Perfil de la tabla de posiciones actualizado.");
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "No se pudo actualizar el perfil de la tabla de posiciones.",
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <section className="page dashboard-page">
       <div className="page-header">
@@ -727,7 +396,6 @@ export function DashboardPage() {
       </div>
 
       {error ? <p className="form-message error">{error}</p> : null}
-      {message ? <p className="form-message success">{message}</p> : null}
       {isLoading ? <p>Cargando inicio...</p> : null}
 
       <div className="stats-grid">
@@ -736,7 +404,7 @@ export function DashboardPage() {
           <strong>{courses.length}</strong>
         </article>
         <article className="stat-card">
-          <span>Posicion</span>
+          <span>Posición</span>
           <strong>{currentRank > 0 ? `#${currentRank}` : "-"}</strong>
         </article>
         <article className="stat-card">
@@ -786,7 +454,7 @@ export function DashboardPage() {
           {priorityInstructorCourses.length === 0 ? (
             <div className="empty-builder">
               <strong>No hay pendientes urgentes</strong>
-              <span>Todos tus cursos asignados estan al dia.</span>
+              <span>Todos tus cursos asignados están al día.</span>
             </div>
           ) : (
             <div className="instructor-course-grid">
@@ -856,7 +524,7 @@ export function DashboardPage() {
           {courseSummaries.length === 0 ? (
             <p>Cargando progreso de cursos...</p>
           ) : startedCourseSummaries.length === 0 ? (
-            <p>Todavia no hay cursos iniciados.</p>
+            <p>Todavía no hay cursos iniciados.</p>
           ) : (
             <div className="student-course-grid">
               {startedCourseSummaries.map((summary) => (
@@ -886,7 +554,7 @@ export function DashboardPage() {
                   </div>
 
                   <div className="student-next-lesson">
-                    <span>Proxima clase</span>
+                    <span>Próxima clase</span>
                     <strong>{summary.nextLessonTitle ?? "Curso revisado"}</strong>
                   </div>
 
@@ -916,196 +584,18 @@ export function DashboardPage() {
         </section>
       ) : null}
 
-      <section
-        className={`leaderboard-shell${
-          hasStudentCourses ? "" : " single-column"
-        }`}
-      >
-        <div className="content-panel leaderboard-panel">
-          <div className="page-header compact-header">
-            <div>
-              <p className="eyebrow">Tabla de posiciones</p>
-              <h2>Ranking del curso</h2>
-            </div>
-            <label className="assignment-search">
-              <span>Curso</span>
-              <select
-                value={selectedCourseId}
-                onChange={(event) => setSelectedCourseId(event.target.value)}
-              >
-                {courses.length === 0 ? (
-                  <option value="">No hay cursos aprobados</option>
-                ) : null}
-                {courses.map((edition) => (
-                  <option key={edition.course_id} value={edition.course_id}>
-                    {edition.courses?.title ?? edition.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {topLeaderboard.length === 0 ? (
-            <p>Todavia no hay datos de ranking.</p>
-          ) : (
-            <>
-              {currentEntry ? (
-                <div className="leaderboard-summary-card">
-                  <div>
-                    <span>Tu posicion</span>
-                    <strong>
-                      {currentRank > 0 ? `#${currentRank}` : "-"} ·{" "}
-                      {currentEntry.level}
-                    </strong>
-                  </div>
-                  <div className="leaderboard-progress">
-                    <span>{scorePercent}%</span>
-                    <div>
-                      <i style={{ width: `${scorePercent}%` }} />
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-              <div className="leaderboard-list">
-                {topLeaderboard.map((entry, index) => {
-                  const avatarPreset = getAvatarPreset(
-                    entry.avatar_url,
-                    entry.student_id,
-                  );
-
-                  return (
-                    <article
-                      className={`leaderboard-row ${getLevelClass(entry.level)}${
-                        entry.student_id === user?.id ? " is-current" : ""
-                      }`}
-                      key={entry.student_id}
-                    >
-                      <span className="leaderboard-rank">{index + 1}</span>
-                      <span
-                        className="leaderboard-avatar"
-                        style={
-                          {
-                            "--avatar-color": avatarPreset.background,
-                            "--avatar-radius": avatarPreset.radius,
-                            "--avatar-clip": avatarPreset.clipPath,
-                          } as CSSProperties
-                        }
-                        title={avatarPreset.label}
-                      >
-                        {getInitials(entry.display_name)}
-                      </span>
-                      <div>
-                        <strong>{entry.display_name}</strong>
-                        <span>{entry.level}</span>
-                      </div>
-                      <div className="leaderboard-score">
-                        <strong>{formatPoints(entry.total_score)}</strong>
-                        <span>
-                          /{formatPoints(entry.max_score)} pts
-                        </span>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </>
-          )}
+      <section className="content-panel dashboard-leaderboard-card">
+        <div>
+          <p className="eyebrow">Leaderboard</p>
+          <h2>Compite por una licencia Relampo</h2>
+          <p>
+            Los 3 primeros lugares reciben una licencia para generar más de
+            1000 usuarios gratis durante 2 meses.
+          </p>
         </div>
-
-        {hasStudentCourses ? (
-          <form
-            className="content-panel leaderboard-profile-card"
-            onSubmit={handleSaveLeaderboardProfile}
-          >
-            <div className="leaderboard-profile-header">
-              <p className="eyebrow">Perfil publico</p>
-              <h2>Identidad en la tabla</h2>
-            </div>
-            <div
-              className="leaderboard-profile-preview"
-              style={
-                {
-                  "--avatar-color": selectedAvatarPreset.background,
-                  "--avatar-radius": selectedAvatarPreset.radius,
-                  "--avatar-clip": selectedAvatarPreset.clipPath,
-                } as CSSProperties
-              }
-            >
-              <span>{getInitials(previewDisplayName)}</span>
-              <strong>{previewDisplayName}</strong>
-            </div>
-            <label>
-              Mostrar como
-              <select
-                value={leaderboardVisibility}
-                onChange={(event) =>
-                  setLeaderboardVisibility(
-                    event.target.value as LeaderboardVisibility,
-                  )
-                }
-              >
-                <option value="alias">Alias</option>
-                <option value="first_name">Nombre</option>
-                <option value="full_name">Nombre completo</option>
-              </select>
-            </label>
-            <label>
-              Alias
-              <div className="inline-picker">
-                <input
-                  value={leaderboardName}
-                  onChange={(event) => setLeaderboardName(event.target.value)}
-                />
-                <button
-                  className="secondary-action"
-                  type="button"
-                  onClick={() =>
-                    setLeaderboardName(
-                      stormAliases[
-                        Math.floor(Math.random() * stormAliases.length)
-                      ],
-                    )
-                  }
-                >
-                  <RefreshCw aria-hidden="true" size={16} strokeWidth={2.4} />
-                </button>
-              </div>
-            </label>
-            <div className="avatar-picker">
-              <span>Avatar</span>
-              <div>
-                {avatarPresets.map((preset) => (
-                  <button
-                    aria-label={`Usar avatar ${preset.label}`}
-                    className={
-                      avatarPresetLabel === preset.label ? "selected" : ""
-                    }
-                    key={preset.label}
-                    style={
-                      {
-                        "--avatar-color": preset.background,
-                        "--avatar-radius": preset.radius,
-                        "--avatar-clip": preset.clipPath,
-                      } as CSSProperties
-                    }
-                    title={preset.label}
-                    type="button"
-                    onClick={() => setAvatarPresetLabel(preset.label)}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="leaderboard-profile-actions">
-              <button
-                className="primary-action"
-                disabled={isSaving}
-                type="submit"
-              >
-                Guardar identidad
-              </button>
-            </div>
-          </form>
-        ) : null}
+        <a className="primary-action" href="#/leaderboard">
+          Abrir leaderboard
+        </a>
       </section>
     </section>
   );

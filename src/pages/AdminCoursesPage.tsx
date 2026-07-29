@@ -14,7 +14,7 @@ function formatStatus(value: string) {
   const labels: Record<string, string> = {
     draft: "borrador",
     published: "publicado",
-    enrollment_closed: "inscripcion cerrada",
+    enrollment_closed: "inscripción cerrada",
     completed: "completado",
   };
 
@@ -115,7 +115,7 @@ export function AdminCoursesPage() {
     <section className="page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Administracion</p>
+          <p className="eyebrow">Administración</p>
           <h1>Cursos</h1>
         </div>
       </div>
@@ -131,7 +131,7 @@ export function AdminCoursesPage() {
             onSubmit={handleCreateCourse}
           >
             <label>
-              Titulo
+              Título
               <input
                 required
                 type="text"
@@ -140,7 +140,7 @@ export function AdminCoursesPage() {
               />
             </label>
             <label>
-              Descripcion corta
+              Descripción corta
               <textarea
                 value={shortDescription}
                 onChange={(event) => setShortDescription(event.target.value)}
@@ -156,7 +156,7 @@ export function AdminCoursesPage() {
               >
                 <option value="draft">Borrador</option>
                 <option value="published">Publicado</option>
-                <option value="enrollment_closed">Inscripcion cerrada</option>
+                <option value="enrollment_closed">Inscripción cerrada</option>
               </select>
             </label>
             <label className="checkbox-row">
@@ -165,7 +165,7 @@ export function AdminCoursesPage() {
                 checked={enrollmentOpen}
                 onChange={(event) => setEnrollmentOpen(event.target.checked)}
               />
-              Inscripcion abierta
+              Inscripción abierta
             </label>
             <button type="submit" disabled={isSubmitting}>
               Crear curso
@@ -176,7 +176,7 @@ export function AdminCoursesPage() {
         <section className="content-panel course-inventory-panel">
           <h2>Inventario de cursos</h2>
           {isLoading ? <p>Cargando cursos...</p> : null}
-          {!isLoading && courses.length === 0 ? <p>Todavia no hay cursos creados.</p> : null}
+          {!isLoading && courses.length === 0 ? <p>Todavía no hay cursos creados.</p> : null}
           <div className="course-list">
             {courses.map((course) => {
               const offering = course.course_editions[0];
@@ -185,13 +185,12 @@ export function AdminCoursesPage() {
                 <article className="course-row" key={course.id}>
                   <div>
                     <h2>{course.title}</h2>
-                    <p>{course.short_description || "Sin descripcion todavia."}</p>
                     <div className="mini-list">
                       <span>{formatStatus(course.status)}</span>
                       <span>
                         {offering?.enrollment_open
-                          ? "Inscripcion abierta"
-                          : "Inscripcion cerrada"}
+                          ? "Inscripción abierta"
+                          : "Inscripción cerrada"}
                       </span>
                       {offering?.capacity ? (
                         <span>{offering.capacity} cupos</span>

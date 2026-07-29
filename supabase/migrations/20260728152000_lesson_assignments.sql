@@ -134,8 +134,8 @@ insert into public.lesson_assignments (
 )
 select
   l.id,
-  'Assignment - ' || l.title,
-  'Submit the required evidence for this class.',
+  'Tarea - ' || l.title,
+  'Envía la evidencia requerida para esta clase.',
   case
     when l.title ilike '%script%'
       or l.title ilike '%jmeter%'

@@ -4,7 +4,6 @@ import {
   ChevronDown,
   ChevronRight,
   ClipboardCheck,
-  Circle,
   CircleHelp,
   File,
   FileText,
@@ -19,15 +18,12 @@ import {
 import {
   listLessonAttendance,
   listLessonAssignments,
-  listLessonProgress,
   listLessonQuizzes,
   listAssignmentSubmissionsByAssignmentIds,
   listCourseContent,
   listQuizAttemptsByQuizIds,
-  markLessonViewed,
   submitAssignment,
   submitQuizAttempt,
-  unmarkLessonViewed,
   type AssignmentSubmission,
   type LessonAttendance,
   type LessonAssignment,
@@ -55,7 +51,7 @@ const resourceTypeLabels: Record<string, string> = {
   external_link: "Enlace externo",
   video: "Video",
   pdf: "PDF",
-  slides: "Presentacion",
+  slides: "Presentación",
   zip: "ZIP",
   script: "Script",
   report: "Reporte",
@@ -92,7 +88,7 @@ function getAttendanceLabel(record?: LessonAttendance) {
     return "pendiente";
   }
 
-  return record.stayed_until_end ? "clase completa" : "asistio";
+  return record.stayed_until_end ? "clase completa" : "asistió";
 }
 
 function renderStudentResource(resource: Resource) {
@@ -131,9 +127,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const { user } = useAuth();
   const [course, setCourse] = useState<CourseWithEditions | null>(null);
   const [modules, setModules] = useState<ModuleWithLessons[]>([]);
-  const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(
-    () => new Set(),
-  );
   const [attendance, setAttendance] = useState<LessonAttendance[]>([]);
   const [assignments, setAssignments] = useState<LessonAssignment[]>([]);
   const [assignmentSubmissions, setAssignmentSubmissions] = useState<
@@ -147,7 +140,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [collapsedLessonIds, setCollapsedLessonIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const [savingLessonId, setSavingLessonId] = useState<string | null>(null);
   const [activeAssignmentLessonId, setActiveAssignmentLessonId] = useState<
     string | null
   >(null);
@@ -172,13 +164,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       ? module.lessons.filter((lesson) => lesson.status === "published")
       : [],
   );
-  const completedCount = availableLessons.filter((lesson) =>
-    completedLessonIds.has(lesson.id),
-  ).length;
-  const progress =
-    availableLessons.length > 0
-      ? Math.round((completedCount / availableLessons.length) * 100)
-      : 0;
   const attendanceByLesson = new Map(
     attendance.map((record) => [record.lesson_id, record]),
   );
@@ -195,6 +180,33 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const attemptByQuiz = new Map(
     quizAttempts.map((attempt) => [attempt.quiz_id, attempt]),
   );
+
+  const isLessonSystemComplete = (lessonId: string) => {
+    const attendanceRecord = attendanceByLesson.get(lessonId);
+    const assignment = assignmentByLesson.get(lessonId);
+    const submission = assignment
+      ? submissionByAssignment.get(assignment.id)
+      : null;
+    const quiz = quizByLesson.get(lessonId);
+    const quizAttempt = quiz ? attemptByQuiz.get(quiz.id) : null;
+    const isQuizConfigured = (quiz?.quiz_questions.length ?? 0) === 10;
+
+    return Boolean(
+      attendanceRecord?.attended &&
+        assignment &&
+        ["reviewed", "needs_revision"].includes(submission?.status ?? "") &&
+        isQuizConfigured &&
+        quizAttempt,
+    );
+  };
+
+  const completedCount = availableLessons.filter((lesson) =>
+    isLessonSystemComplete(lesson.id),
+  ).length;
+  const progress =
+    availableLessons.length > 0
+      ? Math.round((completedCount / availableLessons.length) * 100)
+      : 0;
 
   const getLessonPointSummary = (lessonId: string) => {
     const attendanceRecord = attendanceByLesson.get(lessonId);
@@ -269,56 +281,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const courseHasPendingPoints = coursePointSummaries.some((summary) =>
     summary.label.includes("pendientes"),
   );
-
-  const toggleLessonComplete = async (lessonId: string) => {
-    if (!user) {
-      return;
-    }
-
-    const wasCompleted = completedLessonIds.has(lessonId);
-
-    setCompletedLessonIds((current) => {
-      const next = new Set(current);
-
-      if (wasCompleted) {
-        next.delete(lessonId);
-      } else {
-        next.add(lessonId);
-      }
-
-      return next;
-    });
-
-    setSavingLessonId(lessonId);
-    setError(null);
-
-    try {
-      if (wasCompleted) {
-        await unmarkLessonViewed(lessonId, user.id);
-      } else {
-        await markLessonViewed(lessonId, user.id);
-      }
-    } catch (caughtError) {
-      setCompletedLessonIds((current) => {
-        const next = new Set(current);
-
-        if (wasCompleted) {
-          next.add(lessonId);
-        } else {
-          next.delete(lessonId);
-        }
-
-        return next;
-      });
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "No se pudo actualizar el progreso de la clase.",
-      );
-    } finally {
-      setSavingLessonId(null);
-    }
-  };
 
   const toggleModule = (moduleId: string) => {
     setCollapsedModuleIds((current) => {
@@ -485,9 +447,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
           getCourseWithEditions(courseId),
           listCourseContent(courseId),
         ]);
-        const nextProgress = user
-          ? await listLessonProgress(courseId, user.id).catch(() => [])
-          : [];
         const nextAttendance = user
           ? await listLessonAttendance(courseId, user.id).catch(() => [])
           : [];
@@ -510,9 +469,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
 
         setCourse(nextCourse);
         setModules(nextModules);
-        setCompletedLessonIds(
-          new Set(nextProgress.map((progressItem) => progressItem.lesson_id)),
-        );
         setAttendance(nextAttendance);
         setAssignments(nextAssignments);
         setAssignmentSubmissions(nextAssignmentSubmissions);
@@ -576,7 +532,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
 
       {!isLoading && modules.length === 0 ? (
         <section className="content-panel compact">
-          <p>Todavia no hay contenido disponible para este curso.</p>
+          <p>Todavía no hay contenido disponible para este curso.</p>
         </section>
       ) : null}
 
@@ -590,14 +546,14 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
             <span style={{ width: `${progress}%` }} />
           </div>
           <p>
-            {completedCount} de {availableLessons.length} clases vistas
+            {completedCount} de {availableLessons.length} clases completadas
           </p>
           <div className="student-requirements">
             <div>
               <span>Para completar el curso se requiere</span>
               <div>
                 <small>Instructor confirma asistencia</small>
-                <small>Estudiante completa quiz</small>
+                <small>El estudiante completa el quiz</small>
                 <small>Tarea revisada</small>
               </div>
             </div>
@@ -621,7 +577,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
             ? module.lessons.filter((lesson) => lesson.status === "published")
             : [];
           const moduleCompletedCount = moduleAvailableLessons.filter((lesson) =>
-            completedLessonIds.has(lesson.id),
+            isLessonSystemComplete(lesson.id),
           ).length;
 
           return (
@@ -638,10 +594,10 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                 type="button"
                 onClick={() => toggleModule(module.id)}
               >
-                <span>Modulo {moduleIndex + 1}</span>
+                <span>Módulo {moduleIndex + 1}</span>
                 <div>
                   <h2>{module.title}</h2>
-                  <p>{module.description || "Sin descripcion todavia."}</p>
+                  <p>{module.description || "Sin descripción todavía."}</p>
                 </div>
                 <small title={isModulePublished ? getModuleTooltip(module) : ""}>
                   {isModulePublished
@@ -650,14 +606,14 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                 </small>
                 {isModulePublished ? (
                   <Eye
-                    aria-label="Modulo disponible"
+                    aria-label="Módulo disponible"
                     className="student-availability-icon is-visible"
                     size={18}
                     strokeWidth={2.2}
                   />
                 ) : (
                   <EyeOff
-                    aria-label="Modulo no disponible"
+                    aria-label="Módulo no disponible"
                     className="student-availability-icon is-hidden"
                     size={18}
                     strokeWidth={2.2}
@@ -672,7 +628,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
               {!isModuleCollapsed ? (
                 <div className="student-lesson-list">
                   {module.lessons.length === 0 ? (
-                    <p className="tree-empty">No hay clases en este modulo.</p>
+                    <p className="tree-empty">No hay clases en este módulo.</p>
                   ) : null}
                   {module.lessons.map((lesson, lessonIndex) => {
                     const attendanceRecord = attendanceByLesson.get(lesson.id);
@@ -695,7 +651,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                       ? "Quiz completado"
                       : isQuizReady
                         ? "Quiz pendiente"
-                        : "Configuracion de quiz pendiente";
+                        : "Configuración de quiz pendiente";
                     const assignmentStatusClass =
                       submission?.status === "reviewed"
                         ? "is-confirmed"
@@ -713,6 +669,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                             ? "Tarea enviada"
                             : "Tarea pendiente";
                     const lessonPointSummary = getLessonPointSummary(lesson.id);
+                    const isLessonComplete = isLessonSystemComplete(lesson.id);
                     const isLessonCollapsed =
                       collapsedLessonIds.has(lesson.id) &&
                       activeAssignmentLessonId !== lesson.id &&
@@ -721,47 +678,32 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                     return (
                       <article
                         className={`student-lesson${
-                          completedLessonIds.has(lesson.id) ? " is-viewed" : ""
+                          isLessonComplete ? " is-complete" : ""
                         }${isLessonPublished ? "" : " is-disabled"}`}
                         key={lesson.id}
                       >
                         <header className="student-lesson-header">
-                          <button
+                          <span
                             aria-label={
-                              completedLessonIds.has(lesson.id)
-                                ? "Marcar clase como no vista"
-                                : "Marcar clase como vista"
+                              isLessonComplete
+                                ? "Clase completada por requisitos"
+                                : "Clase pendiente por requisitos"
                             }
-                            className="student-complete-toggle"
-                            disabled={
-                              !isLessonPublished || savingLessonId === lesson.id
+                            className={`student-system-status${
+                              isLessonComplete ? " is-complete" : ""
+                            }`}
+                            title={
+                              isLessonComplete
+                                ? "El sistema completó esta clase"
+                                : "Se completa cuando hay asistencia, quiz completado y tarea revisada"
                             }
-                            type="button"
-                            onClick={() => void toggleLessonComplete(lesson.id)}
                           >
-                            {completedLessonIds.has(lesson.id) ? (
+                            {isLessonComplete ? (
                               <CheckCircle2 aria-hidden="true" size={22} />
                             ) : (
-                              <Circle aria-hidden="true" size={22} />
+                              <CircleHelp aria-hidden="true" size={20} />
                             )}
-                          </button>
-                          <button
-                            aria-expanded={!isLessonCollapsed}
-                            aria-label={
-                              isLessonCollapsed
-                                ? "Expandir clase"
-                                : "Colapsar clase"
-                            }
-                            className="student-lesson-expand"
-                            type="button"
-                            onClick={() => toggleLesson(lesson.id)}
-                          >
-                            {isLessonCollapsed ? (
-                              <ChevronRight aria-hidden="true" size={18} />
-                            ) : (
-                              <ChevronDown aria-hidden="true" size={18} />
-                            )}
-                          </button>
+                          </span>
                           <div>
                             <span>Clase {lessonIndex + 1}</span>
                             <h3>{lesson.title}</h3>
@@ -825,6 +767,31 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                           )}
                           {lesson.description ? (
                             <span>{lesson.description}</span>
+                          ) : null}
+                          {isLessonPublished ? (
+                            <button
+                              aria-expanded={!isLessonCollapsed}
+                              aria-label={
+                                isLessonCollapsed
+                                  ? "Expandir contenido de la clase"
+                                  : "Colapsar contenido de la clase"
+                              }
+                              className="student-lesson-expand"
+                              type="button"
+                              onClick={() => toggleLesson(lesson.id)}
+                            >
+                              {isLessonCollapsed ? (
+                                <>
+                                  <span>Ver contenido</span>
+                                  <ChevronRight aria-hidden="true" size={18} />
+                                </>
+                              ) : (
+                                <>
+                                  <span>Ocultar contenido</span>
+                                  <ChevronDown aria-hidden="true" size={18} />
+                                </>
+                              )}
+                            </button>
                           ) : null}
                         </div>
                         {!isLessonCollapsed && isLessonPublished ? (
@@ -953,7 +920,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               <div>
                                 <small>Quiz</small>
                                 <strong>{quiz.title}</strong>
-                                <p>10 preguntas. El puntaje cambia segun el tiempo de respuesta.</p>
+                                <p>10 preguntas. El puntaje cambia según el tiempo de respuesta.</p>
                               </div>
                             </div>
                             {quizAttempt ? (
@@ -981,7 +948,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                           {quiz.quiz_questions.length}
                                         </span>
                                         <span>
-                                          2 pts antes de 30s · 1.5 antes de 60s · 1 despues
+                                          2 pts antes de 30s · 1.5 antes de 60s · 1 después
                                         </span>
                                       </div>
                                       <strong>{question.question_text}</strong>

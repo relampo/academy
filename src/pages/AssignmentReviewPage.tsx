@@ -52,7 +52,7 @@ function formatStatus(status: string) {
   const labels: Record<string, string> = {
     draft: "borrador",
     published: "publicado",
-    enrollment_closed: "inscripcion cerrada",
+    enrollment_closed: "inscripción cerrada",
     completed: "completado",
     submitted: "enviada",
   };
@@ -105,7 +105,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
         setError(
           caughtError instanceof Error
             ? caughtError.message
-          : "No se pudieron cargar los cursos.",
+            : "No se pudieron cargar los cursos.",
         );
       } finally {
         setIsLoading(false);
@@ -269,7 +269,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
 
         {!isLoading && teachingCourses.length === 0 ? (
           <section className="content-panel compact">
-            <p>Todavia no tienes cursos asignados.</p>
+            <p>Todavía no tienes cursos asignados.</p>
           </section>
         ) : null}
 
@@ -285,7 +285,6 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
               <article className="course-row" key={assignment.course_id}>
                 <div>
                   <h2>{assignedCourse.title}</h2>
-                  <p>{assignedCourse.short_description || "Sin descripcion todavia."}</p>
                   <div className="mini-list">
                     <span>{formatStatus(assignedCourse.status)}</span>
                   </div>
@@ -326,7 +325,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
         <section className="content-panel assignment-gradebook-panel">
           <div className="page-header compact-header">
             <div>
-              <p className="eyebrow">Revision</p>
+              <p className="eyebrow">Revisión</p>
               <h2>Tabla de tareas por estudiante</h2>
             </div>
             <label className="assignment-search">
@@ -343,9 +342,9 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
             </label>
           </div>
 
-          {students.length === 0 ? <p>Todavia no hay estudiantes aprobados.</p> : null}
+          {students.length === 0 ? <p>Todavía no hay estudiantes aprobados.</p> : null}
           {students.length > 0 && columns.length === 0 ? (
-            <p>Todavia no hay tareas configuradas para este curso.</p>
+            <p>Todavía no hay tareas configuradas para este curso.</p>
           ) : null}
           {students.length > 0 && columns.length > 0 ? (
             <>
@@ -474,7 +473,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
               </div>
               <div className="assignment-pagination">
                 <span>
-                  {filteredStudents.length} estudiantes · pagina {safeCurrentPage} de{" "}
+                  {filteredStudents.length} estudiantes · página {safeCurrentPage} de{" "}
                   {pageCount}
                 </span>
                 <div>

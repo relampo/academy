@@ -1387,6 +1387,43 @@ p {
   gap: 12px;
 }
 
+.quiz-question-stepper {
+  display: grid;
+  gap: 12px;
+}
+
+.quiz-stepper-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.quiz-stepper-header strong {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-text);
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 0 10px;
+}
+
+.quiz-stepper-header span {
+  color: #657286;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.quiz-stepper-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .quiz-question-editor {
   display: grid;
   gap: 10px;
@@ -1405,6 +1442,11 @@ p {
 
 .quiz-summary {
   background: #ffffff;
+}
+
+.quiz-config-action {
+  min-height: 30px;
+  padding: 0 11px;
 }
 
 .resource-form {
@@ -1795,13 +1837,13 @@ p {
   color: #657286;
 }
 
-.student-lesson.is-disabled .student-complete-toggle,
+.student-lesson.is-disabled .student-system-status,
 .student-lesson.is-disabled .student-lesson-expand {
   cursor: not-allowed;
   opacity: 0.65;
 }
 
-.student-lesson.is-viewed {
+.student-lesson.is-complete {
   background: rgba(255, 199, 18, 0.08);
   box-shadow: inset 4px 0 0 rgba(255, 199, 18, 0.38);
 }
@@ -1812,45 +1854,54 @@ p {
 
 .student-lesson-header {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
   padding: 14px 20px 8px;
 }
 
-.student-complete-toggle,
+.student-system-status,
 .student-lesson-expand {
-  display: inline-grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #d9e0ea;
-  border-radius: 999px;
   background: #ffffff;
   color: #657286;
-  cursor: pointer;
-  padding: 0;
+}
+
+.student-system-status {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+}
+
+.student-system-status.is-complete {
+  border-color: #bfe7cc;
+  background: #e5f8ed;
+  color: #1f7a45;
 }
 
 .student-lesson-expand {
-  width: 30px;
-  height: 30px;
+  gap: 7px;
+  width: fit-content;
+  min-width: 0;
+  min-height: 34px;
+  border-radius: 999px;
+  cursor: pointer;
   color: #526176;
+  font-size: 0.76rem;
+  font-weight: 900;
+  padding: 0 10px;
+  white-space: nowrap;
 }
 
-.student-complete-toggle:hover,
-.student-complete-toggle:focus-visible,
 .student-lesson-expand:hover,
 .student-lesson-expand:focus-visible {
   border-color: #d8bd3d;
   background: var(--brand-soft);
   color: var(--brand-text);
   outline: none;
-}
-
-.student-complete-toggle:disabled {
-  cursor: wait;
-  opacity: 0.65;
 }
 
 .student-lesson-header > div > span {
@@ -2559,12 +2610,8 @@ p {
   border-left-color: #36a3ff;
 }
 
-.leaderboard-row.is-huracan {
+.leaderboard-row.is-relampago {
   border-left-color: #37a267;
-}
-
-.leaderboard-row.is-tormenta {
-  border-left-color: #7c5cff;
 }
 
 .leaderboard-rank {
@@ -2578,6 +2625,7 @@ p {
   font-weight: 900;
 }
 
+.avatar-emblem,
 .leaderboard-avatar {
   display: grid;
   width: 38px;
@@ -2588,10 +2636,14 @@ p {
   background: var(--avatar-color);
   clip-path: var(--avatar-clip);
   color: #18212f;
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 0 18px rgba(255, 199, 18, 0.14);
+}
+
+.avatar-emblem svg {
+  color: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.48));
 }
 
 .leaderboard-row div:first-of-type {
@@ -2668,21 +2720,24 @@ p {
   white-space: nowrap;
 }
 
-.leaderboard-profile-preview span {
-  display: grid;
+.leaderboard-profile-preview > .avatar-emblem {
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
-  place-items: center;
-  border: 1px solid rgba(24, 33, 47, 0.12);
-  border-radius: var(--avatar-radius);
-  background: var(--avatar-color);
-  clip-path: var(--avatar-clip);
-  color: #18212f;
-  font-size: 0.9rem;
-  font-weight: 900;
-  letter-spacing: 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  width: 54px;
+  height: 54px;
+}
+
+.leaderboard-profile-preview > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.leaderboard-profile-preview > div span {
+  overflow: hidden;
+  color: #657286;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .avatar-picker > div {
@@ -2696,17 +2751,21 @@ p {
 }
 
 .avatar-picker button {
+  display: grid;
   width: 32px;
   height: 32px;
+  place-items: center;
   justify-self: center;
   border: 2px solid transparent;
-  border-radius: var(--avatar-radius);
-  background: var(--avatar-color);
-  clip-path: var(--avatar-clip);
+  border-radius: 8px;
+  background: transparent;
   cursor: pointer;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    0 1px 2px rgba(24, 33, 47, 0.08);
+  padding: 0;
+}
+
+.avatar-picker button .avatar-emblem {
+  width: 100%;
+  height: 100%;
 }
 
 .avatar-picker button.selected {
@@ -2714,6 +2773,105 @@ p {
   box-shadow:
     0 0 0 2px #ffffff,
     0 0 0 4px rgba(255, 199, 18, 0.55);
+}
+
+.identity-customizer {
+  display: grid;
+  gap: 14px;
+}
+
+.identity-option-group {
+  display: grid;
+  gap: 8px;
+  color: #39465a;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.identity-helper {
+  color: #657286;
+  font-size: 0.76rem;
+  font-weight: 400;
+}
+
+.leaderboard-profile-card .identity-checkbox {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 48px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  background: rgba(8, 13, 21, 0.62);
+  color: inherit;
+  padding: 9px 12px;
+}
+
+.leaderboard-profile-card .identity-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand);
+}
+
+.leaderboard-profile-card .identity-checkbox span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: #39465a;
+  font-size: 0.88rem;
+  font-weight: 400;
+}
+
+.leaderboard-profile-card .identity-checkbox strong {
+  color: inherit;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.leaderboard-profile-card .identity-checkbox small {
+  color: #657286;
+  font-size: 0.74rem;
+  font-weight: 400;
+}
+
+.identity-color-grid,
+.identity-shape-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.identity-color-grid button,
+.identity-shape-grid button {
+  display: grid;
+  min-height: 38px;
+  place-items: center;
+  border: 1px solid #e1e7f0;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.identity-color-grid button span {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--avatar-color);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.identity-shape-grid button .avatar-emblem {
+  width: 28px;
+  height: 28px;
+}
+
+.identity-color-grid button.selected,
+.identity-shape-grid button.selected {
+  border-color: rgba(255, 199, 18, 0.85);
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 4px rgba(255, 199, 18, 0.2);
 }
 
 .leaderboard-profile-actions {
@@ -2738,6 +2896,337 @@ p {
 .leaderboard-profile-actions .primary-action:focus-visible {
   background: #eab308;
   outline: none;
+}
+
+.dashboard-leaderboard-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.dashboard-leaderboard-card h2,
+.dashboard-leaderboard-card p {
+  margin: 0;
+}
+
+.dashboard-leaderboard-card div {
+  display: grid;
+  gap: 8px;
+}
+
+.leaderboard-page {
+  gap: 22px;
+}
+
+.leaderboard-hero {
+  align-items: end;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  padding-bottom: 22px;
+}
+
+.leaderboard-hero p:not(.eyebrow) {
+  max-width: 760px;
+  margin: 10px 0 0;
+}
+
+.leaderboard-prize-callout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 880px;
+  margin-top: 14px;
+}
+
+.leaderboard-prize-callout strong,
+.leaderboard-prize-callout span {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.leaderboard-prize-callout strong {
+  border: 1px solid rgba(255, 199, 18, 0.44);
+  background: linear-gradient(90deg, rgba(255, 199, 18, 0.22), rgba(255, 199, 18, 0.08));
+  color: #ffe08a;
+  font-size: 0.92rem;
+  font-weight: 750;
+  padding: 0 14px;
+}
+
+.leaderboard-prize-callout span {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(8, 13, 21, 0.58);
+  color: #dbe5f1;
+  font-size: 0.82rem;
+  font-weight: 650;
+  padding: 0 12px;
+}
+
+.leaderboard-stats-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.leaderboard-stats-strip article {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #e1e7f0;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.leaderboard-stats-strip span {
+  color: #657286;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.leaderboard-stats-strip strong {
+  color: #18212f;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.leaderboard-page-grid {
+  grid-template-columns: minmax(0, 1.65fr) minmax(340px, 0.75fr);
+}
+
+.leaderboard-side-stack {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.leaderboard-arena {
+  overflow: hidden;
+}
+
+.leaderboard-arena .compact-header {
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.46fr);
+}
+
+.league-tier-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.league-tier-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 54px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  background: rgba(8, 13, 21, 0.52);
+  padding: 9px;
+}
+
+.league-tier-card > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 199, 18, 0.12);
+  color: #ffd95a;
+}
+
+.league-tier-card div {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.league-tier-card strong,
+.league-tier-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.league-tier-card strong {
+  color: #f8fafc;
+  font-size: 0.86rem;
+}
+
+.league-tier-card small {
+  color: #ffd95a;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.league-tier-card.is-active {
+  border-color: rgba(255, 199, 18, 0.52);
+  background: linear-gradient(90deg, rgba(255, 199, 18, 0.16), rgba(8, 13, 21, 0.68));
+  box-shadow: 0 0 22px rgba(255, 199, 18, 0.1);
+}
+
+.leaderboard-rank-board {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.leaderboard-rank-board .leaderboard-row {
+  min-height: 68px;
+  border-left-width: 1px;
+  padding: 10px 12px;
+}
+
+.leaderboard-rank-board .leaderboard-row:nth-child(1) {
+  border-color: rgba(255, 199, 18, 0.45);
+  background: linear-gradient(90deg, rgba(255, 199, 18, 0.14), rgba(255, 255, 255, 0.96));
+}
+
+.leaderboard-rank-board .leaderboard-row:nth-child(1) .leaderboard-rank {
+  background: #ffc712;
+  color: #111827;
+}
+
+.leaderboard-rank-board .leaderboard-row:nth-child(2) {
+  border-left-color: #cbd5e1;
+}
+
+.leaderboard-rank-board .leaderboard-row:nth-child(3) {
+  border-left-color: #c56a36;
+}
+
+.league-level-badge {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 20px;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  font-weight: 650;
+  padding: 0 8px;
+}
+
+.league-level-badge.is-rayo,
+.league-level-badge.is-centella,
+.league-level-badge.is-relampago {
+  border-color: rgba(255, 199, 18, 0.32);
+  background: rgba(255, 199, 18, 0.12);
+  color: #ffd95a;
+}
+
+.league-reward-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(255, 199, 18, 0.26);
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255, 199, 18, 0.18), rgba(255, 199, 18, 0.06));
+  padding: 14px 16px;
+}
+
+.league-reward-banner > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.league-reward-banner > div:first-child svg {
+  flex: 0 0 auto;
+  color: #ffd95a;
+}
+
+.league-reward-banner strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 0.95rem;
+}
+
+.league-reward-banner span {
+  color: #cbd5e1;
+  font-size: 0.82rem;
+}
+
+.league-reward-banner > div:last-child {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.leaderboard-levels-card {
+  display: grid;
+  gap: 16px;
+}
+
+.leaderboard-levels-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.leaderboard-level-list {
+  display: grid;
+  gap: 9px;
+}
+
+.leaderboard-level-list article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid #e1e7f0;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.leaderboard-level-list article > span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 999px;
+  background: #fff6c8;
+  color: #b68a00;
+}
+
+.leaderboard-level-list div {
+  display: grid;
+  gap: 3px;
+}
+
+.leaderboard-level-list strong {
+  color: #18212f;
+  font-size: 0.95rem;
+}
+
+.leaderboard-level-list small {
+  color: #b68a00;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.leaderboard-level-list p {
+  margin: 0;
+  color: #657286;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.league-avatar-picker > div {
+  max-height: 330px;
+  overflow: auto;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+}
+
+.league-avatar-picker button {
+  width: 42px;
+  height: 42px;
 }
 
 .assignment-table-scroll {
@@ -3271,6 +3760,15 @@ p {
 }
 
 @media (max-width: 1180px) {
+  .leaderboard-arena .compact-header {
+    grid-template-columns: 1fr;
+  }
+
+  .leaderboard-rank-board,
+  .league-tier-strip {
+    grid-template-columns: 1fr;
+  }
+
   .leaderboard-shell {
     grid-template-columns: 1fr;
   }
@@ -3297,16 +3795,16 @@ p {
   }
 
   .student-lesson-header {
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 9px;
   }
 
   .student-lesson-header .student-availability-icon {
-    grid-column: 4;
+    grid-column: 3;
   }
 
   .student-points-badge {
-    grid-column: 3 / -1;
+    grid-column: 2 / -1;
     justify-self: start;
     margin-left: 0;
   }
@@ -3340,6 +3838,49 @@ p {
 }
 
 @media (max-width: 820px) {
+  .dashboard-leaderboard-card,
+  .leaderboard-stats-strip,
+  .leaderboard-page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-leaderboard-card .primary-action {
+    justify-self: start;
+  }
+
+  .leaderboard-hero {
+    align-items: start;
+  }
+
+  .leaderboard-prize-callout {
+    align-items: stretch;
+  }
+
+  .leaderboard-prize-callout strong,
+  .leaderboard-prize-callout span {
+    flex: 1 1 auto;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .leaderboard-rank-board .leaderboard-row {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  .leaderboard-rank-board .leaderboard-score {
+    grid-column: 3;
+    justify-self: start;
+  }
+
+  .league-reward-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .league-reward-banner > div:last-child {
+    justify-items: start;
+  }
+
   .leaderboard-shell {
     grid-template-columns: 1fr;
   }
@@ -3428,7 +3969,7 @@ p {
     grid-template-columns: 1fr;
   }
 
-  .student-complete-toggle {
+  .student-system-status {
     justify-self: start;
   }
 
@@ -3557,4 +4098,1821 @@ p {
   .sidebar {
     padding: 18px;
   }
+}
+
+/* Relampo visual pass */
+:root {
+  --brand: #ffc712;
+  --brand-strong: #d99a00;
+  --brand-soft: #fff5c7;
+  --brand-text: #121826;
+  --success-bg: #e9f8ef;
+  --success-text: #1d6f43;
+  --warning-bg: #fff4d6;
+  --warning-text: #7a5600;
+  --relampo-ink: #111827;
+  --relampo-ink-soft: #1e293b;
+  --relampo-panel: #ffffff;
+  --relampo-page: #f6f8fc;
+  --relampo-line: #dce4ef;
+  --relampo-muted: #66758c;
+}
+
+body {
+  background:
+    linear-gradient(180deg, rgba(255, 199, 18, 0.08), transparent 260px),
+    var(--relampo-page);
+}
+
+.app-shell {
+  background:
+    radial-gradient(circle at 84% -10%, rgba(255, 199, 18, 0.18), transparent 360px),
+    linear-gradient(180deg, #fbfcff 0%, #f3f6fb 100%);
+}
+
+.sidebar {
+  border-right-color: #dfe6f1;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 18px 0 40px rgba(17, 24, 39, 0.035);
+}
+
+.brand {
+  min-height: 48px;
+}
+
+.brand-mark {
+  border: 1px solid rgba(255, 199, 18, 0.45);
+  box-shadow: 0 14px 26px rgba(255, 199, 18, 0.22);
+}
+
+.brand strong {
+  color: var(--relampo-ink);
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.brand span,
+.sidebar-footer span,
+p,
+.stat-card span,
+.stat-card small,
+.teaching-course-card p,
+.student-course-card-header span,
+.student-next-lesson span,
+.profile-list dt {
+  color: var(--relampo-muted);
+}
+
+.nav-link {
+  border: 1px solid transparent;
+  color: #3c485c;
+  font-weight: 700;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.nav-link:hover,
+.nav-link:focus-visible {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  color: var(--relampo-ink);
+}
+
+.nav-link-active {
+  border-color: rgba(255, 199, 18, 0.4);
+  background: linear-gradient(90deg, rgba(255, 199, 18, 0.2), rgba(255, 199, 18, 0.06));
+  box-shadow: inset 3px 0 0 var(--brand);
+  color: var(--relampo-ink);
+}
+
+.sidebar-footer {
+  border-top-color: #e6edf6;
+}
+
+.sidebar-footer button,
+.secondary-action,
+.subtle-action,
+.panel-actions button,
+.course-setup-actions button,
+.inline-actions button,
+.row-actions button,
+.confirm-actions button,
+.assignment-pagination button,
+.assignment-cell-actions button,
+.compact-select,
+.enrollment-link-box input,
+.inline-picker input,
+.inline-picker select,
+.auth-form input,
+.stacked-form input,
+.stacked-form select,
+.stacked-form textarea,
+.student-assignment-form input,
+.student-assignment-form textarea,
+.leaderboard-profile-card input,
+.leaderboard-profile-card select,
+.assignment-search input,
+.assignment-search select,
+.assignment-cell input {
+  border-color: var(--relampo-line);
+  background-color: #ffffff;
+  color: var(--relampo-ink-soft);
+}
+
+.sidebar-footer button:hover,
+.secondary-action:hover,
+.subtle-action:hover,
+.panel-actions button:hover,
+.course-setup-actions button:hover,
+.inline-actions button:hover,
+.row-actions button:hover,
+.confirm-actions button:hover,
+.assignment-pagination button:hover,
+.assignment-cell-actions button:hover {
+  border-color: #c8d3e2;
+  background-color: #f8fafc;
+}
+
+.main-panel {
+  padding: 34px clamp(22px, 3vw, 44px);
+}
+
+.page {
+  gap: 26px;
+}
+
+.page-header h1 {
+  color: var(--relampo-ink);
+  letter-spacing: 0;
+}
+
+.eyebrow {
+  color: #b98200;
+  letter-spacing: 0;
+}
+
+.stat-card,
+.content-panel,
+.course-row,
+.auth-panel,
+.student-course-card,
+.instructor-course-card,
+.teaching-course-card,
+.module-block,
+.student-module,
+.student-progress-panel,
+.leaderboard-profile-card,
+.assignment-review-card,
+.assignment-gradebook-panel,
+.confirm-dialog {
+  border-color: var(--relampo-line);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 40px rgba(17, 24, 39, 0.055);
+}
+
+.stat-card,
+.content-panel,
+.course-row,
+.auth-panel {
+  border-radius: 10px;
+}
+
+.content-panel {
+  padding: 24px;
+}
+
+.panel-heading,
+.course-setup-actions,
+.details-block,
+.task-list div,
+.profile-list div {
+  border-color: #e7edf5;
+}
+
+.stat-card strong,
+.instructor-metric-grid strong,
+.student-course-card-header strong,
+.student-next-lesson strong,
+.instructor-course-card-header strong,
+.teaching-course-card-header strong,
+.assignment-review-card h3,
+.leaderboard-summary-card strong {
+  color: var(--relampo-ink);
+}
+
+.status-pill,
+.status-chip,
+.publication-chip,
+.student-points-badge,
+.student-pending-grid span,
+.teaching-metric-row span,
+.assignment-card-meta span,
+.student-resource-chip,
+.resource-chip,
+.mini-list span,
+.removable-chip {
+  border-color: #e1e8f2;
+  background: #f4f7fb;
+  color: #526176;
+  font-weight: 800;
+}
+
+.status-pill,
+.student-pending-grid span.is-clear,
+.assignment-review-card.is-reviewed .status-chip {
+  border-color: #bfe7cc;
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.student-pending-grid span,
+.student-points-badge,
+.publication-chip.is-published,
+.status-chip.is-pending {
+  border-color: rgba(255, 199, 18, 0.35);
+  background: var(--brand-soft);
+  color: #735300;
+}
+
+.student-course-progress div,
+.leaderboard-summary-card div:last-child,
+.student-progress-track {
+  background: #e9eef6;
+}
+
+.student-course-progress i,
+.leaderboard-summary-card i,
+.student-progress-track i {
+  background: linear-gradient(90deg, #ffc712, #ffdd5a);
+}
+
+.student-course-card,
+.module-block,
+.student-module,
+.course-row,
+.assignment-review-card {
+  border-left-color: var(--brand);
+}
+
+.instructor-course-card,
+.teaching-course-card {
+  border-left-color: var(--relampo-ink-soft);
+}
+
+.primary-action,
+.auth-form button,
+.stacked-form button,
+.panel-actions button:first-child,
+.course-setup-actions .primary-action,
+.student-course-card-header a,
+.instructor-course-card-header a,
+.teaching-course-card-header a,
+.inline-actions button:first-child,
+.enroll-actions button:first-child,
+.leaderboard-profile-actions .primary-action,
+.assignment-cell-actions button:first-child {
+  border-color: transparent;
+  background: linear-gradient(180deg, #ffd743, var(--brand));
+  box-shadow: 0 10px 22px rgba(255, 199, 18, 0.2);
+  color: var(--brand-text);
+}
+
+.primary-action:hover,
+.auth-form button:hover,
+.stacked-form button:hover,
+.panel-actions button:first-child:hover,
+.course-setup-actions .primary-action:hover,
+.student-course-card-header a:hover,
+.instructor-course-card-header a:hover,
+.teaching-course-card-header a:hover,
+.inline-actions button:first-child:hover,
+.enroll-actions button:first-child:hover,
+.leaderboard-profile-actions .primary-action:hover,
+.assignment-cell-actions button:first-child:hover {
+  background: linear-gradient(180deg, #ffe277, #ffc712);
+}
+
+.danger-action,
+.panel-actions .danger-action,
+.course-setup-actions .danger-action,
+.curriculum-actions .danger-action,
+.lesson-actions .danger-action,
+.row-actions .danger-action,
+.confirm-actions .danger-action,
+.assignment-cell-actions button:last-child {
+  border-color: #efc3bb;
+  background: #fff8f6;
+  color: #9a3328;
+  box-shadow: none;
+}
+
+.segmented-control {
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
+}
+
+.segmented-control button.selected {
+  color: var(--relampo-ink);
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.08);
+}
+
+.auth-page {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 199, 18, 0.16), transparent 340px),
+    #f6f8fc;
+}
+
+.auth-panel {
+  box-shadow: 0 26px 70px rgba(17, 24, 39, 0.12);
+}
+
+.leaderboard-row,
+.leaderboard-my-position,
+.student-assignment-panel,
+.student-quiz-panel,
+.assignment-cell,
+.instructor-metric-grid article,
+.teaching-metric-row span {
+  border-color: #e2e9f3;
+  background: #fbfcff;
+}
+
+.leaderboard-row.is-current,
+.leaderboard-my-position {
+  background: linear-gradient(90deg, rgba(255, 199, 18, 0.16), #ffffff);
+}
+
+@media (max-width: 820px) {
+  .sidebar {
+    box-shadow: 0 12px 30px rgba(17, 24, 39, 0.045);
+  }
+}
+
+/* Relampo dark trial */
+:root {
+  --brand: #ffc712;
+  --brand-strong: #ffd95a;
+  --brand-soft: rgba(255, 199, 18, 0.16);
+  --brand-text: #111827;
+  --success-bg: rgba(43, 189, 110, 0.16);
+  --success-text: #7ee0a4;
+  --warning-bg: rgba(255, 199, 18, 0.14);
+  --warning-text: #ffd95a;
+  --relampo-ink: #f8fafc;
+  --relampo-ink-soft: #e5edf8;
+  --relampo-panel: #111827;
+  --relampo-page: #070b12;
+  --relampo-line: rgba(148, 163, 184, 0.2);
+  --relampo-muted: #9aa8ba;
+  color: #f8fafc;
+  background: #070b12;
+}
+
+body {
+  background:
+    radial-gradient(circle at 16% -8%, rgba(255, 199, 18, 0.2), transparent 340px),
+    radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.12), transparent 360px),
+    linear-gradient(180deg, #0b111c 0%, #070b12 100%);
+}
+
+.app-shell {
+  background:
+    radial-gradient(circle at 82% 0%, rgba(255, 199, 18, 0.14), transparent 390px),
+    linear-gradient(180deg, #0b111c 0%, #080d15 100%);
+}
+
+.sidebar {
+  border-right-color: rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 199, 18, 0.08), transparent 34%),
+    rgba(9, 14, 24, 0.96);
+  box-shadow: 18px 0 48px rgba(0, 0, 0, 0.18);
+}
+
+.brand strong,
+.sidebar-footer strong,
+.page-header h1,
+h1,
+h2,
+h3,
+.stat-card strong,
+.instructor-metric-grid strong,
+.student-course-card-header strong,
+.student-next-lesson strong,
+.instructor-course-card-header strong,
+.teaching-course-card-header strong,
+.assignment-review-card h3,
+.leaderboard-summary-card strong,
+.profile-list dd,
+.assignment-cell strong,
+.student-lesson-title,
+.lesson-title-stack strong,
+.module-heading strong,
+.student-module-header strong,
+.student-assignment-main strong,
+.student-quiz-panel strong {
+  color: #f8fafc;
+}
+
+.brand span,
+.sidebar-footer span,
+p,
+.stat-card span,
+.stat-card small,
+.teaching-course-card p,
+.student-course-card-header span,
+.student-next-lesson span,
+.profile-list dt,
+.task-list span,
+.lesson-description,
+.student-lesson-summary p,
+.student-module-header p,
+.assignment-review-card p,
+.student-assignment-main p {
+  color: #9aa8ba;
+}
+
+.nav-link {
+  color: #cbd5e1;
+}
+
+.nav-link:hover,
+.nav-link:focus-visible {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.nav-link-active {
+  border-color: rgba(255, 199, 18, 0.28);
+  background: linear-gradient(90deg, rgba(255, 199, 18, 0.2), rgba(255, 199, 18, 0.04));
+  color: #ffffff;
+}
+
+.sidebar-footer,
+.panel-heading,
+.course-setup-actions,
+.details-block,
+.task-list div,
+.profile-list div,
+.student-lesson-body,
+.student-resource-list,
+.assignment-table-scroll {
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
+.stat-card,
+.content-panel,
+.course-row,
+.auth-panel,
+.student-course-card,
+.instructor-course-card,
+.teaching-course-card,
+.module-block,
+.student-module,
+.student-progress-panel,
+.leaderboard-profile-card,
+.assignment-review-card,
+.assignment-gradebook-panel,
+.confirm-dialog,
+.student-lesson,
+.student-assignment-panel,
+.student-quiz-panel,
+.assignment-cell,
+.leaderboard-row,
+.leaderboard-my-position,
+.instructor-metric-grid article,
+.teaching-metric-row span,
+.resource-chip,
+.student-resource-chip,
+.enrollment-row,
+.attendance-row {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.2);
+}
+
+.student-lesson.is-complete,
+.leaderboard-row.is-current,
+.leaderboard-my-position,
+.assignment-review-card.is-reviewed {
+  background: linear-gradient(90deg, rgba(255, 199, 18, 0.11), rgba(15, 23, 42, 0.88));
+}
+
+.module-block,
+.student-module,
+.student-course-card,
+.course-row,
+.assignment-review-card {
+  border-left-color: var(--brand);
+}
+
+.sidebar-footer button,
+.secondary-action,
+.subtle-action,
+.panel-actions button,
+.course-setup-actions button,
+.inline-actions button,
+.row-actions button,
+.confirm-actions button,
+.assignment-pagination button,
+.assignment-cell-actions button,
+.compact-select,
+.enrollment-link-box input,
+.inline-picker input,
+.inline-picker select,
+.auth-form input,
+.stacked-form input,
+.stacked-form select,
+.stacked-form textarea,
+.student-assignment-form input,
+.student-assignment-form textarea,
+.leaderboard-profile-card input,
+.leaderboard-profile-card select,
+.assignment-search input,
+.assignment-search select,
+.assignment-cell input {
+  border-color: rgba(148, 163, 184, 0.24);
+  background-color: rgba(8, 13, 21, 0.72);
+  color: #f8fafc;
+}
+
+.sidebar-footer button:hover,
+.secondary-action:hover,
+.subtle-action:hover,
+.panel-actions button:hover,
+.course-setup-actions button:hover,
+.inline-actions button:hover,
+.row-actions button:hover,
+.confirm-actions button:hover,
+.assignment-pagination button:hover,
+.assignment-cell-actions button:hover {
+  border-color: rgba(255, 199, 18, 0.34);
+  background-color: rgba(255, 199, 18, 0.08);
+}
+
+.auth-form input::placeholder,
+.stacked-form input::placeholder,
+.stacked-form textarea::placeholder,
+.assignment-search input::placeholder {
+  color: #738196;
+}
+
+.stacked-form input:disabled,
+.stacked-form select:disabled,
+.stacked-form textarea:disabled {
+  background: rgba(15, 23, 42, 0.46);
+  color: #cbd5e1;
+}
+
+.status-chip,
+.publication-chip,
+.student-points-badge,
+.teaching-metric-row span,
+.assignment-card-meta span,
+.mini-list span,
+.removable-chip {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
+.status-pill,
+.student-pending-grid span.is-clear,
+.assignment-review-card.is-reviewed .status-chip {
+  border-color: rgba(126, 224, 164, 0.28);
+  background: rgba(43, 189, 110, 0.14);
+  color: #7ee0a4;
+}
+
+.student-pending-grid span,
+.student-points-badge,
+.publication-chip.is-published,
+.status-chip.is-pending {
+  border-color: rgba(255, 199, 18, 0.26);
+  background: rgba(255, 199, 18, 0.14);
+  color: #ffe08a;
+}
+
+.student-course-progress div,
+.leaderboard-summary-card div:last-child,
+.student-progress-track {
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.68);
+}
+
+.segmented-control {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(8, 13, 21, 0.72);
+}
+
+.segmented-control button {
+  color: #aab7c8;
+}
+
+.segmented-control button.selected {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.text-link {
+  color: #ffd95a;
+}
+
+@media (max-width: 820px) {
+  .sidebar {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Dark polish pass */
+.empty-builder,
+.avatar-picker > div,
+.identity-checkbox,
+.identity-color-grid button,
+.identity-shape-grid button,
+.leaderboard-profile-preview,
+.leaderboard-summary-card,
+.student-assignment-meta,
+.student-quiz-result,
+.student-resource-list,
+.lesson-support-row,
+.assignment-empty,
+.tree-empty {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(8, 13, 21, 0.52);
+  color: #cbd5e1;
+}
+
+.empty-builder {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+}
+
+.empty-builder strong {
+  color: #f8fafc;
+}
+
+.empty-builder span,
+.tree-empty,
+.leaderboard-profile-card label,
+.avatar-picker,
+.identity-option-group {
+  color: #9aa8ba;
+}
+
+.leaderboard-profile-preview strong,
+.leaderboard-row div:first-of-type strong,
+.leaderboard-score strong,
+.leaderboard-summary-card strong {
+  color: #f8fafc;
+}
+
+.leaderboard-profile-preview,
+.leaderboard-summary-card,
+.leaderboard-row {
+  background: rgba(12, 19, 32, 0.76);
+}
+
+.dashboard-leaderboard-card,
+.leaderboard-stats-strip article,
+.leaderboard-level-list article {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.82);
+}
+
+.dashboard-leaderboard-card h2,
+.leaderboard-stats-strip strong,
+.leaderboard-level-list strong,
+.leaderboard-levels-card h2 {
+  color: #f8fafc;
+}
+
+.dashboard-leaderboard-card p,
+.leaderboard-hero p:not(.eyebrow),
+.leaderboard-stats-strip span,
+.leaderboard-level-list p {
+  color: #9aa8ba;
+}
+
+.leaderboard-level-list article {
+  background:
+    linear-gradient(90deg, rgba(255, 199, 18, 0.05), rgba(12, 19, 32, 0.78));
+}
+
+.leaderboard-level-list article > span {
+  background: rgba(255, 199, 18, 0.14);
+  color: #ffd95a;
+}
+
+.leaderboard-level-list small {
+  color: #ffd95a;
+}
+
+.leaderboard-rank-board .leaderboard-row:nth-child(1) {
+  border-color: rgba(255, 199, 18, 0.38);
+  background: linear-gradient(90deg, rgba(255, 199, 18, 0.18), rgba(12, 19, 32, 0.8));
+}
+
+.leaderboard-rank-board .leaderboard-row:nth-child(2) {
+  border-color: rgba(203, 213, 225, 0.32);
+}
+
+.leaderboard-rank-board .leaderboard-row:nth-child(3) {
+  border-color: rgba(197, 106, 54, 0.34);
+  background: linear-gradient(90deg, rgba(197, 106, 54, 0.1), rgba(12, 19, 32, 0.76));
+}
+
+.leaderboard-levels-card {
+  gap: 8px;
+}
+
+.leaderboard-levels-card p:not(.eyebrow) {
+  margin: 0;
+  color: #9aa8ba;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.leaderboard-rank {
+  background: rgba(148, 163, 184, 0.16);
+  color: #dbe5f1;
+}
+
+.leaderboard-score,
+.leaderboard-row div:first-of-type span,
+.leaderboard-summary-card span,
+.leaderboard-progress > span {
+  color: #9aa8ba;
+}
+
+.avatar-picker > div {
+  padding: 12px;
+}
+
+.avatar-picker button.selected {
+  border-color: var(--brand);
+  box-shadow:
+    0 0 0 2px #0b111c,
+    0 0 0 5px rgba(255, 199, 18, 0.52);
+}
+
+.action-link,
+.teaching-course-actions a,
+.instructor-course-actions a,
+.row-actions button,
+.secondary-action,
+.subtle-action {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(8, 13, 21, 0.52);
+  color: #f8fafc;
+  box-shadow: none;
+}
+
+.action-link:hover,
+.teaching-course-actions a:hover,
+.instructor-course-actions a:hover {
+  border-color: rgba(255, 199, 18, 0.36);
+  background: rgba(255, 199, 18, 0.1);
+}
+
+.course-row p,
+.teaching-course-card p,
+.assignment-review-card p {
+  display: none;
+}
+
+.course-detail-header p,
+.student-course-header p,
+.enroll-panel p,
+.student-module-header p,
+.student-lesson-summary p,
+.student-assignment-main p,
+.assignment-summary p,
+.quiz-summary p {
+  display: revert;
+}
+
+.form-message.error,
+.form-message.success {
+  border: 1px solid rgba(255, 199, 18, 0.22);
+}
+
+.form-message.error {
+  background: rgba(255, 199, 18, 0.12);
+  color: #ffe08a;
+}
+
+.form-message.success {
+  background: rgba(43, 189, 110, 0.14);
+  color: #7ee0a4;
+}
+
+.student-progress-panel,
+.content-panel,
+.stat-card,
+.leaderboard-profile-card,
+.assignment-gradebook-panel {
+  backdrop-filter: blur(10px);
+}
+
+/* Dark curriculum detail fix */
+.curriculum-panel,
+.course-details-panel {
+  background: rgba(15, 23, 42, 0.82);
+}
+
+.curriculum-panel .module-block,
+.curriculum-panel .lesson-row,
+.curriculum-panel .lesson-details,
+.curriculum-panel .assignment-summary,
+.curriculum-panel .quiz-summary,
+.curriculum-panel .lesson-support-row,
+.curriculum-panel .resource-list,
+.curriculum-panel .resource-chip,
+.course-details-panel .details-block {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(10, 16, 28, 0.7);
+  color: #f8fafc;
+}
+
+.curriculum-panel .module-block {
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+}
+
+.curriculum-panel .module-heading,
+.curriculum-panel .lesson-heading {
+  border-color: rgba(148, 163, 184, 0.16);
+  background: rgba(13, 21, 36, 0.92);
+  color: #f8fafc;
+}
+
+.curriculum-panel .lesson-row {
+  box-shadow: none;
+}
+
+.curriculum-panel .lesson-details {
+  background: rgba(7, 11, 18, 0.28);
+}
+
+.curriculum-panel .module-toggle > span,
+.curriculum-panel .lesson-toggle > span,
+.curriculum-panel .curriculum-actions button,
+.curriculum-panel .lesson-actions button,
+.curriculum-panel .resource-chip button {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(8, 13, 21, 0.72);
+  color: #dbe5f1;
+}
+
+.curriculum-panel .module-heading h2,
+.curriculum-panel .module-heading p,
+.curriculum-panel .lesson-heading strong,
+.curriculum-panel .assignment-summary strong,
+.curriculum-panel .quiz-summary strong,
+.curriculum-panel .resource-chip span,
+.curriculum-panel .resource-chip-link {
+  color: #f8fafc;
+}
+
+.curriculum-panel .module-heading p,
+.curriculum-panel .lesson-details,
+.curriculum-panel .lesson-details > span,
+.curriculum-panel .assignment-summary small,
+.curriculum-panel .quiz-summary small,
+.curriculum-panel .builder-label {
+  color: #9aa8ba;
+}
+
+.curriculum-panel .lesson-list::before {
+  background: rgba(255, 199, 18, 0.45);
+}
+
+.curriculum-panel .publication-chip,
+.curriculum-panel .assignment-summary > span,
+.curriculum-panel .resource-chip button {
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+
+.curriculum-panel .publication-chip.is-published,
+.curriculum-panel .student-duration,
+.curriculum-panel .student-points-badge {
+  border-color: rgba(255, 199, 18, 0.28);
+  background: rgba(255, 199, 18, 0.14);
+  color: #ffe08a;
+}
+
+.curriculum-panel .curriculum-actions .visibility-action.is-visible,
+.curriculum-panel .lesson-actions .visibility-action.is-visible {
+  color: #7ee0a4;
+}
+
+.curriculum-panel .curriculum-actions .visibility-action.is-hidden,
+.curriculum-panel .lesson-actions .visibility-action.is-hidden {
+  color: #9aa8ba;
+}
+
+.curriculum-panel .curriculum-actions .danger-action,
+.curriculum-panel .lesson-actions .danger-action,
+.curriculum-panel .resource-chip .danger-action {
+  border-color: rgba(239, 195, 187, 0.4);
+  background: rgba(154, 51, 40, 0.12);
+  color: #ffb4a9;
+}
+
+.curriculum-panel .curriculum-actions button:hover,
+.curriculum-panel .curriculum-actions button:focus-visible,
+.curriculum-panel .lesson-actions button:hover,
+.curriculum-panel .lesson-actions button:focus-visible,
+.curriculum-panel .resource-chip button:hover,
+.curriculum-panel .resource-chip button:focus-visible {
+  border-color: rgba(255, 199, 18, 0.36);
+  background: rgba(255, 199, 18, 0.1);
+  color: #ffe08a;
+}
+
+.curriculum-panel .inline-builder-form,
+.course-details-panel .inline-builder-form {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(8, 13, 21, 0.72);
+}
+
+.curriculum-panel .quiz-form {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 8px;
+  background: rgba(7, 11, 18, 0.38);
+  margin: 12px 14px 14px 42px;
+  padding: 16px;
+}
+
+.curriculum-panel .quiz-form > label {
+  max-width: 720px;
+}
+
+.curriculum-panel .quiz-form-message {
+  margin: 0;
+  max-width: 720px;
+}
+
+.curriculum-panel .quiz-question-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.curriculum-panel .quiz-stepper-header strong {
+  background: rgba(255, 199, 18, 0.14);
+  color: #ffe08a;
+}
+
+.curriculum-panel .quiz-stepper-header span {
+  color: #9aa8ba;
+}
+
+.curriculum-panel .quiz-stepper-actions button {
+  min-height: 34px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 8px;
+  background: rgba(8, 13, 21, 0.72);
+  color: #f8fafc;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0 12px;
+}
+
+.curriculum-panel .quiz-stepper-actions button:hover,
+.curriculum-panel .quiz-stepper-actions button:focus-visible {
+  border-color: rgba(255, 199, 18, 0.36);
+  background: rgba(255, 199, 18, 0.1);
+  color: #ffe08a;
+  outline: none;
+}
+
+.curriculum-panel .quiz-stepper-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.curriculum-panel .quiz-question-editor {
+  border: 0;
+  background: rgba(12, 19, 32, 0.58);
+  color: #f8fafc;
+  padding: 14px;
+}
+
+.curriculum-panel .quiz-question-editor legend {
+  color: #ffe08a;
+}
+
+.curriculum-panel .quiz-question-editor label {
+  color: #cbd5e1;
+}
+
+.curriculum-panel .quiz-question-editor input,
+.curriculum-panel .quiz-question-editor select,
+.curriculum-panel .quiz-form > label input {
+  border-color: rgba(148, 163, 184, 0.16);
+  background: rgba(3, 7, 18, 0.74);
+  box-shadow: none;
+}
+
+.curriculum-panel .quiz-question-editor input:focus,
+.curriculum-panel .quiz-question-editor select:focus,
+.curriculum-panel .quiz-form > label input:focus {
+  border-color: rgba(255, 199, 18, 0.5);
+  outline: none;
+}
+
+.curriculum-panel .quiz-config-action {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+@media (max-width: 960px) {
+  .curriculum-panel .quiz-question-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark final surface audit */
+input,
+select,
+textarea {
+  border-color: rgba(148, 163, 184, 0.24);
+  background-color: rgba(8, 13, 21, 0.72);
+  color: #f8fafc;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: rgba(15, 23, 42, 0.52);
+  color: #cbd5e1;
+}
+
+.course-create-panel,
+.course-inventory-panel,
+.edition-card,
+.enroll-panel,
+.enrollment-row,
+.attendance-row,
+.student-progress-panel,
+.student-module,
+.student-module-header,
+.student-lesson,
+.student-lesson.is-disabled,
+.student-lesson.is-disabled .student-module-header,
+.student-lesson-body,
+.student-assignment-panel,
+.student-quiz-panel,
+.student-assignment-meta,
+.student-quiz-result,
+.assignment-review-panel,
+.assignment-gradebook-panel,
+.assignment-table-scroll,
+.assignment-gradebook-table,
+.assignment-gradebook-table thead th,
+.assignment-gradebook-table thead th:first-child,
+.assignment-gradebook-table tbody th,
+.assignment-gradebook-table tbody td,
+.assignment-cell,
+.assignment-cell.is-reviewed,
+.assignment-cell.is-needs_revision,
+.assignment-cell.is-missing-points input,
+.confirm-dialog,
+.modal-backdrop + .confirm-dialog,
+.profile-list,
+.task-list div {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(12, 19, 32, 0.82);
+  color: #f8fafc;
+}
+
+.student-module.is-disabled,
+.student-module.is-disabled .student-module-header,
+.student-lesson.is-disabled {
+  background: rgba(12, 19, 32, 0.5);
+}
+
+.student-module-header:hover,
+.student-module-header:focus-visible,
+.student-lesson.is-complete,
+.assignment-cell.is-missing-points,
+.assignment-cell.is-missing-points input {
+  background: rgba(255, 199, 18, 0.1);
+}
+
+.assignment-cell.is-reviewed {
+  border-left-color: #7ee0a4;
+  background: rgba(43, 189, 110, 0.12);
+}
+
+.assignment-cell.is-needs_revision {
+  border-left-color: #ff8e7f;
+  background: rgba(154, 51, 40, 0.12);
+}
+
+.assignment-gradebook-table tbody th {
+  box-shadow: 10px 0 18px rgba(0, 0, 0, 0.18);
+}
+
+.assignment-gradebook-table th span,
+.assignment-gradebook-table th small,
+.assignment-cell-top span,
+.assignment-cell label,
+.attendance-row > div > span,
+.student-progress-panel span,
+.student-progress-panel p,
+.student-module-header p,
+.student-module-header small,
+.student-lesson-summary > span,
+.student-lesson-body > span,
+.student-lesson-body p {
+  color: #9aa8ba;
+}
+
+.assignment-gradebook-table th strong,
+.assignment-gradebook-table tbody th,
+.student-progress-panel strong,
+.student-module-header h2,
+.student-lesson-header h3 {
+  color: #f8fafc;
+}
+
+.student-system-status,
+.student-lesson-expand,
+.student-module-header small,
+.student-duration,
+.student-status-row span,
+.student-assignment-locked,
+.student-submit-action,
+.assignment-cell-actions button,
+.assignment-pagination button,
+.compact-select,
+.edition-card button {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(8, 13, 21, 0.72);
+  color: #dbe5f1;
+}
+
+.student-status-row .is-confirmed {
+  background: rgba(43, 189, 110, 0.16);
+  color: #7ee0a4;
+}
+
+.student-status-row .is-submitted {
+  background: rgba(255, 199, 18, 0.14);
+  color: #ffe08a;
+}
+
+.student-status-row .is-needs-revision {
+  background: rgba(154, 51, 40, 0.16);
+  color: #ffb4a9;
+}
+
+.student-status-row .is-disabled {
+  background: rgba(148, 163, 184, 0.12);
+  color: #9aa8ba;
+}
+
+.leaderboard-profile-preview,
+.avatar-picker > div,
+.identity-color-grid button,
+.identity-shape-grid button,
+.empty-builder {
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+}
+
+.leaderboard-profile-preview {
+  background: rgba(8, 13, 21, 0.62);
+}
+
+.avatar-picker > div,
+.identity-checkbox,
+.identity-color-grid button,
+.identity-shape-grid button {
+  background: rgba(8, 13, 21, 0.62);
+}
+
+.leaderboard-profile-card .identity-checkbox span {
+  color: #dbe5f1;
+}
+
+.leaderboard-profile-card .identity-checkbox small {
+  color: #9aa8ba;
+}
+
+.leaderboard-profile-card .identity-checkbox:hover,
+.leaderboard-profile-card .identity-checkbox:focus-within {
+  border-color: rgba(255, 199, 18, 0.36);
+  background: rgba(255, 199, 18, 0.08);
+}
+
+.identity-color-grid button.selected,
+.identity-shape-grid button.selected {
+  border-color: rgba(255, 199, 18, 0.75);
+  box-shadow:
+    0 0 0 1px rgba(255, 199, 18, 0.26),
+    0 0 18px rgba(255, 199, 18, 0.12);
+}
+
+.action-link,
+.student-course-card-header a,
+.instructor-course-card-header a,
+.teaching-course-card-header a {
+  border-color: transparent;
+  background: linear-gradient(180deg, #ffd743, var(--brand));
+  color: var(--brand-text);
+}
+
+.row-actions button:disabled,
+.assignment-pagination button:disabled,
+.assignment-cell-actions button:disabled {
+  background: rgba(15, 23, 42, 0.45);
+  color: #7b8798;
+}
+
+.student-system-status.is-complete {
+  border-color: rgba(126, 224, 164, 0.32);
+  background: rgba(43, 189, 110, 0.16);
+  color: #7ee0a4;
+}
+
+.student-system-status:not(.is-complete) {
+  border-color: rgba(255, 199, 18, 0.26);
+  background: rgba(255, 199, 18, 0.1);
+  color: #ffe08a;
+}
+
+.student-lesson-expand span {
+  line-height: 1;
+}
+
+.student-lesson-expand:hover,
+.student-lesson-expand:focus-visible {
+  border-color: rgba(255, 199, 18, 0.48);
+  background: rgba(255, 199, 18, 0.12);
+  color: #ffe08a;
+  outline: none;
+}
+
+.student-lesson-expand:hover svg,
+.student-lesson-expand:focus-visible svg {
+  color: #ffe08a;
+}
+
+.curriculum-panel .module-heading .curriculum-actions button,
+.curriculum-panel .module-heading .curriculum-actions button:nth-child(2) {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(8, 13, 21, 0.72);
+  color: #dbe5f1;
+}
+
+.curriculum-panel .module-heading .curriculum-actions button:hover,
+.curriculum-panel .module-heading .curriculum-actions button:focus-visible {
+  border-color: rgba(255, 199, 18, 0.36);
+  background: rgba(255, 199, 18, 0.1);
+  color: #ffe08a;
+}
+
+.curriculum-panel .module-heading .curriculum-actions .danger-action {
+  border-color: rgba(239, 195, 187, 0.4);
+  background: rgba(154, 51, 40, 0.12);
+  color: #ffb4a9;
+}
+
+.curriculum-panel .module-heading .curriculum-actions .visibility-action.is-visible {
+  color: #7ee0a4;
+}
+
+/* Typography weight refinement */
+input,
+select,
+textarea,
+option {
+  font-weight: 400;
+}
+
+label,
+.auth-form label,
+.stacked-form label,
+.inline-builder-form label,
+.edition-edit-form label,
+.student-assignment-form label,
+.assignment-search,
+.assignment-cell label,
+.leaderboard-profile-card label,
+.avatar-picker,
+.quiz-question-editor label {
+  font-weight: 600;
+}
+
+button,
+.secondary-action,
+.primary-action,
+.danger-action,
+.subtle-action,
+.action-link,
+.text-link,
+.student-lesson-expand,
+.student-submit-action,
+.quiz-config-action,
+.course-setup-actions button,
+.panel-actions button,
+.inline-actions button,
+.row-actions button,
+.assignment-cell-actions button,
+.assignment-pagination button,
+.leaderboard-profile-actions .primary-action {
+  font-weight: 650;
+}
+
+.status-pill,
+.status-chip,
+.publication-chip,
+.student-points-badge,
+.student-pending-grid span,
+.student-status-row span,
+.student-assignment-meta span,
+.student-assignment-meta a,
+.student-resource-chip,
+.resource-chip,
+.mini-list span,
+.removable-chip,
+.assignment-card-meta span,
+.teaching-metric-row span,
+.student-duration,
+.leaderboard-rank,
+.quiz-stepper-header strong {
+  font-weight: 650;
+}
+
+.eyebrow,
+.module-kicker,
+.lesson-kicker,
+.builder-label,
+.assignment-summary small,
+.quiz-summary small,
+.student-lesson-header > div > span,
+.student-assignment-panel small,
+.quiz-stepper-header span,
+.quiz-question-editor legend {
+  font-weight: 700;
+}
+
+.student-assignment-panel strong,
+.assignment-summary strong,
+.quiz-summary strong,
+.leaderboard-profile-preview strong,
+.leaderboard-row div:first-of-type strong,
+.student-course-card-header strong,
+.student-next-lesson strong,
+.instructor-course-card-header strong,
+.teaching-course-card-header strong {
+  font-weight: 700;
+}
+
+/* Curriculum typography hierarchy */
+.curriculum-panel .module-heading h2,
+.curriculum-panel .lesson-heading strong,
+.curriculum-panel .assignment-summary strong,
+.curriculum-panel .quiz-summary strong {
+  font-weight: 700;
+}
+
+.curriculum-panel .module-heading p,
+.curriculum-panel .lesson-details > span,
+.curriculum-panel .resource-chip,
+.curriculum-panel .resource-chip span,
+.curriculum-panel .publication-chip,
+.curriculum-panel .assignment-summary > span,
+.curriculum-panel .mini-list span {
+  font-weight: 400;
+}
+
+.curriculum-panel .module-kicker,
+.curriculum-panel .lesson-kicker,
+.curriculum-panel .assignment-summary small,
+.curriculum-panel .quiz-summary small,
+.curriculum-panel .quiz-question-editor label,
+.curriculum-panel .quiz-question-editor legend {
+  font-weight: 600;
+}
+
+.curriculum-panel .resource-list .resource-chip {
+  font-weight: 500;
+}
+
+.curriculum-panel .resource-chip button,
+.curriculum-panel .removable-chip button {
+  font-weight: 600;
+}
+
+.curriculum-panel input,
+.curriculum-panel select,
+.curriculum-panel textarea {
+  font-weight: 400;
+}
+
+.student-resource-chip:hover,
+.student-resource-chip:focus-visible,
+.curriculum-panel .resource-chip:hover,
+.curriculum-panel .resource-chip:focus-visible {
+  border-color: rgba(255, 199, 18, 0.5);
+  background: rgba(255, 199, 18, 0.12);
+  color: #ffe08a;
+  outline: none;
+}
+
+.student-resource-chip:hover svg,
+.student-resource-chip:focus-visible svg,
+.curriculum-panel .resource-chip:hover svg,
+.curriculum-panel .resource-chip:focus-visible svg {
+  color: #ffe08a;
+}
+
+.student-resource-chip:hover span,
+.student-resource-chip:focus-visible span,
+.curriculum-panel .resource-chip:hover span,
+.curriculum-panel .resource-chip:focus-visible span {
+  color: inherit;
+}
+
+/* Student course polish: completed lessons should read as one unified block. */
+.student-module-header > span {
+  background: rgba(255, 199, 18, 0.92);
+  color: #111827;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.student-module-header p,
+.student-lesson-body > span,
+.student-lesson-body p {
+  color: #dbe5f1;
+  font-weight: 400;
+}
+
+.student-lesson.is-complete {
+  background: linear-gradient(90deg, rgba(31, 141, 87, 0.22), rgba(12, 19, 32, 0.92));
+  box-shadow: inset 4px 0 0 rgba(126, 224, 164, 0.82);
+}
+
+.student-lesson.is-complete .student-lesson-summary,
+.student-lesson.is-complete .student-lesson-body {
+  background: transparent;
+}
+
+.student-lesson.is-complete .student-lesson-body > span,
+.student-lesson.is-complete .student-lesson-body p,
+.student-lesson.is-complete .student-assignment-panel p,
+.student-lesson.is-complete .student-quiz-panel p {
+  color: #f8fafc;
+}
+
+.student-lesson.is-complete .student-assignment-panel,
+.student-lesson.is-complete .student-quiz-panel {
+  border-color: rgba(126, 224, 164, 0.26);
+  background: rgba(7, 12, 21, 0.48);
+}
+
+.student-lesson.is-complete .student-resource-list {
+  background: transparent;
+}
+
+.student-lesson.is-complete .student-resource-chip {
+  border-color: rgba(126, 224, 164, 0.28);
+  background: rgba(7, 12, 21, 0.62);
+  color: #f8fafc;
+  font-weight: 500;
+}
+
+.student-lesson.is-complete .student-resource-chip svg {
+  color: #7ee0a4;
+}
+
+.student-lesson.is-complete .student-resource-chip span {
+  color: #f8fafc;
+}
+
+/* Shared course visual pattern across student, instructor and admin views. */
+.curriculum-panel .module-kicker,
+.curriculum-panel .lesson-kicker,
+.student-module-header > span {
+  background: rgba(255, 199, 18, 0.92);
+  color: #111827;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.curriculum-panel .module-heading p,
+.curriculum-panel .lesson-details > span,
+.curriculum-panel .lesson-details p,
+.teaching-course-card p,
+.instructor-course-card p,
+.student-module-header p,
+.student-course-card p {
+  color: #dbe5f1;
+  font-weight: 400;
+}
+
+.curriculum-panel .module-heading h2,
+.curriculum-panel .lesson-heading strong,
+.student-module-header h2,
+.student-lesson-header h3,
+.teaching-course-card-header strong,
+.instructor-course-card-header strong {
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.curriculum-panel .assignment-summary,
+.curriculum-panel .quiz-summary,
+.curriculum-panel .lesson-support-row,
+.curriculum-panel .resource-list,
+.student-assignment-panel,
+.student-quiz-panel,
+.student-resource-list {
+  background: rgba(7, 12, 21, 0.48);
+}
+
+.curriculum-panel .resource-chip,
+.student-resource-chip {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(7, 12, 21, 0.62);
+  color: #f8fafc;
+  font-weight: 500;
+}
+
+.curriculum-panel .resource-chip span,
+.student-resource-chip span {
+  color: #f8fafc;
+  font-weight: 500;
+}
+
+.curriculum-panel .resource-chip svg,
+.student-resource-chip svg {
+  color: #d6a400;
+}
+
+.curriculum-panel .module-kicker,
+.curriculum-panel .lesson-kicker {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 28px;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(255, 199, 18, 0.92);
+  color: #111827;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  padding: 0 12px;
+  text-decoration: none;
+}
+
+.curriculum-panel .lesson-kicker {
+  min-height: 24px;
+  font-size: 0.72rem;
+  padding: 0 10px;
+}
+
+.curriculum-panel .module-toggle:hover h2,
+.curriculum-panel .module-toggle:focus-visible h2 {
+  text-decoration: none;
+}
+
+/* Align admin/instructor curriculum composition with the student course view. */
+.curriculum-panel .module-toggle > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: start;
+  min-width: 0;
+}
+
+.curriculum-panel .module-kicker {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  margin: 0;
+}
+
+.curriculum-panel .module-heading h2,
+.curriculum-panel .module-heading p,
+.curriculum-panel .module-heading .publication-chip {
+  grid-column: 2;
+}
+
+.curriculum-panel .module-heading h2 {
+  margin-top: 1px;
+}
+
+.curriculum-panel .lesson-title-stack {
+  gap: 3px;
+}
+
+.curriculum-panel .lesson-kicker {
+  min-height: auto;
+  border-radius: 0;
+  background: transparent;
+  color: #7f8da3;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0;
+}
+
+.curriculum-panel .lesson-heading strong {
+  line-height: 1.25;
+}
+
+.curriculum-panel .module-toggle > span,
+.curriculum-panel .lesson-toggle > span {
+  display: grid;
+  place-items: center;
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(8, 13, 21, 0.58);
+  color: #7f8da3;
+}
+
+.curriculum-panel .module-toggle > span svg,
+.curriculum-panel .lesson-toggle > span svg {
+  color: inherit;
+}
+
+.curriculum-panel .module-toggle:hover > span,
+.curriculum-panel .module-toggle:focus-visible > span,
+.curriculum-panel .lesson-toggle:hover > span,
+.curriculum-panel .lesson-toggle:focus-visible > span {
+  border-color: rgba(255, 199, 18, 0.34);
+  color: #ffe08a;
+}
+
+.curriculum-panel .module-heading h2,
+.curriculum-panel .lesson-heading strong {
+  font-weight: 700;
+}
+
+.curriculum-panel .module-heading p,
+.curriculum-panel .lesson-details,
+.curriculum-panel .lesson-details > span,
+.curriculum-panel .assignment-summary > span,
+.curriculum-panel .quiz-summary > span,
+.curriculum-panel .resource-chip,
+.curriculum-panel .resource-chip span,
+.curriculum-panel .publication-chip {
+  font-weight: 400;
+}
+
+.curriculum-panel .assignment-summary strong,
+.curriculum-panel .quiz-summary strong {
+  font-weight: 650;
+}
+
+.curriculum-panel .resource-list .resource-chip,
+.curriculum-panel .resource-chip span {
+  font-weight: 500;
+}
+
+.curriculum-panel .collapse-action {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(8, 13, 21, 0.72);
+  color: #7f8da3;
+}
+
+.curriculum-panel .collapse-action:hover,
+.curriculum-panel .collapse-action:focus-visible {
+  border-color: rgba(255, 199, 18, 0.36);
+  background: rgba(255, 199, 18, 0.1);
+  color: #ffe08a;
+  outline: none;
+}
+
+.curriculum-panel .collapse-action svg {
+  color: inherit;
+}
+
+.curriculum-panel .lesson-toggle:hover strong,
+.curriculum-panel .lesson-toggle:focus-visible strong {
+  text-decoration: none;
+}
+
+.curriculum-panel .module-heading p,
+.curriculum-panel .lesson-details,
+.curriculum-panel .lesson-details > span,
+.curriculum-panel .lesson-details p,
+.curriculum-panel .assignment-summary > span,
+.curriculum-panel .quiz-summary > span,
+.curriculum-panel .resource-chip,
+.curriculum-panel .resource-chip span,
+.curriculum-panel .publication-chip {
+  font-weight: 400;
+}
+
+.curriculum-panel .assignment-summary strong,
+.curriculum-panel .quiz-summary strong,
+.curriculum-panel .resource-chip-link {
+  font-weight: 600;
+}
+
+/* Match admin/instructor curriculum typography with the student reader. */
+.curriculum-panel .module-toggle,
+.curriculum-panel .lesson-toggle,
+.curriculum-panel .lesson-details,
+.curriculum-panel .assignment-summary,
+.curriculum-panel .quiz-summary,
+.curriculum-panel .resource-chip,
+.curriculum-panel .resource-chip-link,
+.curriculum-panel .publication-chip {
+  font-weight: 400;
+}
+
+.curriculum-panel .module-heading h2,
+.curriculum-panel .lesson-heading strong {
+  font-weight: 650;
+}
+
+.curriculum-panel .module-heading p,
+.curriculum-panel .lesson-details > span,
+.curriculum-panel .lesson-details p,
+.curriculum-panel .assignment-summary > span,
+.curriculum-panel .quiz-summary > span,
+.curriculum-panel .resource-chip span,
+.curriculum-panel .resource-chip-link span,
+.curriculum-panel .publication-chip {
+  font-weight: 400;
+}
+
+.curriculum-panel .assignment-summary strong,
+.curriculum-panel .quiz-summary strong,
+.curriculum-panel .resource-chip-link {
+  font-weight: 550;
+}
+
+.curriculum-panel .module-kicker,
+.curriculum-panel .lesson-kicker,
+.curriculum-panel .assignment-summary small,
+.curriculum-panel .quiz-summary small {
+  font-weight: 600;
+}
+
+.curriculum-panel .assignment-summary div,
+.curriculum-panel .quiz-summary div {
+  gap: 3px;
+}
+
+.curriculum-panel .assignment-summary small,
+.curriculum-panel .quiz-summary small {
+  order: 1;
+  color: #7f8da3;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.curriculum-panel .assignment-summary strong,
+.curriculum-panel .quiz-summary strong {
+  order: 2;
+  color: #f8fafc;
+  font-size: 0.94rem;
+  font-weight: 400;
+}
+
+.student-assignment-panel small,
+.student-quiz-panel small,
+.curriculum-panel .assignment-summary small,
+.curriculum-panel .quiz-summary small {
+  font-weight: 700;
+}
+
+.student-assignment-panel strong,
+.student-quiz-panel strong,
+.curriculum-panel .assignment-summary strong,
+.curriculum-panel .quiz-summary strong {
+  font-weight: 700;
+}
+
+.curriculum-panel .module-toggle,
+.curriculum-panel .lesson-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.curriculum-panel .module-toggle > div,
+.curriculum-panel .lesson-toggle > div {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.curriculum-panel .module-toggle > span,
+.curriculum-panel .lesson-toggle > span {
+  grid-column: 2;
+  grid-row: 1;
 }

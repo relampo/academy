@@ -15,8 +15,8 @@ begin
   )
   values (
     new.id,
-    'Assignment - ' || new.title,
-    'Submit the required evidence for this class.',
+    'Tarea - ' || new.title,
+    'Envía la evidencia requerida para esta clase.',
     'report',
     10,
     true

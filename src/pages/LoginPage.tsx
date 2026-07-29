@@ -44,7 +44,7 @@ export function LoginPage() {
         await signUp({ email, password, firstName, lastName });
         const returnTo = getReturnPath();
         const successMessage =
-          "Cuenta creada. Revisa tu email si la confirmacion esta activa.";
+          "Cuenta creada. Revisa tu email si la confirmación está activa.";
         setMessage(successMessage);
         window.sessionStorage.setItem("relampo:notice", successMessage);
         window.location.hash = returnTo;
@@ -69,21 +69,21 @@ export function LoginPage() {
         <div>
           <p className="eyebrow">Relampo Academy</p>
           <h1 id="login-title">
-            {isSignUp ? "Crear cuenta" : "Iniciar sesion"}
+            {isSignUp ? "Crear cuenta" : "Iniciar sesión"}
           </h1>
           <p>
             Usa tu cuenta de la academia para acceder a cursos, progreso y
-            practicas.
+            prácticas.
           </p>
         </div>
 
-        <div className="segmented-control" aria-label="Modo de autenticacion">
+        <div className="segmented-control" aria-label="Modo de autenticación">
           <button
             type="button"
             className={mode === "sign-in" ? "selected" : ""}
             onClick={() => setMode("sign-in")}
           >
-            Iniciar sesion
+            Iniciar sesión
           </button>
           <button
             type="button"
@@ -128,12 +128,12 @@ export function LoginPage() {
             />
           </label>
           <label>
-            Contrasena
+            Contraseña
             <input
               required
               minLength={6}
               type="password"
-              placeholder="Tu contrasena"
+              placeholder="Tu contraseña"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />

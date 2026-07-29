@@ -72,7 +72,7 @@ export function EnrollmentReviewPage() {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "No se pudieron cargar las solicitudes de inscripcion.",
+          : "No se pudieron cargar las solicitudes de inscripción.",
       );
     } finally {
       setIsLoading(false);
@@ -138,15 +138,15 @@ export function EnrollmentReviewPage() {
       await updateEnrollmentStatus(enrollmentId, nextStatus, user.id);
       setMessage(
         nextStatus === "approved"
-          ? "Inscripcion aprobada."
-          : "Inscripcion rechazada.",
+          ? "Inscripción aprobada."
+          : "Inscripción rechazada.",
       );
       await loadEnrollments();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "No se pudo actualizar la inscripcion.",
+          : "No se pudo actualizar la inscripción.",
       );
     } finally {
       setUpdatingEnrollmentId(null);
@@ -158,9 +158,9 @@ export function EnrollmentReviewPage() {
       <div className="page-header">
         <div>
           <p className="eyebrow">Instructor</p>
-          <h1>{selectedCourseTitle ?? "Revision de inscripciones"}</h1>
+          <h1>{selectedCourseTitle ?? "Revisión de inscripciones"}</h1>
           {courseIdFilter ? (
-            <p>Solicitudes de inscripcion para este curso.</p>
+            <p>Solicitudes de inscripción para este curso.</p>
           ) : null}
         </div>
         {courseIdFilter ? (
@@ -187,7 +187,7 @@ export function EnrollmentReviewPage() {
       <section className="content-panel">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Revision de inscripciones</p>
+            <p className="eyebrow">Revisión de inscripciones</p>
             <h2>{courseIdFilter ? "Solicitudes del curso" : "Solicitudes"}</h2>
           </div>
           <select
@@ -205,15 +205,15 @@ export function EnrollmentReviewPage() {
           </select>
         </div>
 
-        {isLoading ? <p>Cargando solicitudes de inscripcion...</p> : null}
+        {isLoading ? <p>Cargando solicitudes de inscripción...</p> : null}
         {!isLoading && filteredEnrollments.length === 0 ? (
           <div className="empty-builder">
-            <strong>No hay solicitudes aqui</strong>
+            <strong>No hay solicitudes aquí</strong>
             <span>
-              Las solicitudes apareceran cuando un estudiante abra el link de
-              inscripcion y el curso este publicado con inscripcion abierta.
+              Las solicitudes aparecerán cuando un estudiante abra el link de
+              inscripción y el curso esté publicado con inscripción abierta.
               {profile?.role === "instructor"
-                ? " Si estas como instructor, tambien debes estar asignado a ese curso para verlas."
+                ? " Si estás como instructor, también debes estar asignado a ese curso para verlas."
                 : ""}
             </span>
           </div>

@@ -6,6 +6,7 @@ import { AssignmentReviewPage } from "./pages/AssignmentReviewPage";
 import { CoursesPage } from "./pages/CoursesPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { EnrollmentReviewPage } from "./pages/EnrollmentReviewPage";
+import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { TeachingCoursesPage } from "./pages/TeachingCoursesPage";
 import type { Enums } from "./types/database.types";
@@ -32,6 +33,13 @@ export const appRoutes: AppRoute[] = [
     path: "/courses",
     label: "Mis cursos",
     Component: CoursesPage,
+    allowedRoles: ["admin", "instructor", "student"],
+    navGroup: "student",
+  },
+  {
+    path: "/leaderboard",
+    label: "Leaderboard",
+    Component: LeaderboardPage,
     allowedRoles: ["admin", "instructor", "student"],
     navGroup: "student",
   },
@@ -79,7 +87,7 @@ export const appRoutes: AppRoute[] = [
   },
   {
     path: "/admin/settings",
-    label: "Configuracion",
+    label: "Configuración",
     Component: AdminSettingsPage,
     allowedRoles: ["admin"],
     navGroup: "admin",

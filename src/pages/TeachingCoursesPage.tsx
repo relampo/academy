@@ -20,7 +20,7 @@ function formatStatus(value: string) {
   const labels: Record<string, string> = {
     draft: "borrador",
     published: "publicado",
-    enrollment_closed: "inscripcion cerrada",
+    enrollment_closed: "inscripción cerrada",
     completed: "completado",
   };
 
@@ -142,7 +142,7 @@ export function TeachingCoursesPage() {
 
       {!isLoading && assignments.length === 0 ? (
         <section className="content-panel compact">
-          <p>Todavia no tienes cursos asignados.</p>
+          <p>Todavía no tienes cursos asignados.</p>
         </section>
       ) : null}
 
@@ -182,8 +182,6 @@ export function TeachingCoursesPage() {
                     </div>
                     <a href={`#/admin/courses/${course.id}`}>Abrir</a>
                   </div>
-
-                  <p>{course.short_description || "Sin descripcion todavia."}</p>
 
                   <div
                     className="teaching-metric-row"

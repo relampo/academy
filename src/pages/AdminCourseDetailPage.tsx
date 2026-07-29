@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ChartNoAxesColumn,
+  ChevronDown,
+  ChevronRight,
   Eye,
   EyeOff,
   Code2,
@@ -60,7 +62,7 @@ const resourceTypeLabels: Record<string, string> = {
   external_link: "Enlace externo",
   video: "Video",
   pdf: "PDF",
-  slides: "Presentacion",
+  slides: "Presentación",
   zip: "ZIP",
   script: "Script",
   report: "Reporte",
@@ -70,7 +72,7 @@ function formatStatus(value: string) {
   const labels: Record<string, string> = {
     draft: "borrador",
     published: "publicado",
-    enrollment_closed: "inscripcion cerrada",
+    enrollment_closed: "inscripción cerrada",
     completed: "completado",
     archived: "archivado",
   };
@@ -265,6 +267,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   const [editingQuizQuestions, setEditingQuizQuestions] = useState<
     QuizQuestionDraft[]
   >(() => createBlankQuizQuestions());
+  const [editingQuizQuestionIndex, setEditingQuizQuestionIndex] = useState(0);
+  const [editingQuizError, setEditingQuizError] = useState<string | null>(null);
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -398,13 +402,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         await assignCourseInstructor(courseId, selectedInstructorId, user.id);
       }
 
-      setMessage("Configuracion del curso actualizada.");
+      setMessage("Configuración del curso actualizada.");
       await loadCourse();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "No se pudo actualizar la configuracion del curso.",
+          : "No se pudo actualizar la configuración del curso.",
       );
     } finally {
       setIsSubmitting(false);
@@ -545,10 +549,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setModuleTitle("");
       setModuleDescription("");
       setIsAddingModule(false);
-      setMessage("Modulo creado.");
+      setMessage("Módulo creado.");
       await refreshCourseContent();
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "No se pudo crear el modulo."));
+      setError(getErrorMessage(caughtError, "No se pudo crear el módulo."));
     } finally {
       setIsSubmitting(false);
     }
@@ -584,7 +588,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       await upsertLessonAssignment({
         lessonId: lesson.id,
         title: `Tarea - ${lesson.title}`,
-        description: "Submit the required evidence for this class.",
+        description: "Envía la evidencia requerida para esta clase.",
         assignmentType: "report",
         points: 10,
       });
@@ -703,13 +707,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       });
 
       setEditingModuleId(null);
-      setMessage("Modulo actualizado.");
+      setMessage("Módulo actualizado.");
       await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "No se pudo actualizar el modulo.",
+          : "No se pudo actualizar el módulo.",
       );
     } finally {
       setIsSubmitting(false);
@@ -732,15 +736,15 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       });
       setMessage(
         nextStatus === "published"
-          ? "Modulo publicado."
-          : "Modulo ocultado.",
+          ? "Módulo publicado."
+          : "Módulo ocultado.",
       );
       await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "No se pudo actualizar el estado del modulo.",
+          : "No se pudo actualizar el estado del módulo.",
       );
     } finally {
       setIsSubmitting(false);
@@ -804,7 +808,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setEditingAssignmentLessonId(lesson.id);
     setEditingAssignmentTitle(assignment?.title ?? `Tarea - ${lesson.title}`);
     setEditingAssignmentDescription(
-      assignment?.description ?? "Submit the required evidence for this class.",
+      assignment?.description ?? "Envía la evidencia requerida para esta clase.",
     );
     setEditingAssignmentType(assignment?.assignment_type ?? "report");
     setCollapsedLessonIds((current) => {
@@ -838,6 +842,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     setEditingQuizLessonId(lesson.id);
     setEditingQuizTitle(quiz?.title ?? `Quiz - ${lesson.title}`);
     setEditingQuizQuestions(questionDrafts);
+    setEditingQuizQuestionIndex(0);
+    setEditingQuizError(null);
     setCollapsedLessonIds((current) => {
       const next = new Set(current);
       next.delete(lesson.id);
@@ -850,6 +856,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     field: keyof QuizQuestionDraft,
     value: string,
   ) => {
+    setEditingQuizError(null);
     setEditingQuizQuestions((current) =>
       current.map((question) =>
         question.position === position ? { ...question, [field]: value } : question,
@@ -864,7 +871,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       return;
     }
 
-    const hasEmptyQuestion = editingQuizQuestions.some(
+    const firstEmptyQuestionIndex = editingQuizQuestions.findIndex(
       (question) =>
         !question.questionText.trim() ||
         !question.optionA.trim() ||
@@ -873,8 +880,18 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         !question.optionD.trim(),
     );
 
-    if (editingQuizQuestions.length !== 10 || hasEmptyQuestion) {
-      setError("El quiz requiere exactamente 10 preguntas completas.");
+    if (editingQuizQuestions.length !== 10 || firstEmptyQuestionIndex >= 0) {
+      const nextError =
+        firstEmptyQuestionIndex >= 0
+          ? `Completa la pregunta ${firstEmptyQuestionIndex + 1} antes de guardar.`
+          : "El quiz requiere exactamente 10 preguntas completas.";
+
+      if (firstEmptyQuestionIndex >= 0) {
+        setEditingQuizQuestionIndex(firstEmptyQuestionIndex);
+      }
+
+      setEditingQuizError(nextError);
+      setError(null);
       return;
     }
 
@@ -896,6 +913,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         return [...withoutCurrent, quiz];
       });
       setEditingQuizLessonId(null);
+      setEditingQuizError(null);
       setMessage("Quiz actualizado.");
     } catch (caughtError) {
       setError(getErrorMessage(caughtError, "No se pudo actualizar el quiz."));
@@ -1029,13 +1047,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         status: "archived",
       });
 
-      setMessage("Modulo eliminado.");
+      setMessage("Módulo eliminado.");
       await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "No se pudo eliminar el modulo.",
+          : "No se pudo eliminar el módulo.",
       );
     } finally {
       setIsSubmitting(false);
@@ -1084,7 +1102,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
 
     try {
       await window.navigator.clipboard.writeText(enrollmentLink);
-      setMessage("Link de inscripcion copiado.");
+      setMessage("Link de inscripción copiado.");
     } catch {
       setMessage(enrollmentLink);
     }
@@ -1094,17 +1112,17 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     <section className="page">
       <div className="page-header course-detail-header">
         <div>
-          <p className="eyebrow">Administracion</p>
+          <p className="eyebrow">Administración</p>
           <h1>{course?.title ?? "Curso"}</h1>
           {course ? (
             <div className="mini-list">
               <span>{formatStatus(course.status)}</span>
               <span>
                 {primaryOffering?.enrollment_open
-                  ? "Inscripcion abierta"
-                  : "Inscripcion cerrada"}
+                  ? "Inscripción abierta"
+                  : "Inscripción cerrada"}
               </span>
-              <span>{modules.length} modulos</span>
+              <span>{modules.length} módulos</span>
             </div>
           ) : null}
         </div>
@@ -1122,7 +1140,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
           <div className="panel-heading">
             <div>
               <p className="eyebrow">Detalles</p>
-              <h2>Configuracion del curso</h2>
+              <h2>Configuración del curso</h2>
             </div>
           </div>
 
@@ -1141,7 +1159,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               >
                 <div className="form-grid">
                   <label>
-                    Titulo
+                    Título
                     <input
                       disabled={!isEditingCourse}
                       required
@@ -1161,13 +1179,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     >
                       <option value="draft">Borrador</option>
                       <option value="published">Publicado</option>
-                      <option value="enrollment_closed">Inscripcion cerrada</option>
+                      <option value="enrollment_closed">Inscripción cerrada</option>
                       <option value="completed">Completado</option>
                     </select>
                   </label>
                 </div>
                 <label>
-                  Descripcion
+                  Descripción
                   <textarea
                     className="compact-textarea"
                     disabled={!isEditingCourse}
@@ -1180,7 +1198,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
 
             <section className="details-block">
               <div className="subsection-heading">
-                <h3>Inscripcion</h3>
+                <h3>Inscripción</h3>
               </div>
             {primaryOffering ? (
               <div
@@ -1232,11 +1250,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                         setEditingEditionEnrollmentOpen(event.target.checked)
                       }
                     />
-                    Inscripcion abierta
+                    Inscripción abierta
                   </label>
                 </div>
                 <div className="enrollment-link-box">
-                  <span>Link de inscripcion</span>
+                  <span>Link de inscripción</span>
                   <div>
                     <input readOnly value={enrollmentLink} />
                     <button
@@ -1251,8 +1269,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               </div>
             ) : (
               <div className="empty-builder">
-                <strong>Todavia no hay configuracion de inscripcion</strong>
-                <span>Este curso necesita configuracion antes de aceptar estudiantes.</span>
+                <strong>Todavía no hay configuración de inscripción</strong>
+                <span>Este curso necesita configuración antes de aceptar estudiantes.</span>
               </div>
             )}
             </section>
@@ -1274,7 +1292,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       <option value="">
                         {instructors.length === 0
                           ? "No hay instructores activos"
-                          : "Todos los instructores estan asignados"}
+                          : "Todos los instructores están asignados"}
                       </option>
                     ) : null}
                     {availableInstructors.map((instructor) => (
@@ -1369,14 +1387,14 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
             <div>
               <p className="eyebrow">Contenido</p>
               <h2>Contenido del curso</h2>
-              <p>Crea modulos, agrega clases y adjunta recursos a cada clase.</p>
+              <p>Crea módulos, agrega clases y adjunta recursos a cada clase.</p>
             </div>
             <button
               className="secondary-action"
               type="button"
               onClick={() => setIsAddingModule((current) => !current)}
             >
-              Agregar modulo
+              Agregar módulo
             </button>
           </div>
 
@@ -1386,7 +1404,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               onSubmit={handleCreateModule}
             >
               <label>
-                Titulo del modulo
+                Título del módulo
                 <input
                   required
                   value={moduleTitle}
@@ -1394,7 +1412,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 />
               </label>
               <label>
-                Descripcion
+                Descripción
                 <textarea
                   value={moduleDescription}
                   onChange={(event) => setModuleDescription(event.target.value)}
@@ -1402,7 +1420,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               </label>
               <div className="inline-actions">
                 <button type="submit" disabled={isSubmitting}>
-                  Guardar modulo
+                  Guardar módulo
                 </button>
                 <button
                   type="button"
@@ -1417,8 +1435,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
           <div className="content-tree">
             {modules.length === 0 ? (
               <div className="empty-builder">
-                <strong>Todavia no hay modulos</strong>
-                <span>Agrega el primer modulo para empezar a construir el curso.</span>
+                <strong>Todavía no hay módulos</strong>
+                <span>Agrega el primer módulo para empezar a construir el curso.</span>
               </div>
             ) : null}
             {modules.map((module, moduleIndex) => (
@@ -1430,13 +1448,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     aria-expanded={!collapsedModuleIds.has(module.id)}
                     onClick={() => toggleModule(module.id)}
                   >
-                    <span aria-hidden="true">
-                      {collapsedModuleIds.has(module.id) ? "+" : "-"}
-                    </span>
                     <div>
-                      <span className="module-kicker">Modulo {moduleIndex + 1}</span>
+                      <span className="module-kicker">Módulo {moduleIndex + 1}</span>
                       <h2>{module.title}</h2>
-                      <p>{module.description || "Sin descripcion todavia."}</p>
+                      <p>{module.description || "Sin descripción todavía."}</p>
                       <span className="publication-chip">
                         {module.status === "published"
                           ? "Publicado"
@@ -1453,13 +1468,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       }
                       aria-label={
                         module.status === "published"
-                          ? "Modulo publicado"
-                          : "Modulo no publicado"
+                          ? "Módulo publicado"
+                          : "Módulo no publicado"
                       }
                       title={
                         module.status === "published"
-                          ? "Publicado - click para ocultar"
-                          : "No publicado - click para publicar"
+                          ? "Publicado - clic para ocultar"
+                          : "No publicado - clic para publicar"
                       }
                       type="button"
                       disabled={isSubmitting || module.status === "archived"}
@@ -1477,8 +1492,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       )}
                     </button>
                     <button
-                      aria-label="Editar modulo"
-                      title="Editar modulo"
+                      aria-label="Editar módulo"
+                      title="Editar módulo"
                       type="button"
                       onClick={() => startEditModule(module)}
                     >
@@ -1504,8 +1519,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </button>
                     <button
                       className="danger-action"
-                      aria-label="Eliminar modulo"
-                      title="Eliminar modulo"
+                      aria-label="Eliminar módulo"
+                      title="Eliminar módulo"
                       type="button"
                       disabled={isSubmitting || module.status === "archived"}
                       onClick={() =>
@@ -1517,6 +1532,28 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     >
                       <Trash2 aria-hidden="true" size={17} strokeWidth={2.2} />
                     </button>
+                    <button
+                      className="collapse-action"
+                      aria-label={
+                        collapsedModuleIds.has(module.id)
+                          ? "Expandir módulo"
+                          : "Colapsar módulo"
+                      }
+                      title={
+                        collapsedModuleIds.has(module.id)
+                          ? "Expandir módulo"
+                          : "Colapsar módulo"
+                      }
+                      type="button"
+                      aria-expanded={!collapsedModuleIds.has(module.id)}
+                      onClick={() => toggleModule(module.id)}
+                    >
+                      {collapsedModuleIds.has(module.id) ? (
+                        <ChevronRight size={17} strokeWidth={2.2} />
+                      ) : (
+                        <ChevronDown size={17} strokeWidth={2.2} />
+                      )}
+                    </button>
                   </div>
                 </div>
                 {editingModuleId === module.id ? (
@@ -1525,7 +1562,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     onSubmit={handleUpdateModule}
                   >
                     <label>
-                      Titulo del modulo
+                      Título del módulo
                       <input
                         required
                         value={editingModuleTitle}
@@ -1535,7 +1572,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       />
                     </label>
                     <label>
-                      Descripcion
+                      Descripción
                       <textarea
                         value={editingModuleDescription}
                         onChange={(event) =>
@@ -1545,7 +1582,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </label>
                     <div className="inline-actions">
                       <button type="submit" disabled={isSubmitting}>
-                        Guardar modulo
+                        Guardar módulo
                       </button>
                       <button
                         type="button"
@@ -1563,7 +1600,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     onSubmit={handleCreateLesson}
                   >
                     <label>
-                      Titulo de la clase
+                      Título de la clase
                       <input
                         required
                         value={lessonTitle}
@@ -1571,7 +1608,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       />
                     </label>
                     <label>
-                      Descripcion
+                      Descripción
                       <textarea
                         value={lessonDescription}
                         onChange={(event) =>
@@ -1625,7 +1662,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 {!collapsedModuleIds.has(module.id) ? (
                   <div className="lesson-list">
                     {module.lessons.length === 0 ? (
-                      <p className="tree-empty">No hay clases en este modulo.</p>
+                      <p className="tree-empty">No hay clases en este módulo.</p>
                     ) : (
                       module.lessons.map((lesson, lessonIndex) => (
                         <div
@@ -1641,9 +1678,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               aria-expanded={!collapsedLessonIds.has(lesson.id)}
                               onClick={() => toggleLesson(lesson.id)}
                             >
-                              <span aria-hidden="true">
-                                {collapsedLessonIds.has(lesson.id) ? "+" : "-"}
-                              </span>
                               <div className="lesson-title-stack">
                                 <span className="lesson-kicker">
                                   Clase {lessonIndex + 1}
@@ -1670,8 +1704,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 }
                                 title={
                                   lesson.status === "published"
-                                    ? "Publicada - click para ocultar"
-                                    : "No publicada - click para publicar"
+                                    ? "Publicada - clic para ocultar"
+                                    : "No publicada - clic para publicar"
                                 }
                                 type="button"
                                 disabled={
@@ -1725,18 +1759,6 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </button>
                               <button
-                                aria-label="Editar quiz"
-                                title="Editar quiz"
-                                type="button"
-                                onClick={() => startEditQuiz(lesson)}
-                              >
-                                <CircleHelp
-                                  aria-hidden="true"
-                                  size={17}
-                                  strokeWidth={2.2}
-                                />
-                              </button>
-                              <button
                                 className="subtle-action"
                                 aria-label="Agregar recurso"
                                 title="Agregar recurso"
@@ -1782,6 +1804,28 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                   strokeWidth={2.2}
                                 />
                               </button>
+                              <button
+                                className="collapse-action"
+                                aria-label={
+                                  collapsedLessonIds.has(lesson.id)
+                                    ? "Expandir clase"
+                                    : "Colapsar clase"
+                                }
+                                title={
+                                  collapsedLessonIds.has(lesson.id)
+                                    ? "Expandir clase"
+                                    : "Colapsar clase"
+                                }
+                                type="button"
+                                aria-expanded={!collapsedLessonIds.has(lesson.id)}
+                                onClick={() => toggleLesson(lesson.id)}
+                              >
+                                {collapsedLessonIds.has(lesson.id) ? (
+                                  <ChevronRight size={17} strokeWidth={2.2} />
+                                ) : (
+                                  <ChevronDown size={17} strokeWidth={2.2} />
+                                )}
+                              </button>
                             </div>
                           </div>
                           {!collapsedLessonIds.has(lesson.id) &&
@@ -1791,7 +1835,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               onSubmit={handleUpdateLesson}
                             >
                               <label>
-                                Titulo de la clase
+                                Título de la clase
                                 <input
                                   required
                                   value={editingLessonTitle}
@@ -1801,7 +1845,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </label>
                               <label>
-                                Descripcion
+                                Descripción
                                 <textarea
                                   value={editingLessonDescription}
                                   onChange={(event) =>
@@ -1864,7 +1908,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                           editingLessonId !== lesson.id ? (
                             <div className="lesson-details">
                               <span>
-                                {lesson.description || "Sin descripcion todavia."}
+                                {lesson.description || "Sin descripción todavía."}
                               </span>
                               <div className="assignment-summary">
                                 {(() => {
@@ -1913,15 +1957,21 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                         </strong>
                                       </div>
                                       <span>{questionCount}/10 preguntas</span>
+                                      <button
+                                        className="secondary-action quiz-config-action"
+                                        type="button"
+                                        onClick={() => startEditQuiz(lesson)}
+                                      >
+                                        {questionCount === 10
+                                          ? "Editar quiz"
+                                          : "Configurar quiz"}
+                                      </button>
                                     </>
                                   );
                                 })()}
                               </div>
                               <div className="lesson-support-row">
                                 <div className="mini-list">
-                                  {lesson.duration_minutes ? (
-                                    <span>{lesson.duration_minutes} min</span>
-                                  ) : null}
                                   {lesson.resources.length > 0 ? (
                                     <span>
                                       {lesson.resources.length}{" "}
@@ -1952,7 +2002,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               onSubmit={handleUpdateQuiz}
                             >
                               <label>
-                                Titulo del quiz
+                                Título del quiz
                                 <input
                                   required
                                   value={editingQuizTitle}
@@ -1961,113 +2011,165 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                   }
                                 />
                               </label>
-                              <div className="quiz-question-grid">
-                                {editingQuizQuestions.map((question) => (
-                                  <fieldset
-                                    className="quiz-question-editor"
-                                    key={question.position}
-                                  >
-                                    <legend>Pregunta {question.position}</legend>
-                                    <label>
-                                      Pregunta
-                                      <input
-                                        required
-                                        value={question.questionText}
-                                        onChange={(event) =>
-                                          updateQuizQuestionDraft(
-                                            question.position,
-                                            "questionText",
-                                            event.target.value,
-                                          )
-                                        }
-                                      />
-                                    </label>
-                                    <div className="form-grid">
-                                      <label>
-                                        A
-                                        <input
-                                          required
-                                          value={question.optionA}
-                                          onChange={(event) =>
-                                            updateQuizQuestionDraft(
-                                              question.position,
-                                              "optionA",
-                                              event.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label>
-                                        B
-                                        <input
-                                          required
-                                          value={question.optionB}
-                                          onChange={(event) =>
-                                            updateQuizQuestionDraft(
-                                              question.position,
-                                              "optionB",
-                                              event.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label>
-                                        C
-                                        <input
-                                          required
-                                          value={question.optionC}
-                                          onChange={(event) =>
-                                            updateQuizQuestionDraft(
-                                              question.position,
-                                              "optionC",
-                                              event.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label>
-                                        D
-                                        <input
-                                          required
-                                          value={question.optionD}
-                                          onChange={(event) =>
-                                            updateQuizQuestionDraft(
-                                              question.position,
-                                              "optionD",
-                                              event.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
+                              {editingQuizError ? (
+                                <p className="form-message error quiz-form-message">
+                                  {editingQuizError}
+                                </p>
+                              ) : null}
+                              {(() => {
+                                const question =
+                                  editingQuizQuestions[editingQuizQuestionIndex];
+
+                                return (
+                                  <div className="quiz-question-stepper">
+                                    <div className="quiz-stepper-header">
+                                      <strong>
+                                        {editingQuizQuestionIndex + 1}/
+                                        {editingQuizQuestions.length}
+                                      </strong>
+                                      <span>
+                                        Pregunta {question.position}
+                                      </span>
                                     </div>
-                                    <label>
-                                      Respuesta correcta
-                                      <select
-                                        value={question.correctOption}
-                                        onChange={(event) =>
-                                          updateQuizQuestionDraft(
-                                            question.position,
-                                            "correctOption",
-                                            event.target.value,
+                                    <fieldset
+                                      className="quiz-question-editor"
+                                      key={question.position}
+                                    >
+                                      <legend>Pregunta {question.position}</legend>
+                                      <label>
+                                        Pregunta
+                                        <input
+                                          required
+                                          value={question.questionText}
+                                          onChange={(event) =>
+                                            updateQuizQuestionDraft(
+                                              question.position,
+                                              "questionText",
+                                              event.target.value,
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                      <div className="form-grid">
+                                        <label>
+                                          Opción A
+                                          <input
+                                            required
+                                            value={question.optionA}
+                                            onChange={(event) =>
+                                              updateQuizQuestionDraft(
+                                                question.position,
+                                                "optionA",
+                                                event.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label>
+                                          Opción B
+                                          <input
+                                            required
+                                            value={question.optionB}
+                                            onChange={(event) =>
+                                              updateQuizQuestionDraft(
+                                                question.position,
+                                                "optionB",
+                                                event.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label>
+                                          Opción C
+                                          <input
+                                            required
+                                            value={question.optionC}
+                                            onChange={(event) =>
+                                              updateQuizQuestionDraft(
+                                                question.position,
+                                                "optionC",
+                                                event.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label>
+                                          Opción D
+                                          <input
+                                            required
+                                            value={question.optionD}
+                                            onChange={(event) =>
+                                              updateQuizQuestionDraft(
+                                                question.position,
+                                                "optionD",
+                                                event.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                      </div>
+                                      <label>
+                                        Respuesta correcta
+                                        <select
+                                          value={question.correctOption}
+                                          onChange={(event) =>
+                                            updateQuizQuestionDraft(
+                                              question.position,
+                                              "correctOption",
+                                              event.target.value,
+                                            )
+                                          }
+                                        >
+                                          <option value="a">A</option>
+                                          <option value="b">B</option>
+                                          <option value="c">C</option>
+                                          <option value="d">D</option>
+                                        </select>
+                                      </label>
+                                    </fieldset>
+                                    <div className="quiz-stepper-actions">
+                                      <button
+                                        type="button"
+                                        disabled={editingQuizQuestionIndex === 0}
+                                        onClick={() =>
+                                          setEditingQuizQuestionIndex((current) =>
+                                            Math.max(0, current - 1),
                                           )
                                         }
                                       >
-                                        <option value="a">A</option>
-                                        <option value="b">B</option>
-                                        <option value="c">C</option>
-                                        <option value="d">D</option>
-                                      </select>
-                                    </label>
-                                  </fieldset>
-                                ))}
-                              </div>
+                                        Anterior
+                                      </button>
+                                      <button
+                                        type="button"
+                                        disabled={
+                                          editingQuizQuestionIndex ===
+                                          editingQuizQuestions.length - 1
+                                        }
+                                        onClick={() =>
+                                          setEditingQuizQuestionIndex((current) =>
+                                            Math.min(
+                                              editingQuizQuestions.length - 1,
+                                              current + 1,
+                                            ),
+                                          )
+                                        }
+                                      >
+                                        Siguiente
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                               <div className="inline-actions">
                                 <button type="submit" disabled={isSubmitting}>
                                   Guardar quiz
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => setEditingQuizLessonId(null)}
+                                  onClick={() => {
+                                    setEditingQuizLessonId(null);
+                                    setEditingQuizError(null);
+                                  }}
                                 >
                                   Cancelar
                                 </button>
@@ -2081,7 +2183,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               onSubmit={handleUpdateAssignment}
                             >
                               <label>
-                                Titulo de la tarea
+                                Título de la tarea
                                 <input
                                   required
                                   value={editingAssignmentTitle}
@@ -2111,7 +2213,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 >
                                   <option value="report">Reporte/enlace</option>
                                   <option value="script">
-                                    Validacion de script
+                                    Validación de script
                                   </option>
                                   <option value="document">Documento</option>
                                   <option value="drive_link">
@@ -2142,7 +2244,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                             >
                               <div className="form-grid">
                                 <label>
-                                  Titulo del recurso
+                                  Título del recurso
                                   <input
                                     required
                                     value={resourceTitle}
@@ -2164,7 +2266,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                     </option>
                                     <option value="video">Video</option>
                                     <option value="pdf">PDF</option>
-                                    <option value="slides">Presentacion</option>
+                                    <option value="slides">Presentación</option>
                                     <option value="zip">ZIP</option>
                                     <option value="script">Script</option>
                                     <option value="report">Reporte</option>
@@ -2213,7 +2315,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         >
           <section className="confirm-dialog">
             <div>
-              <p className="eyebrow">Confirmar eliminacion</p>
+              <p className="eyebrow">Confirmar eliminación</p>
               <h2 id="delete-dialog-title">
                 Eliminar{" "}
                 {pendingDelete.type === "course"
@@ -2224,7 +2326,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 ?
               </h2>
               <p>
-                Esto lo quitara de la gestion activa del curso. Los registros
+                Esto lo quitará de la gestión activa del curso. Los registros
                 existentes se mantienen para historial.
               </p>
             </div>

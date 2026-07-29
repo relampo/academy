@@ -37,7 +37,7 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar" aria-label="Navegacion principal">
+      <aside className="sidebar" aria-label="Navegación principal">
         <div className="brand">
           <BrandMark />
           <div>
@@ -66,7 +66,7 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
             <span>{formatRole(profile?.role ?? "student")}</span>
           </div>
           <button type="button" onClick={handleSignOut}>
-            Cerrar sesion
+            Cerrar sesión
           </button>
         </div>
       </aside>

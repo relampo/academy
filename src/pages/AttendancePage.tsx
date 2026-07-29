@@ -211,8 +211,8 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
 
           {students.length === 0 ? (
             <div className="empty-builder">
-              <strong>Todavia no hay estudiantes aprobados</strong>
-              <span>Las inscripciones aprobadas apareceran aqui.</span>
+              <strong>Todavía no hay estudiantes aprobados</strong>
+              <span>Las inscripciones aprobadas aparecerán aquí.</span>
             </div>
           ) : null}
 
@@ -243,7 +243,7 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
                         })
                       }
                     />
-                    Asistio
+                    Asistió
                   </label>
                   <label className="toggle-row compact-toggle">
                     <input

@@ -18,7 +18,7 @@ function formatStatus(value: string) {
     withdrawn: "retirado",
     completed: "completado",
     published: "publicado",
-    enrollment_closed: "inscripcion cerrada",
+    enrollment_closed: "inscripción cerrada",
   };
 
   return labels[value] ?? value.replace(/_/g, " ");
@@ -43,15 +43,15 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
     (!enrollment || canRequestAgain);
   const unavailableReason = (() => {
     if (!offering) {
-      return "Este curso todavia no tiene una oferta publicada para inscripcion.";
+      return "Este curso todavía no tiene una oferta publicada para inscripción.";
     }
 
     if (offering.status !== "published") {
-      return "La inscripcion no esta disponible porque la oferta del curso no esta publicada.";
+      return "La inscripción no está disponible porque la oferta del curso no está publicada.";
     }
 
     if (!offering.enrollment_open) {
-      return "La inscripcion esta cerrada para este curso.";
+      return "La inscripción está cerrada para este curso.";
     }
 
     return null;
@@ -84,7 +84,7 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "No se pudo solicitar la inscripcion.",
+          : "No se pudo solicitar la inscripción.",
       );
     } finally {
       setIsSubmitting(false);
@@ -163,17 +163,17 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
     }
 
     if (!offering.enrollment_open) {
-      return "Inscripcion cerrada";
+      return "Inscripción cerrada";
     }
 
-    return "Solicitar inscripcion";
+    return "Solicitar inscripción";
   })();
 
   return (
     <section className="page enroll-page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Inscripcion</p>
+          <p className="eyebrow">Inscripción</p>
           <h1>{course?.title ?? "Curso"}</h1>
           {course?.short_description ? <p>{course.short_description}</p> : null}
         </div>
@@ -185,7 +185,7 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
 
       {!isLoading && !course ? (
         <section className="content-panel compact">
-          <p>No encontramos este curso o ya no esta disponible.</p>
+          <p>No encontramos este curso o ya no está disponible.</p>
         </section>
       ) : null}
 
@@ -201,8 +201,8 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
             <span>{formatStatus(course.status)}</span>
             <span>
               {offering?.enrollment_open
-                ? "Inscripcion abierta"
-                : "Inscripcion cerrada"}
+                ? "Inscripción abierta"
+                : "Inscripción cerrada"}
             </span>
             {enrollment ? <span>{formatStatus(enrollment.status)}</span> : null}
           </div>
@@ -216,7 +216,7 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
                 Crear cuenta
               </button>
               <button type="button" onClick={() => goToLogin("sign-in")}>
-                Iniciar sesion
+                Iniciar sesión
               </button>
             </div>
           ) : enrollment?.status === "approved" ? (

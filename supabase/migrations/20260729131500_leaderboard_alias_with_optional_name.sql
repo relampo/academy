@@ -1,40 +1,3 @@
-create or replace function public.get_generated_leaderboard_alias(target_user_id uuid)
-returns text
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select (
-    array[
-      'Rayo Norte',
-      'Centella Alta',
-      'Trueno Claro',
-      'Nube Iónica',
-      'Chispa Azul',
-      'Vórtice Solar',
-      'Pulso Eléctrico',
-      'Relámpago Delta',
-      'Frente de Tormenta',
-      'Arco Plasma'
-    ]
-  )[1 + (abs(hashtext(target_user_id::text)) % 10)]
-$$;
-
-create or replace function public.get_leaderboard_level(score_ratio numeric)
-returns text
-language sql
-immutable
-as $$
-  select case
-    when score_ratio >= 0.90 then 'Tormenta'
-    when score_ratio >= 0.80 then 'Huracan'
-    when score_ratio >= 0.75 then 'Centella'
-    when score_ratio >= 0.50 then 'Rayo'
-    else 'Chispa'
-  end
-$$;
-
 create or replace function public.get_course_leaderboard(target_course_id uuid)
 returns table (
   student_id uuid,
@@ -108,6 +71,14 @@ as $$
     )::numeric as max_score
     from course_lessons l
     left join public.lesson_assignments a on a.lesson_id = l.id
+  ),
+  visible_profiles as (
+    select
+      p.*,
+      coalesce(nullif(p.leaderboard_name, ''), public.get_generated_leaderboard_alias(p.id)) as generated_name,
+      coalesce(nullif(p.display_name, ''), nullif(trim(p.first_name || ' ' || p.last_name), '')) as full_profile_name
+    from approved_students s
+    join public.profiles p on p.id = s.student_id
   )
   select
     p.id as student_id,
@@ -115,12 +86,14 @@ as $$
       when p.leaderboard_visibility = 'hidden'
         and p.id <> auth.uid()
         and not public.can_manage_course(target_course_id)
-        then 'Hidden student'
+        then 'Estudiante privado'
       when p.leaderboard_visibility = 'full_name'
-        then coalesce(nullif(p.display_name, ''), trim(p.first_name || ' ' || p.last_name))
+        and p.full_profile_name is not null
+        then p.generated_name || ' · ' || p.full_profile_name
       when p.leaderboard_visibility = 'first_name'
-        then p.first_name
-      else coalesce(nullif(p.leaderboard_name, ''), public.get_generated_leaderboard_alias(p.id))
+        and nullif(p.first_name, '') is not null
+        then p.generated_name || ' · ' || p.first_name
+      else p.generated_name
     end as display_name,
     p.avatar_url,
     (
@@ -147,16 +120,14 @@ as $$
         else 0
       end
     ) as level
-  from approved_students s
-  join public.profiles p on p.id = s.student_id
+  from visible_profiles p
   cross join max_scores
-  left join attendance_scores on attendance_scores.student_id = s.student_id
-  left join quiz_scores on quiz_scores.student_id = s.student_id
-  left join assignment_scores on assignment_scores.student_id = s.student_id
+  left join attendance_scores on attendance_scores.student_id = p.id
+  left join quiz_scores on quiz_scores.student_id = p.id
+  left join assignment_scores on assignment_scores.student_id = p.id
   cross join requester_allowed
   where requester_allowed.allowed
   order by total_score desc, display_name asc
 $$;
 
 grant execute on function public.get_course_leaderboard(uuid) to authenticated;
-grant execute on function public.get_generated_leaderboard_alias(uuid) to authenticated;

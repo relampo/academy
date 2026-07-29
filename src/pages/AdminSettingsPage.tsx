@@ -3,8 +3,8 @@ export function AdminSettingsPage() {
     <section className="page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Administracion</p>
-          <h1>Configuracion</h1>
+          <p className="eyebrow">Administración</p>
+          <h1>Configuración</h1>
         </div>
       </div>
 
@@ -19,7 +19,7 @@ export function AdminSettingsPage() {
             <dd>GitHub Pages</dd>
           </div>
           <div>
-            <dt>Motor de validacion</dt>
+            <dt>Motor de validación</dt>
             <dd>Planificado para la fase final</dd>
           </div>
         </dl>
