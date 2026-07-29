@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ChartNoAxesColumn,
+  Eye,
+  EyeOff,
   Code2,
   File,
   FileText,
@@ -55,14 +57,26 @@ import type { Enums } from "../types/database.types";
 type CourseStatus = Enums<"course_status">;
 
 const resourceTypeLabels: Record<string, string> = {
-  external_link: "External link",
+  external_link: "Enlace externo",
   video: "Video",
   pdf: "PDF",
-  slides: "Slides",
+  slides: "Presentacion",
   zip: "ZIP",
   script: "Script",
-  report: "Report",
+  report: "Reporte",
 };
+
+function formatStatus(value: string) {
+  const labels: Record<string, string> = {
+    draft: "borrador",
+    published: "publicado",
+    enrollment_closed: "inscripcion cerrada",
+    completed: "completado",
+    archived: "archivado",
+  };
+
+  return labels[value] ?? value.replace(/_/g, " ");
+}
 
 const resourceTypeIcons: Record<string, LucideIcon> = {
   external_link: Link,
@@ -104,7 +118,7 @@ function renderResourceChip(
         <span>{resource.title}</span>
       )}
       <button
-        aria-label={`Remove ${resource.title}`}
+        aria-label={`Quitar ${resource.title}`}
         disabled={isDisabled}
         onClick={(event) => {
           event.preventDefault();
@@ -144,13 +158,13 @@ function getErrorMessage(caughtError: unknown, fallback: string) {
 
 function getProfileName(profile: InstructorProfile | null) {
   if (!profile) {
-    return "Unknown instructor";
+    return "Instructor desconocido";
   }
 
   return (
     profile.display_name ||
     `${profile.first_name} ${profile.last_name}`.trim() ||
-    "Unnamed instructor"
+    "Instructor sin nombre"
   );
 }
 
@@ -333,7 +347,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       );
     } catch (caughtError) {
       setError(
-        caughtError instanceof Error ? caughtError.message : "Could not load course.",
+        caughtError instanceof Error ? caughtError.message : "No se pudo cargar el curso.",
       );
     } finally {
       setIsLoading(false);
@@ -384,13 +398,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         await assignCourseInstructor(courseId, selectedInstructorId, user.id);
       }
 
-      setMessage("Course setup updated.");
+      setMessage("Configuracion del curso actualizada.");
       await loadCourse();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not update course setup.",
+          : "No se pudo actualizar la configuracion del curso.",
       );
     } finally {
       setIsSubmitting(false);
@@ -417,7 +431,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
 
   const validateEditionDates = (startDate: string, endDate: string) => {
     if (startDate && endDate && endDate < startDate) {
-      setError("End date must be after the start date.");
+      setError("La fecha final debe ser posterior a la fecha de inicio.");
       return false;
     }
 
@@ -445,9 +459,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
             ),
         )?.id ?? "",
       );
-      setMessage("Instructor added.");
+      setMessage("Instructor agregado.");
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not add instructor."));
+      setError(getErrorMessage(caughtError, "No se pudo agregar el instructor."));
     } finally {
       setIsSubmitting(false);
     }
@@ -470,9 +484,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
             ),
         )?.id ?? "",
       );
-      setMessage("Instructor removed.");
+      setMessage("Instructor removido.");
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not remove instructor."));
+      setError(getErrorMessage(caughtError, "No se pudo remover el instructor."));
     } finally {
       setIsSubmitting(false);
     }
@@ -498,13 +512,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         enrollment_open: false,
       });
 
-      setMessage("Course deleted.");
+      setMessage("Curso eliminado.");
       window.location.hash = "/admin/courses";
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not delete course.",
+          : "No se pudo eliminar el curso.",
       );
     } finally {
       setIsSubmitting(false);
@@ -525,16 +539,16 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         title: moduleTitle,
         description: moduleDescription || null,
         position: nextPosition,
-        status: "published",
+        status: "draft",
       });
 
       setModuleTitle("");
       setModuleDescription("");
       setIsAddingModule(false);
-      setMessage("Module created.");
+      setMessage("Modulo creado.");
       await refreshCourseContent();
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not create module."));
+      setError(getErrorMessage(caughtError, "No se pudo crear el modulo."));
     } finally {
       setIsSubmitting(false);
     }
@@ -565,11 +579,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         video_url: lessonVideoUrl || null,
         duration_minutes: lessonDuration ? Number(lessonDuration) : null,
         position: nextPosition,
-        status: "published",
+        status: "draft",
       });
       await upsertLessonAssignment({
         lessonId: lesson.id,
-        title: `Assignment - ${lesson.title}`,
+        title: `Tarea - ${lesson.title}`,
         description: "Submit the required evidence for this class.",
         assignmentType: "report",
         points: 10,
@@ -581,13 +595,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setLessonVideoUrl("");
       setLessonDuration("");
       setActiveLessonModuleId(null);
-      setMessage("Lesson created.");
+      setMessage("Clase creada.");
       await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not create lesson.",
+          : "No se pudo crear la clase.",
       );
     } finally {
       setIsSubmitting(false);
@@ -619,13 +633,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       setResourceUrl("");
       setResourceType("external_link");
       setActiveResourceLessonId(null);
-      setMessage("Resource added.");
+      setMessage("Recurso agregado.");
       await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not add resource.",
+          : "No se pudo agregar el recurso.",
       );
     } finally {
       setIsSubmitting(false);
@@ -689,13 +703,44 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       });
 
       setEditingModuleId(null);
-      setMessage("Module updated.");
+      setMessage("Modulo actualizado.");
       await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not update module.",
+          : "No se pudo actualizar el modulo.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateModuleStatus = async (
+    module: ModuleWithLessons,
+    nextStatus: "draft" | "published" | "hidden",
+  ) => {
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await updateModule(module.id, {
+        title: module.title,
+        description: module.description,
+        status: nextStatus,
+      });
+      setMessage(
+        nextStatus === "published"
+          ? "Modulo publicado."
+          : "Modulo ocultado.",
+      );
+      await refreshCourseContent();
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "No se pudo actualizar el estado del modulo.",
       );
     } finally {
       setIsSubmitting(false);
@@ -718,13 +763,46 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     });
   };
 
+  const handleUpdateLessonStatus = async (
+    lesson: LessonWithResources,
+    nextStatus: "draft" | "published" | "hidden",
+  ) => {
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await updateLesson(lesson.id, {
+        title: lesson.title,
+        slug: lesson.slug,
+        description: lesson.description,
+        content: lesson.content,
+        video_url: lesson.video_url,
+        duration_minutes: lesson.duration_minutes,
+        status: nextStatus,
+      });
+      setMessage(
+        nextStatus === "published" ? "Clase publicada." : "Clase ocultada.",
+      );
+      await refreshCourseContent();
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "No se pudo actualizar el estado de la clase.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const startEditAssignment = (lesson: LessonWithResources) => {
     const assignment = lessonAssignments.find(
       (currentAssignment) => currentAssignment.lesson_id === lesson.id,
     );
 
     setEditingAssignmentLessonId(lesson.id);
-    setEditingAssignmentTitle(assignment?.title ?? `Assignment - ${lesson.title}`);
+    setEditingAssignmentTitle(assignment?.title ?? `Tarea - ${lesson.title}`);
     setEditingAssignmentDescription(
       assignment?.description ?? "Submit the required evidence for this class.",
     );
@@ -796,7 +874,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
     );
 
     if (editingQuizQuestions.length !== 10 || hasEmptyQuestion) {
-      setError("Quiz requires exactly 10 complete questions.");
+      setError("El quiz requiere exactamente 10 preguntas completas.");
       return;
     }
 
@@ -818,9 +896,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         return [...withoutCurrent, quiz];
       });
       setEditingQuizLessonId(null);
-      setMessage("Quiz updated.");
+      setMessage("Quiz actualizado.");
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not update quiz."));
+      setError(getErrorMessage(caughtError, "No se pudo actualizar el quiz."));
     } finally {
       setIsSubmitting(false);
     }
@@ -857,9 +935,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         return [...withoutCurrent, assignment];
       });
       setEditingAssignmentLessonId(null);
-      setMessage("Assignment updated.");
+      setMessage("Tarea actualizada.");
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not update assignment."));
+      setError(getErrorMessage(caughtError, "No se pudo actualizar la tarea."));
     } finally {
       setIsSubmitting(false);
     }
@@ -889,10 +967,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       });
 
       setEditingLessonId(null);
-      setMessage("Lesson updated.");
+      setMessage("Clase actualizada.");
       await refreshCourseContent();
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not update lesson."));
+      setError(getErrorMessage(caughtError, "No se pudo actualizar la clase."));
     } finally {
       setIsSubmitting(false);
     }
@@ -914,10 +992,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         status: "archived",
       });
 
-      setMessage("Lesson deleted.");
+      setMessage("Clase eliminada.");
       await refreshCourseContent();
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not delete lesson."));
+      setError(getErrorMessage(caughtError, "No se pudo eliminar la clase."));
     } finally {
       setIsSubmitting(false);
     }
@@ -930,10 +1008,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
 
     try {
       await deleteResource(resourceId);
-      setMessage("Resource removed.");
+      setMessage("Recurso removido.");
       await refreshCourseContent();
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError, "Could not remove resource."));
+      setError(getErrorMessage(caughtError, "No se pudo remover el recurso."));
     } finally {
       setIsSubmitting(false);
     }
@@ -951,13 +1029,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         status: "archived",
       });
 
-      setMessage("Module deleted.");
+      setMessage("Modulo eliminado.");
       await refreshCourseContent();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not delete module.",
+          : "No se pudo eliminar el modulo.",
       );
     } finally {
       setIsSubmitting(false);
@@ -981,6 +1059,11 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   };
 
   const primaryOffering = course?.course_editions[0] ?? null;
+  const enrollmentLink = course
+    ? `${window.location.origin}${window.location.pathname}#/enroll/${encodeURIComponent(
+        course.slug || course.id,
+      )}`
+    : "";
   const assignmentByLesson = new Map(
     lessonAssignments.map((assignment) => [assignment.lesson_id, assignment]),
   );
@@ -994,39 +1077,52 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       ),
   );
 
+  const handleCopyEnrollmentLink = async () => {
+    if (!enrollmentLink) {
+      return;
+    }
+
+    try {
+      await window.navigator.clipboard.writeText(enrollmentLink);
+      setMessage("Link de inscripcion copiado.");
+    } catch {
+      setMessage(enrollmentLink);
+    }
+  };
+
   return (
     <section className="page">
       <div className="page-header course-detail-header">
         <div>
-          <p className="eyebrow">Administration</p>
-          <h1>{course?.title ?? "Course"}</h1>
+          <p className="eyebrow">Administracion</p>
+          <h1>{course?.title ?? "Curso"}</h1>
           {course ? (
             <div className="mini-list">
-              <span>{course.status}</span>
+              <span>{formatStatus(course.status)}</span>
               <span>
                 {primaryOffering?.enrollment_open
-                  ? "Enrollment open"
-                  : "Enrollment closed"}
+                  ? "Inscripcion abierta"
+                  : "Inscripcion cerrada"}
               </span>
-              <span>{modules.length} modules</span>
+              <span>{modules.length} modulos</span>
             </div>
           ) : null}
         </div>
         <a className="text-link" href="#/admin/courses">
-          Back to courses
+          Volver a cursos
         </a>
       </div>
 
       {error ? <p className="form-message error">{error}</p> : null}
       {message ? <p className="form-message success">{message}</p> : null}
-      {isLoading ? <p>Loading course...</p> : null}
+      {isLoading ? <p>Cargando curso...</p> : null}
 
       {!isLoading && course ? (
         <section className="content-panel course-details-panel">
           <div className="panel-heading">
             <div>
-              <p className="eyebrow">Details</p>
-              <h2>Course setup</h2>
+              <p className="eyebrow">Detalles</p>
+              <h2>Configuracion del curso</h2>
             </div>
           </div>
 
@@ -1038,14 +1134,14 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
           <div className="course-overview-grid">
             <section className="details-block details-block-main">
               <div className="subsection-heading">
-                <h3>Course details</h3>
+                <h3>Detalles del curso</h3>
               </div>
               <div
                 className="stacked-form"
               >
                 <div className="form-grid">
                   <label>
-                    Title
+                    Titulo
                     <input
                       disabled={!isEditingCourse}
                       required
@@ -1055,7 +1151,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     />
                   </label>
                   <label>
-                    Status
+                    Estado
                     <select
                       disabled={!isEditingCourse}
                       value={status}
@@ -1063,15 +1159,15 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                         setStatus(event.target.value as CourseStatus)
                       }
                     >
-                      <option value="draft">Draft</option>
-                      <option value="published">Published</option>
-                      <option value="enrollment_closed">Enrollment closed</option>
-                      <option value="completed">Completed</option>
+                      <option value="draft">Borrador</option>
+                      <option value="published">Publicado</option>
+                      <option value="enrollment_closed">Inscripcion cerrada</option>
+                      <option value="completed">Completado</option>
                     </select>
                   </label>
                 </div>
                 <label>
-                  Description
+                  Descripcion
                   <textarea
                     className="compact-textarea"
                     disabled={!isEditingCourse}
@@ -1084,7 +1180,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
 
             <section className="details-block">
               <div className="subsection-heading">
-                <h3>Enrollment</h3>
+                <h3>Inscripcion</h3>
               </div>
             {primaryOffering ? (
               <div
@@ -1092,7 +1188,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               >
                 <div className="form-grid">
                   <label>
-                    Start date
+                    Fecha de inicio
                     <input
                       disabled={!isEditingCourse}
                       type="date"
@@ -1103,7 +1199,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     />
                   </label>
                   <label>
-                    End date
+                    Fecha final
                     <input
                       disabled={!isEditingCourse}
                       type="date"
@@ -1115,7 +1211,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                   </label>
                 </div>
                 <label>
-                  Capacity
+                  Capacidad
                   <input
                     disabled={!isEditingCourse}
                     min="1"
@@ -1136,25 +1232,38 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                         setEditingEditionEnrollmentOpen(event.target.checked)
                       }
                     />
-                    Enrollment open
+                    Inscripcion abierta
                   </label>
+                </div>
+                <div className="enrollment-link-box">
+                  <span>Link de inscripcion</span>
+                  <div>
+                    <input readOnly value={enrollmentLink} />
+                    <button
+                      className="secondary-action"
+                      type="button"
+                      onClick={() => void handleCopyEnrollmentLink()}
+                    >
+                      Copiar
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="empty-builder">
-                <strong>No enrollment settings yet</strong>
-                <span>This course needs enrollment settings before students can join.</span>
+                <strong>Todavia no hay configuracion de inscripcion</strong>
+                <span>Este curso necesita configuracion antes de aceptar estudiantes.</span>
               </div>
             )}
             </section>
 
             <section className="details-block">
               <div className="subsection-heading">
-                <h3>Instructors</h3>
+                <h3>Instructores</h3>
               </div>
             <div className="stacked-form">
               <label>
-                Assign instructor
+                Asignar instructor
                 <div className="inline-picker">
                   <select
                     disabled={availableInstructors.length === 0 || isSubmitting}
@@ -1164,8 +1273,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     {availableInstructors.length === 0 ? (
                       <option value="">
                         {instructors.length === 0
-                          ? "No active instructors"
-                          : "All instructors assigned"}
+                          ? "No hay instructores activos"
+                          : "Todos los instructores estan asignados"}
                       </option>
                     ) : null}
                     {availableInstructors.map((instructor) => (
@@ -1184,21 +1293,21 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     type="button"
                     onClick={() => void handleAddInstructor()}
                   >
-                    Add
+                    Agregar
                   </button>
                 </div>
               </label>
             </div>
             <div className="mini-list instructor-list">
               {assignedInstructors.length === 0 ? (
-                <span>No instructors assigned</span>
+                <span>No hay instructores asignados</span>
               ) : null}
               {assignedInstructors.map((assignment) => (
                 <span className="removable-chip" key={assignment.instructor_id}>
                   {getProfileName(assignment.profiles)}
                   {isEditingCourse ? (
                     <button
-                      aria-label={`Remove ${getProfileName(assignment.profiles)}`}
+                      aria-label={`Quitar ${getProfileName(assignment.profiles)}`}
                       disabled={isSubmitting}
                       type="button"
                       onClick={() =>
@@ -1220,19 +1329,19 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 type="button"
                 onClick={() => setIsEditingCourse(true)}
               >
-                Edit
+                Editar
               </button>
             ) : (
               <>
                 <button type="button" onClick={handleCancelEditCourse}>
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   className="primary-action"
                   type="submit"
                   disabled={isSubmitting}
                 >
-                  Save
+                  Guardar
                 </button>
               </>
             )}
@@ -1247,7 +1356,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 })
               }
             >
-              Delete
+              Eliminar
             </button>
           </div>
           </form>
@@ -1258,16 +1367,16 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         <section className="content-panel curriculum-panel">
           <div className="page-header compact-header">
             <div>
-              <p className="eyebrow">Curriculum</p>
-              <h2>Course content</h2>
-              <p>Create modules, add lessons, then attach resources to each lesson.</p>
+              <p className="eyebrow">Contenido</p>
+              <h2>Contenido del curso</h2>
+              <p>Crea modulos, agrega clases y adjunta recursos a cada clase.</p>
             </div>
             <button
               className="secondary-action"
               type="button"
               onClick={() => setIsAddingModule((current) => !current)}
             >
-              Add module
+              Agregar modulo
             </button>
           </div>
 
@@ -1277,7 +1386,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               onSubmit={handleCreateModule}
             >
               <label>
-                Module title
+                Titulo del modulo
                 <input
                   required
                   value={moduleTitle}
@@ -1285,7 +1394,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 />
               </label>
               <label>
-                Description
+                Descripcion
                 <textarea
                   value={moduleDescription}
                   onChange={(event) => setModuleDescription(event.target.value)}
@@ -1293,13 +1402,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
               </label>
               <div className="inline-actions">
                 <button type="submit" disabled={isSubmitting}>
-                  Save module
+                  Guardar modulo
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsAddingModule(false)}
                 >
-                  Cancel
+                  Cancelar
                 </button>
               </div>
             </form>
@@ -1308,15 +1417,15 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
           <div className="content-tree">
             {modules.length === 0 ? (
               <div className="empty-builder">
-                <strong>No modules yet</strong>
-                <span>Add your first module to start building the course.</span>
+                <strong>Todavia no hay modulos</strong>
+                <span>Agrega el primer modulo para empezar a construir el curso.</span>
               </div>
             ) : null}
             {modules.map((module, moduleIndex) => (
               <article className="module-block" key={module.id}>
                 <div className="module-heading">
                   <button
-                    className="module-toggle"
+                      className="module-toggle"
                     type="button"
                     aria-expanded={!collapsedModuleIds.has(module.id)}
                     onClick={() => toggleModule(module.id)}
@@ -1325,23 +1434,59 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       {collapsedModuleIds.has(module.id) ? "+" : "-"}
                     </span>
                     <div>
-                      <span className="module-kicker">Module {moduleIndex + 1}</span>
+                      <span className="module-kicker">Modulo {moduleIndex + 1}</span>
                       <h2>{module.title}</h2>
-                      <p>{module.description || "No description yet."}</p>
+                      <p>{module.description || "Sin descripcion todavia."}</p>
+                      <span className="publication-chip">
+                        {module.status === "published"
+                          ? "Publicado"
+                          : "No publicado"}
+                      </span>
                     </div>
                   </button>
                   <div className="row-actions curriculum-actions">
                     <button
-                      aria-label="Edit module"
-                      title="Edit module"
+                      className={
+                        module.status === "published"
+                          ? "visibility-action is-visible"
+                          : "visibility-action is-hidden"
+                      }
+                      aria-label={
+                        module.status === "published"
+                          ? "Modulo publicado"
+                          : "Modulo no publicado"
+                      }
+                      title={
+                        module.status === "published"
+                          ? "Publicado - click para ocultar"
+                          : "No publicado - click para publicar"
+                      }
+                      type="button"
+                      disabled={isSubmitting || module.status === "archived"}
+                      onClick={() =>
+                        void handleUpdateModuleStatus(
+                          module,
+                          module.status === "published" ? "hidden" : "published",
+                        )
+                      }
+                    >
+                      {module.status === "published" ? (
+                        <Eye aria-hidden="true" size={17} strokeWidth={2.2} />
+                      ) : (
+                        <EyeOff aria-hidden="true" size={17} strokeWidth={2.2} />
+                      )}
+                    </button>
+                    <button
+                      aria-label="Editar modulo"
+                      title="Editar modulo"
                       type="button"
                       onClick={() => startEditModule(module)}
                     >
                       <Pencil aria-hidden="true" size={17} strokeWidth={2.2} />
                     </button>
                     <button
-                      aria-label="Add lesson"
-                      title="Add lesson"
+                      aria-label="Agregar clase"
+                      title="Agregar clase"
                       type="button"
                       onClick={() => {
                         setLessonModuleId(module.id);
@@ -1359,8 +1504,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </button>
                     <button
                       className="danger-action"
-                      aria-label="Delete module"
-                      title="Delete module"
+                      aria-label="Eliminar modulo"
+                      title="Eliminar modulo"
                       type="button"
                       disabled={isSubmitting || module.status === "archived"}
                       onClick={() =>
@@ -1380,7 +1525,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     onSubmit={handleUpdateModule}
                   >
                     <label>
-                      Module title
+                      Titulo del modulo
                       <input
                         required
                         value={editingModuleTitle}
@@ -1390,7 +1535,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       />
                     </label>
                     <label>
-                      Description
+                      Descripcion
                       <textarea
                         value={editingModuleDescription}
                         onChange={(event) =>
@@ -1400,13 +1545,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </label>
                     <div className="inline-actions">
                       <button type="submit" disabled={isSubmitting}>
-                        Save module
+                        Guardar modulo
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingModuleId(null)}
                       >
-                        Cancel
+                        Cancelar
                       </button>
                     </div>
                   </form>
@@ -1418,7 +1563,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     onSubmit={handleCreateLesson}
                   >
                     <label>
-                      Lesson title
+                      Titulo de la clase
                       <input
                         required
                         value={lessonTitle}
@@ -1426,7 +1571,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       />
                     </label>
                     <label>
-                      Description
+                      Descripcion
                       <textarea
                         value={lessonDescription}
                         onChange={(event) =>
@@ -1435,7 +1580,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                       />
                     </label>
                     <label>
-                      Content
+                      Contenido
                       <textarea
                         value={lessonContent}
                         onChange={(event) => setLessonContent(event.target.value)}
@@ -1443,7 +1588,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </label>
                     <div className="form-grid">
                       <label>
-                        Video URL
+                        URL del video
                         <input
                           type="url"
                           value={lessonVideoUrl}
@@ -1453,7 +1598,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                         />
                       </label>
                       <label>
-                        Minutes
+                        Minutos
                         <input
                           min="1"
                           type="number"
@@ -1466,13 +1611,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                     </div>
                     <div className="inline-actions">
                       <button type="submit" disabled={isSubmitting}>
-                        Save lesson
+                        Guardar clase
                       </button>
                       <button
                         type="button"
                         onClick={() => setActiveLessonModuleId(null)}
                       >
-                        Cancel
+                        Cancelar
                       </button>
                     </div>
                   </form>
@@ -1480,7 +1625,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 {!collapsedModuleIds.has(module.id) ? (
                   <div className="lesson-list">
                     {module.lessons.length === 0 ? (
-                      <p className="tree-empty">No lessons in this module.</p>
+                      <p className="tree-empty">No hay clases en este modulo.</p>
                     ) : (
                       module.lessons.map((lesson, lessonIndex) => (
                         <div
@@ -1501,15 +1646,63 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               </span>
                               <div className="lesson-title-stack">
                                 <span className="lesson-kicker">
-                                  Lesson {lessonIndex + 1}
+                                  Clase {lessonIndex + 1}
                                 </span>
                                 <strong>{lesson.title}</strong>
+                                <span className="publication-chip">
+                                  {lesson.status === "published"
+                                    ? "Publicado"
+                                    : "No publicado"}
+                                </span>
                               </div>
                             </button>
                             <div className="lesson-actions">
                               <button
-                                aria-label="Edit lesson"
-                                title="Edit lesson"
+                                className={
+                                  lesson.status === "published"
+                                    ? "visibility-action is-visible"
+                                    : "visibility-action is-hidden"
+                                }
+                                aria-label={
+                                  lesson.status === "published"
+                                    ? "Clase publicada"
+                                    : "Clase no publicada"
+                                }
+                                title={
+                                  lesson.status === "published"
+                                    ? "Publicada - click para ocultar"
+                                    : "No publicada - click para publicar"
+                                }
+                                type="button"
+                                disabled={
+                                  isSubmitting || lesson.status === "archived"
+                                }
+                                onClick={() =>
+                                  void handleUpdateLessonStatus(
+                                    lesson,
+                                    lesson.status === "published"
+                                      ? "hidden"
+                                      : "published",
+                                  )
+                                }
+                              >
+                                {lesson.status === "published" ? (
+                                  <Eye
+                                    aria-hidden="true"
+                                    size={17}
+                                    strokeWidth={2.2}
+                                  />
+                                ) : (
+                                  <EyeOff
+                                    aria-hidden="true"
+                                    size={17}
+                                    strokeWidth={2.2}
+                                  />
+                                )}
+                              </button>
+                              <button
+                                aria-label="Editar clase"
+                                title="Editar clase"
                                 type="button"
                                 onClick={() => startEditLesson(lesson)}
                               >
@@ -1520,8 +1713,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </button>
                               <button
-                                aria-label="Edit assignment"
-                                title="Edit assignment"
+                                aria-label="Editar tarea"
+                                title="Editar tarea"
                                 type="button"
                                 onClick={() => startEditAssignment(lesson)}
                               >
@@ -1532,8 +1725,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </button>
                               <button
-                                aria-label="Edit quiz"
-                                title="Edit quiz"
+                                aria-label="Editar quiz"
+                                title="Editar quiz"
                                 type="button"
                                 onClick={() => startEditQuiz(lesson)}
                               >
@@ -1545,8 +1738,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               </button>
                               <button
                                 className="subtle-action"
-                                aria-label="Add resource"
-                                title="Add resource"
+                                aria-label="Agregar recurso"
+                                title="Agregar recurso"
                                 type="button"
                                 onClick={() => {
                                   setResourceLessonId(lesson.id);
@@ -1570,8 +1763,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               </button>
                               <button
                                 className="danger-action"
-                                aria-label="Delete lesson"
-                                title="Delete lesson"
+                                aria-label="Eliminar clase"
+                                title="Eliminar clase"
                                 type="button"
                                 disabled={
                                   isSubmitting || lesson.status === "archived"
@@ -1598,7 +1791,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               onSubmit={handleUpdateLesson}
                             >
                               <label>
-                                Lesson title
+                                Titulo de la clase
                                 <input
                                   required
                                   value={editingLessonTitle}
@@ -1608,7 +1801,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </label>
                               <label>
-                                Description
+                                Descripcion
                                 <textarea
                                   value={editingLessonDescription}
                                   onChange={(event) =>
@@ -1619,7 +1812,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </label>
                               <label>
-                                Content
+                                Contenido
                                 <textarea
                                   value={editingLessonContent}
                                   onChange={(event) =>
@@ -1629,7 +1822,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               </label>
                               <div className="form-grid">
                                 <label>
-                                  Video URL
+                                  URL del video
                                   <input
                                     type="url"
                                     value={editingLessonVideoUrl}
@@ -1641,7 +1834,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                   />
                                 </label>
                                 <label>
-                                  Minutes
+                                  Minutos
                                   <input
                                     min="1"
                                     type="number"
@@ -1656,13 +1849,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               </div>
                               <div className="inline-actions">
                                 <button type="submit" disabled={isSubmitting}>
-                                  Save lesson
+                                  Guardar clase
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setEditingLessonId(null)}
                                 >
-                                  Cancel
+                                  Cancelar
                                 </button>
                               </div>
                             </form>
@@ -1671,7 +1864,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                           editingLessonId !== lesson.id ? (
                             <div className="lesson-details">
                               <span>
-                                {lesson.description || "No description yet."}
+                                {lesson.description || "Sin descripcion todavia."}
                               </span>
                               <div className="assignment-summary">
                                 {(() => {
@@ -1687,10 +1880,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                         strokeWidth={2.2}
                                       />
                                       <div>
-                                        <small>Required assignment</small>
+                                        <small>Tarea obligatoria</small>
                                         <strong>
                                           {assignment?.title ??
-                                            `Assignment - ${lesson.title}`}
+                                            `Tarea - ${lesson.title}`}
                                         </strong>
                                       </div>
                                       <span>
@@ -1714,12 +1907,12 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                         strokeWidth={2.2}
                                       />
                                       <div>
-                                        <small>Required quiz</small>
+                                        <small>Quiz obligatorio</small>
                                         <strong>
                                           {quiz?.title ?? `Quiz - ${lesson.title}`}
                                         </strong>
                                       </div>
-                                      <span>{questionCount}/10 questions</span>
+                                      <span>{questionCount}/10 preguntas</span>
                                     </>
                                   );
                                 })()}
@@ -1733,8 +1926,8 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                     <span>
                                       {lesson.resources.length}{" "}
                                       {lesson.resources.length === 1
-                                        ? "resource"
-                                        : "resources"}
+                                        ? "recurso"
+                                        : "recursos"}
                                     </span>
                                   ) : null}
                                 </div>
@@ -1759,7 +1952,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               onSubmit={handleUpdateQuiz}
                             >
                               <label>
-                                Quiz title
+                                Titulo del quiz
                                 <input
                                   required
                                   value={editingQuizTitle}
@@ -1774,9 +1967,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                     className="quiz-question-editor"
                                     key={question.position}
                                   >
-                                    <legend>Question {question.position}</legend>
+                                    <legend>Pregunta {question.position}</legend>
                                     <label>
-                                      Question
+                                      Pregunta
                                       <input
                                         required
                                         value={question.questionText}
@@ -1848,7 +2041,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                       </label>
                                     </div>
                                     <label>
-                                      Correct answer
+                                      Respuesta correcta
                                       <select
                                         value={question.correctOption}
                                         onChange={(event) =>
@@ -1870,13 +2063,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               </div>
                               <div className="inline-actions">
                                 <button type="submit" disabled={isSubmitting}>
-                                  Save quiz
+                                  Guardar quiz
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setEditingQuizLessonId(null)}
                                 >
-                                  Cancel
+                                  Cancelar
                                 </button>
                               </div>
                             </form>
@@ -1888,7 +2081,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               onSubmit={handleUpdateAssignment}
                             >
                               <label>
-                                Assignment title
+                                Titulo de la tarea
                                 <input
                                   required
                                   value={editingAssignmentTitle}
@@ -1898,7 +2091,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </label>
                               <label>
-                                Instructions
+                                Instrucciones
                                 <textarea
                                   value={editingAssignmentDescription}
                                   onChange={(event) =>
@@ -1909,26 +2102,26 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                 />
                               </label>
                               <label>
-                                Type
+                                Tipo
                                 <select
                                   value={editingAssignmentType}
                                   onChange={(event) =>
                                     setEditingAssignmentType(event.target.value)
                                   }
                                 >
-                                  <option value="report">Report/link</option>
+                                  <option value="report">Reporte/enlace</option>
                                   <option value="script">
-                                    Script validation
+                                    Validacion de script
                                   </option>
-                                  <option value="document">Document</option>
+                                  <option value="document">Documento</option>
                                   <option value="drive_link">
-                                    Google Drive link
+                                    Enlace de Google Drive
                                   </option>
                                 </select>
                               </label>
                               <div className="inline-actions">
                                 <button type="submit" disabled={isSubmitting}>
-                                  Save assignment
+                                  Guardar tarea
                                 </button>
                                 <button
                                   type="button"
@@ -1936,7 +2129,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                     setEditingAssignmentLessonId(null)
                                   }
                                 >
-                                  Cancel
+                                  Cancelar
                                 </button>
                               </div>
                             </form>
@@ -1949,7 +2142,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                             >
                               <div className="form-grid">
                                 <label>
-                                  Resource title
+                                  Titulo del recurso
                                   <input
                                     required
                                     value={resourceTitle}
@@ -1959,7 +2152,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                   />
                                 </label>
                                 <label>
-                                  Type
+                                  Tipo
                                   <select
                                     value={resourceType}
                                     onChange={(event) =>
@@ -1967,19 +2160,19 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                     }
                                   >
                                     <option value="external_link">
-                                      External link
+                                      Enlace externo
                                     </option>
                                     <option value="video">Video</option>
                                     <option value="pdf">PDF</option>
-                                    <option value="slides">Slides</option>
+                                    <option value="slides">Presentacion</option>
                                     <option value="zip">ZIP</option>
                                     <option value="script">Script</option>
-                                    <option value="report">Report</option>
+                                    <option value="report">Reporte</option>
                                   </select>
                                 </label>
                               </div>
                               <label>
-                                External URL optional
+                                URL externa opcional
                                 <input
                                   type="url"
                                   value={resourceUrl}
@@ -1990,13 +2183,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                               </label>
                               <div className="inline-actions">
                                 <button type="submit" disabled={isSubmitting}>
-                                  Save resource
+                                  Guardar recurso
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setActiveResourceLessonId(null)}
                                 >
-                                  Cancel
+                                  Cancelar
                                 </button>
                               </div>
                             </form>
@@ -2020,9 +2213,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
         >
           <section className="confirm-dialog">
             <div>
-              <p className="eyebrow">Confirm delete</p>
+              <p className="eyebrow">Confirmar eliminacion</p>
               <h2 id="delete-dialog-title">
-                Delete{" "}
+                Eliminar{" "}
                 {pendingDelete.type === "course"
                   ? pendingDelete.title
                   : pendingDelete.type === "module"
@@ -2031,13 +2224,13 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 ?
               </h2>
               <p>
-                This will remove it from active course management. Existing
-                records are kept safely for history.
+                Esto lo quitara de la gestion activa del curso. Los registros
+                existentes se mantienen para historial.
               </p>
             </div>
             <div className="confirm-actions">
               <button type="button" onClick={() => setPendingDelete(null)}>
-                Cancel
+                Cancelar
               </button>
               <button
                 className="danger-action"
@@ -2045,7 +2238,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                 disabled={isSubmitting}
                 onClick={() => void confirmDelete()}
               >
-                Delete
+                Eliminar
               </button>
             </div>
           </section>

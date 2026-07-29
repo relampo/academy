@@ -3,25 +3,25 @@ export function AdminUsersPage() {
     <section className="page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Administration</p>
-          <h1>Users</h1>
+          <p className="eyebrow">Administracion</p>
+          <h1>Usuarios</h1>
         </div>
       </div>
 
       <section className="content-panel">
-        <h2>User management</h2>
+        <h2>Gestion de usuarios</h2>
         <div className="task-list">
           <div>
-            <strong>Profiles</strong>
-            <span>Review academy users and account status.</span>
+            <strong>Perfiles</strong>
+            <span>Revisa usuarios de la academia y estado de cuenta.</span>
           </div>
           <div>
             <strong>Roles</strong>
-            <span>Promote instructors and manage administrative access.</span>
+            <span>Asigna instructores y administra accesos.</span>
           </div>
           <div>
-            <strong>Audit</strong>
-            <span>Track sensitive account changes.</span>
+            <strong>Auditoria</strong>
+            <span>Da seguimiento a cambios sensibles de cuenta.</span>
           </div>
         </div>
       </section>

@@ -1,5 +1,22 @@
 import { useAuth } from "../hooks/useAuth";
 
+function formatValue(value: string) {
+  const labels: Record<string, string> = {
+    admin: "administrador",
+    instructor: "instructor",
+    student: "estudiante",
+    active: "activo",
+    suspended: "suspendido",
+    pending: "pendiente",
+    alias: "alias",
+    first_name: "nombre",
+    full_name: "nombre completo",
+    hidden: "oculto",
+  };
+
+  return labels[value] ?? value.replace(/_/g, " ");
+}
+
 export function ProfilePage() {
   const { profile, user } = useAuth();
 
@@ -7,8 +24,8 @@ export function ProfilePage() {
     <section className="page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Account</p>
-          <h1>Profile</h1>
+          <p className="eyebrow">Cuenta</p>
+          <h1>Perfil</h1>
         </div>
       </div>
 
@@ -19,20 +36,20 @@ export function ProfilePage() {
             <dd>{user?.email}</dd>
           </div>
           <div>
-            <dt>Name</dt>
-            <dd>{profile?.display_name || "Not set"}</dd>
+            <dt>Nombre</dt>
+            <dd>{profile?.display_name || "Sin configurar"}</dd>
           </div>
           <div>
-            <dt>Role</dt>
-            <dd>{profile?.role ?? "student"}</dd>
+            <dt>Rol</dt>
+            <dd>{formatValue(profile?.role ?? "student")}</dd>
           </div>
           <div>
-            <dt>Status</dt>
-            <dd>{profile?.status ?? "active"}</dd>
+            <dt>Estado</dt>
+            <dd>{formatValue(profile?.status ?? "active")}</dd>
           </div>
           <div>
-            <dt>Leaderboard display</dt>
-            <dd>{profile?.leaderboard_visibility ?? "alias"}</dd>
+            <dt>Nombre en tabla de posiciones</dt>
+            <dd>{formatValue(profile?.leaderboard_visibility ?? "alias")}</dd>
           </div>
         </dl>
       </section>

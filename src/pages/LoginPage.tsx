@@ -3,9 +3,26 @@ import { useAuth } from "../hooks/useAuth";
 
 type AuthMode = "sign-in" | "sign-up";
 
+function getInitialMode(): AuthMode {
+  const storedMode = window.sessionStorage.getItem("relampo:authMode");
+
+  if (storedMode === "sign-up" || storedMode === "sign-in") {
+    window.sessionStorage.removeItem("relampo:authMode");
+    return storedMode;
+  }
+
+  return "sign-in";
+}
+
+function getReturnPath() {
+  const returnTo = window.sessionStorage.getItem("relampo:returnTo");
+  window.sessionStorage.removeItem("relampo:returnTo");
+  return returnTo || "/";
+}
+
 export function LoginPage() {
   const { signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<AuthMode>("sign-in");
+  const [mode, setMode] = useState<AuthMode>(getInitialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -25,16 +42,21 @@ export function LoginPage() {
     try {
       if (isSignUp) {
         await signUp({ email, password, firstName, lastName });
-        setMessage("Account created. Check your email if confirmation is enabled.");
+        const returnTo = getReturnPath();
+        const successMessage =
+          "Cuenta creada. Revisa tu email si la confirmacion esta activa.";
+        setMessage(successMessage);
+        window.sessionStorage.setItem("relampo:notice", successMessage);
+        window.location.hash = returnTo;
       } else {
         await signIn(email, password);
-        window.location.hash = "/";
+        window.location.hash = getReturnPath();
       }
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Authentication failed.",
+          : "No se pudo autenticar.",
       );
     } finally {
       setIsSubmitting(false);
@@ -46,27 +68,29 @@ export function LoginPage() {
       <section className="auth-panel" aria-labelledby="login-title">
         <div>
           <p className="eyebrow">Relampo Academy</p>
-          <h1 id="login-title">{isSignUp ? "Create account" : "Sign in"}</h1>
+          <h1 id="login-title">
+            {isSignUp ? "Crear cuenta" : "Iniciar sesion"}
+          </h1>
           <p>
-            Use your academy account to access courses, progress and practical
-            assignments.
+            Usa tu cuenta de la academia para acceder a cursos, progreso y
+            practicas.
           </p>
         </div>
 
-        <div className="segmented-control" aria-label="Authentication mode">
+        <div className="segmented-control" aria-label="Modo de autenticacion">
           <button
             type="button"
             className={mode === "sign-in" ? "selected" : ""}
             onClick={() => setMode("sign-in")}
           >
-            Sign in
+            Iniciar sesion
           </button>
           <button
             type="button"
             className={mode === "sign-up" ? "selected" : ""}
             onClick={() => setMode("sign-up")}
           >
-            Sign up
+            Registrarme
           </button>
         </div>
 
@@ -74,7 +98,7 @@ export function LoginPage() {
           {isSignUp ? (
             <div className="form-grid">
               <label>
-                First name
+                Nombre
                 <input
                   required
                   type="text"
@@ -83,7 +107,7 @@ export function LoginPage() {
                 />
               </label>
               <label>
-                Last name
+                Apellido
                 <input
                   required
                   type="text"
@@ -104,12 +128,12 @@ export function LoginPage() {
             />
           </label>
           <label>
-            Password
+            Contrasena
             <input
               required
               minLength={6}
               type="password"
-              placeholder="Your password"
+              placeholder="Tu contrasena"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
@@ -117,7 +141,7 @@ export function LoginPage() {
           {error ? <p className="form-message error">{error}</p> : null}
           {message ? <p className="form-message success">{message}</p> : null}
           <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Working..." : "Continue"}
+            {isSubmitting ? "Procesando..." : "Continuar"}
           </button>
         </form>
       </section>

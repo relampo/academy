@@ -19,6 +19,10 @@ export type PublishedEditionWithCourseAndEnrollment = CourseEdition & {
   enrollments: Enrollment[];
 };
 
+export type CourseEnrollmentOffering = Course & {
+  course_editions: Array<CourseEdition & { enrollments: Enrollment[] }>;
+};
+
 export type EnrollmentReviewItem = Enrollment & {
   course_editions: (CourseEdition & { courses: Course | null }) | null;
   profiles: Pick<
@@ -127,6 +131,74 @@ export async function getCourseWithEditions(courseId: string) {
   return data as CourseWithEditions;
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
+}
+
+export async function getCourseEnrollmentOffering(
+  courseRef: string,
+  studentId?: string,
+) {
+  const selectQuery = "*, course_editions(*, enrollments(*))";
+  let query = supabase
+    .from("courses")
+    .select(selectQuery)
+    .eq("slug", courseRef)
+    .neq("status", "archived")
+    .maybeSingle();
+
+  let { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data && isUuid(courseRef)) {
+    const result = await supabase
+      .from("courses")
+      .select(selectQuery)
+      .eq("id", courseRef)
+      .neq("status", "archived")
+      .maybeSingle();
+
+    data = result.data;
+    error = result.error;
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const course = data as CourseEnrollmentOffering;
+  const offerings = course.course_editions
+    .filter((edition) =>
+      ["published", "enrollment_closed", "completed"].includes(edition.status),
+    )
+    .filter((edition) => !edition.archived_at)
+    .map((edition) => ({
+      ...edition,
+      enrollments: studentId
+        ? edition.enrollments.filter(
+            (enrollment) => enrollment.student_id === studentId,
+          )
+        : [],
+    }))
+    .sort((nextEdition, currentEdition) =>
+      shouldPreferCourseOffering(nextEdition, currentEdition) ? -1 : 1,
+    );
+
+  return {
+    ...course,
+    course_editions: offerings,
+  };
+}
+
 export async function listPublishedCourseEditions(studentId?: string) {
   const { data, error } = await supabase
     .from("course_editions")
@@ -166,8 +238,14 @@ export async function listPublishedCourseEditions(studentId?: string) {
 }
 
 function shouldPreferCourseOffering(
-  nextEdition: PublishedEditionWithCourseAndEnrollment,
-  currentEdition: PublishedEditionWithCourseAndEnrollment,
+  nextEdition: Pick<
+    PublishedEditionWithCourseAndEnrollment,
+    "created_at" | "enrollment_open" | "enrollments" | "status"
+  >,
+  currentEdition: Pick<
+    PublishedEditionWithCourseAndEnrollment,
+    "created_at" | "enrollment_open" | "enrollments" | "status"
+  >,
 ) {
   const nextHasEnrollment = nextEdition.enrollments.length > 0;
   const currentHasEnrollment = currentEdition.enrollments.length > 0;

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -8,6 +8,8 @@ import {
   CircleHelp,
   File,
   FileText,
+  Eye,
+  EyeOff,
   Link,
   Package,
   PlayCircle,
@@ -50,13 +52,13 @@ const partialAttendancePoints = 5;
 const quizMaxPoints = 20;
 
 const resourceTypeLabels: Record<string, string> = {
-  external_link: "External link",
+  external_link: "Enlace externo",
   video: "Video",
   pdf: "PDF",
-  slides: "Slides",
+  slides: "Presentacion",
   zip: "ZIP",
   script: "Script",
-  report: "Report",
+  report: "Reporte",
 };
 
 const resourceTypeIcons: Record<string, LucideIcon> = {
@@ -87,10 +89,10 @@ function getAttendancePoints(record?: LessonAttendance) {
 
 function getAttendanceLabel(record?: LessonAttendance) {
   if (!record?.attended) {
-    return "pending";
+    return "pendiente";
   }
 
-  return record.stayed_until_end ? "full class" : "attended";
+  return record.stayed_until_end ? "clase completa" : "asistio";
 }
 
 function renderStudentResource(resource: Resource) {
@@ -142,6 +144,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [collapsedLessonIds, setCollapsedLessonIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [savingLessonId, setSavingLessonId] = useState<string | null>(null);
   const [activeAssignmentLessonId, setActiveAssignmentLessonId] = useState<
     string | null
@@ -162,12 +167,18 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const lessons = modules.flatMap((module) => module.lessons);
-  const completedCount = lessons.filter((lesson) =>
+  const availableLessons = modules.flatMap((module) =>
+    module.status === "published"
+      ? module.lessons.filter((lesson) => lesson.status === "published")
+      : [],
+  );
+  const completedCount = availableLessons.filter((lesson) =>
     completedLessonIds.has(lesson.id),
   ).length;
   const progress =
-    lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
+    availableLessons.length > 0
+      ? Math.round((completedCount / availableLessons.length) * 100)
+      : 0;
   const attendanceByLesson = new Map(
     attendance.map((record) => [record.lesson_id, record]),
   );
@@ -210,28 +221,28 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       earned,
       max,
       label: hasPending
-        ? "Points pending"
+        ? "Puntos pendientes"
         : `${formatPoints(earned)}/${formatPoints(max)} pts`,
       tooltip: [
-        `Attendance: ${
+        `Asistencia: ${
           attendanceRecord?.attended
             ? `${getAttendanceLabel(attendanceRecord)} · ${formatPoints(
                 earnedAttendancePoints,
               )}/${attendancePoints} pts`
-            : "pending"
+            : "pendiente"
         }`,
         `Quiz: ${
           quizAttempt
             ? `${formatPoints(quizAttempt.total_score)}/${quizMaxPoints} pts`
-            : "pending"
+            : "pendiente"
         }`,
-        `Assignment: ${
+        `Tarea: ${
           submission?.points_awarded !== null &&
           submission?.points_awarded !== undefined
             ? `${formatPoints(submission.points_awarded)}/${formatPoints(
                 assignmentMaxPoints,
               )} pts`
-            : "pending"
+            : "pendiente"
         }`,
       ].join("\n"),
     };
@@ -241,10 +252,10 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     module.lessons
       .map((lesson, index) => {
         const summary = getLessonPointSummary(lesson.id);
-        return `Lesson ${index + 1}: ${summary.label}\n${summary.tooltip}`;
+        return `Clase ${index + 1}: ${summary.label}\n${summary.tooltip}`;
       })
       .join("\n\n");
-  const coursePointSummaries = lessons.map((lesson) =>
+  const coursePointSummaries = availableLessons.map((lesson) =>
     getLessonPointSummary(lesson.id),
   );
   const courseEarnedPoints = coursePointSummaries.reduce(
@@ -256,7 +267,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     0,
   );
   const courseHasPendingPoints = coursePointSummaries.some((summary) =>
-    summary.label.includes("pending"),
+    summary.label.includes("pendientes"),
   );
 
   const toggleLessonComplete = async (lessonId: string) => {
@@ -302,7 +313,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not update lesson progress.",
+          : "No se pudo actualizar el progreso de la clase.",
       );
     } finally {
       setSavingLessonId(null);
@@ -323,10 +334,29 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     });
   };
 
+  const toggleLesson = (lessonId: string) => {
+    setCollapsedLessonIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(lessonId)) {
+        next.delete(lessonId);
+      } else {
+        next.add(lessonId);
+      }
+
+      return next;
+    });
+  };
+
   const startAssignmentSubmission = (
     lessonId: string,
     submission: AssignmentSubmission | null,
   ) => {
+    setCollapsedLessonIds((current) => {
+      const next = new Set(current);
+      next.delete(lessonId);
+      return next;
+    });
     setActiveAssignmentLessonId(lessonId);
     setAssignmentUrl(submission?.submission_url ?? "");
     setAssignmentNotes(submission?.notes ?? "");
@@ -367,7 +397,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not submit assignment.",
+          : "No se pudo enviar la tarea.",
       );
     } finally {
       setSavingAssignmentId(null);
@@ -375,6 +405,11 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   };
 
   const startQuiz = (lessonId: string) => {
+    setCollapsedLessonIds((current) => {
+      const next = new Set(current);
+      next.delete(lessonId);
+      return next;
+    });
     setActiveQuizLessonId(lessonId);
     setActiveQuizQuestionIndex(0);
     setQuizAnswers([]);
@@ -430,17 +465,20 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not submit quiz.",
+          : "No se pudo enviar el quiz.",
       );
     } finally {
       setSavingQuizId(null);
     }
   };
 
-  useEffect(() => {
-    const loadCourse = async () => {
+  const loadCourse = useCallback(
+    async (options: { resetCollapsed: boolean; showLoading: boolean }) => {
       setError(null);
-      setIsLoading(true);
+
+      if (options.showLoading) {
+        setIsLoading(true);
+      }
 
       try {
         const [nextCourse, nextModules] = await Promise.all([
@@ -480,71 +518,96 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         setAssignmentSubmissions(nextAssignmentSubmissions);
         setQuizzes(nextQuizzes);
         setQuizAttempts(nextQuizAttempts);
-        setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
+
+        if (options.resetCollapsed) {
+          setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
+          setCollapsedLessonIds(
+            new Set(
+              nextModules.flatMap((module) =>
+                module.lessons.map((lesson) => lesson.id),
+              ),
+            ),
+          );
+        }
       } catch (caughtError) {
         setError(
           caughtError instanceof Error
             ? caughtError.message
-            : "Could not load course.",
+            : "No se pudo cargar el curso.",
         );
       } finally {
-        setIsLoading(false);
+        if (options.showLoading) {
+          setIsLoading(false);
+        }
       }
+    },
+    [courseId, user],
+  );
+
+  useEffect(() => {
+    void loadCourse({ resetCollapsed: true, showLoading: true });
+  }, [loadCourse]);
+
+  useEffect(() => {
+    const handleDataChanged = () => {
+      void loadCourse({ resetCollapsed: false, showLoading: false });
     };
 
-    void loadCourse();
-  }, [courseId, user?.id]);
+    window.addEventListener("relampo:data-changed", handleDataChanged);
+    return () =>
+      window.removeEventListener("relampo:data-changed", handleDataChanged);
+  }, [loadCourse]);
 
   return (
     <section className="page">
       <div className="page-header course-detail-header student-course-header">
         <div>
-          <p className="eyebrow">Course</p>
-          <h1>{course?.title ?? "Course"}</h1>
+          <p className="eyebrow">Curso</p>
+          <h1>{course?.title ?? "Curso"}</h1>
           {course?.description ? <p>{course.description}</p> : null}
         </div>
         <a className="text-link" href="#/courses">
-          Back to my courses
+          Volver a mis cursos
         </a>
       </div>
 
       {error ? <p className="form-message error">{error}</p> : null}
-      {isLoading ? <p>Loading course...</p> : null}
+      {isLoading ? <p>Cargando curso...</p> : null}
 
       {!isLoading && modules.length === 0 ? (
         <section className="content-panel compact">
-          <p>No course content is available yet.</p>
+          <p>Todavia no hay contenido disponible para este curso.</p>
         </section>
       ) : null}
 
       {!isLoading && modules.length > 0 ? (
         <section className="student-progress-panel">
           <div>
-            <span>Lesson progress</span>
+            <span>Progreso de clases</span>
             <strong>{progress}%</strong>
           </div>
           <div className="student-progress-track">
             <span style={{ width: `${progress}%` }} />
           </div>
           <p>
-            {completedCount} of {lessons.length} lessons viewed
+            {completedCount} de {availableLessons.length} clases vistas
           </p>
           <div className="student-requirements">
             <div>
-              <span>Course completion requires</span>
+              <span>Para completar el curso se requiere</span>
               <div>
-                <small>Instructor confirms attendance</small>
-                <small>Student completes quiz</small>
-                <small>Assignment reviewed</small>
+                <small>Instructor confirma asistencia</small>
+                <small>Estudiante completa quiz</small>
+                <small>Tarea revisada</small>
               </div>
             </div>
             <div className="student-course-points">
-              <span>Total accumulated</span>
+              <span>Total acumulado</span>
               <strong>
                 {formatPoints(courseEarnedPoints)}/
                 {formatPoints(courseMaxPoints)} pts
               </strong>
-              {courseHasPendingPoints ? <small>Some items pending</small> : null}
+              {courseHasPendingPoints ? <small>Hay elementos pendientes</small> : null}
             </div>
           </div>
         </section>
@@ -553,12 +616,21 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       <div className="student-course-shell">
         {modules.map((module, moduleIndex) => {
           const isModuleCollapsed = collapsedModuleIds.has(module.id);
-          const moduleCompletedCount = module.lessons.filter((lesson) =>
+          const isModulePublished = module.status === "published";
+          const moduleAvailableLessons = isModulePublished
+            ? module.lessons.filter((lesson) => lesson.status === "published")
+            : [];
+          const moduleCompletedCount = moduleAvailableLessons.filter((lesson) =>
             completedLessonIds.has(lesson.id),
           ).length;
 
           return (
-            <article className="student-module" key={module.id}>
+            <article
+              className={`student-module${
+                isModulePublished ? "" : " is-disabled"
+              }`}
+              key={module.id}
+            >
               <button
                 aria-expanded={!isModuleCollapsed}
                 className="student-module-header"
@@ -566,14 +638,31 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                 type="button"
                 onClick={() => toggleModule(module.id)}
               >
-                <span>Module {moduleIndex + 1}</span>
+                <span>Modulo {moduleIndex + 1}</span>
                 <div>
                   <h2>{module.title}</h2>
-                  <p>{module.description || "No description yet."}</p>
+                  <p>{module.description || "Sin descripcion todavia."}</p>
                 </div>
-                <small title={getModuleTooltip(module)}>
-                  {moduleCompletedCount}/{module.lessons.length}
+                <small title={isModulePublished ? getModuleTooltip(module) : ""}>
+                  {isModulePublished
+                    ? `${moduleCompletedCount}/${moduleAvailableLessons.length}`
+                    : "No disponible"}
                 </small>
+                {isModulePublished ? (
+                  <Eye
+                    aria-label="Modulo disponible"
+                    className="student-availability-icon is-visible"
+                    size={18}
+                    strokeWidth={2.2}
+                  />
+                ) : (
+                  <EyeOff
+                    aria-label="Modulo no disponible"
+                    className="student-availability-icon is-hidden"
+                    size={18}
+                    strokeWidth={2.2}
+                  />
+                )}
                 {isModuleCollapsed ? (
                   <ChevronRight aria-hidden="true" size={20} />
                 ) : (
@@ -583,10 +672,12 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
               {!isModuleCollapsed ? (
                 <div className="student-lesson-list">
                   {module.lessons.length === 0 ? (
-                    <p className="tree-empty">No lessons in this module.</p>
+                    <p className="tree-empty">No hay clases en este modulo.</p>
                   ) : null}
                   {module.lessons.map((lesson, lessonIndex) => {
                     const attendanceRecord = attendanceByLesson.get(lesson.id);
+                    const isLessonPublished =
+                      isModulePublished && lesson.status === "published";
                     const assignment = assignmentByLesson.get(lesson.id);
                     const quiz = quizByLesson.get(lesson.id);
                     const quizAttempt = quiz ? attemptByQuiz.get(quiz.id) : null;
@@ -601,10 +692,10 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                         ? ""
                         : "is-needs-revision";
                     const quizStatusLabel = quizAttempt
-                      ? "Quiz completed"
+                      ? "Quiz completado"
                       : isQuizReady
-                        ? "Quiz pending"
-                        : "Quiz setup pending";
+                        ? "Quiz pendiente"
+                        : "Configuracion de quiz pendiente";
                     const assignmentStatusClass =
                       submission?.status === "reviewed"
                         ? "is-confirmed"
@@ -615,150 +706,203 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                             : "";
                     const assignmentStatusLabel =
                       submission?.status === "reviewed"
-                        ? "Assignment reviewed"
+                        ? "Tarea revisada"
                         : submission?.status === "needs_revision"
-                          ? "Assignment needs revision"
+                          ? "Tarea fallada"
                           : submission
-                            ? "Assignment submitted"
-                            : "Assignment pending";
+                            ? "Tarea enviada"
+                            : "Tarea pendiente";
                     const lessonPointSummary = getLessonPointSummary(lesson.id);
+                    const isLessonCollapsed =
+                      collapsedLessonIds.has(lesson.id) &&
+                      activeAssignmentLessonId !== lesson.id &&
+                      activeQuizLessonId !== lesson.id;
 
                     return (
-                    <article
-                      className={`student-lesson${
-                        completedLessonIds.has(lesson.id) ? " is-viewed" : ""
-                      }`}
-                      key={lesson.id}
-                    >
-                      <header className="student-lesson-header">
-                        <button
-                          aria-label={
-                            completedLessonIds.has(lesson.id)
-                              ? "Mark lesson not viewed"
-                              : "Mark lesson viewed"
-                          }
-                          className="student-complete-toggle"
-                          disabled={savingLessonId === lesson.id}
-                          type="button"
-                          onClick={() => void toggleLessonComplete(lesson.id)}
-                        >
-                          {completedLessonIds.has(lesson.id) ? (
-                            <CheckCircle2 aria-hidden="true" size={22} />
-                          ) : (
-                            <Circle aria-hidden="true" size={22} />
-                          )}
-                        </button>
-                        <div>
-                          <span>Lesson {lessonIndex + 1}</span>
-                          <h3>{lesson.title}</h3>
-                        </div>
-                        <span
-                          className="student-points-badge"
-                          title={lessonPointSummary.tooltip}
-                        >
-                          {lessonPointSummary.label}
-                        </span>
-                      </header>
-                      <div className="student-lesson-body">
-                        <div className="student-status-row">
-                          <span
-                            className={
-                              attendanceRecord?.attended ? "is-confirmed" : ""
+                      <article
+                        className={`student-lesson${
+                          completedLessonIds.has(lesson.id) ? " is-viewed" : ""
+                        }${isLessonPublished ? "" : " is-disabled"}`}
+                        key={lesson.id}
+                      >
+                        <header className="student-lesson-header">
+                          <button
+                            aria-label={
+                              completedLessonIds.has(lesson.id)
+                                ? "Marcar clase como no vista"
+                                : "Marcar clase como vista"
                             }
+                            className="student-complete-toggle"
+                            disabled={
+                              !isLessonPublished || savingLessonId === lesson.id
+                            }
+                            type="button"
+                            onClick={() => void toggleLessonComplete(lesson.id)}
                           >
-                            {attendanceRecord?.attended
-                              ? attendanceRecord.stayed_until_end
-                                ? "Full class confirmed"
-                                : "Attendance confirmed"
-                              : "Attendance pending"}
+                            {completedLessonIds.has(lesson.id) ? (
+                              <CheckCircle2 aria-hidden="true" size={22} />
+                            ) : (
+                              <Circle aria-hidden="true" size={22} />
+                            )}
+                          </button>
+                          <button
+                            aria-expanded={!isLessonCollapsed}
+                            aria-label={
+                              isLessonCollapsed
+                                ? "Expandir clase"
+                                : "Colapsar clase"
+                            }
+                            className="student-lesson-expand"
+                            type="button"
+                            onClick={() => toggleLesson(lesson.id)}
+                          >
+                            {isLessonCollapsed ? (
+                              <ChevronRight aria-hidden="true" size={18} />
+                            ) : (
+                              <ChevronDown aria-hidden="true" size={18} />
+                            )}
+                          </button>
+                          <div>
+                            <span>Clase {lessonIndex + 1}</span>
+                            <h3>{lesson.title}</h3>
+                          </div>
+                          <span
+                            className="student-points-badge"
+                            title={lessonPointSummary.tooltip}
+                          >
+                            {isLessonPublished
+                              ? lessonPointSummary.label
+                              : "No disponible"}
                           </span>
-                          <span className={quizStatusClass}>
-                            {quizStatusLabel}
-                          </span>
-                          <span className={assignmentStatusClass}>
-                            <ClipboardCheck
-                              aria-hidden="true"
-                              size={14}
-                              strokeWidth={2.4}
+                          {isLessonPublished ? (
+                            <Eye
+                              aria-label="Clase disponible"
+                              className="student-availability-icon is-visible"
+                              size={18}
+                              strokeWidth={2.2}
                             />
-                            {assignmentStatusLabel}
-                          </span>
-                        </div>
-                        {lesson.description ? (
-                          <span>{lesson.description}</span>
-                        ) : null}
-                        {assignment ? (
-                          <section className="student-assignment-panel">
-                            <div className="student-assignment-main">
-                              <ClipboardCheck
-                                aria-hidden="true"
-                                size={17}
-                                strokeWidth={2.4}
-                              />
-                              <div>
-                              <small>Assignment</small>
-                              <strong>{assignment.title}</strong>
-                              {assignment.description ? (
-                                <p>{assignment.description}</p>
-                              ) : null}
-                              </div>
+                          ) : (
+                            <EyeOff
+                              aria-label="Clase no disponible"
+                              className="student-availability-icon is-hidden"
+                              size={18}
+                              strokeWidth={2.2}
+                            />
+                          )}
+                        </header>
+                        <div className="student-lesson-summary">
+                          {isLessonPublished ? (
+                            <div className="student-status-row">
+                              <span
+                                className={
+                                  attendanceRecord?.attended
+                                    ? "is-confirmed"
+                                    : ""
+                                }
+                              >
+                                {attendanceRecord?.attended
+                                  ? "Asistencia confirmada"
+                                  : "Asistencia pendiente"}
+                              </span>
+                              <span className={quizStatusClass}>
+                                {quizStatusLabel}
+                              </span>
+                              <span className={assignmentStatusClass}>
+                                <ClipboardCheck
+                                  aria-hidden="true"
+                                  size={14}
+                                  strokeWidth={2.4}
+                                />
+                                {assignmentStatusLabel}
+                              </span>
                             </div>
-                            {activeAssignmentLessonId !== lesson.id ? (
-                              <div className="student-assignment-side">
-                                <div className="student-assignment-meta">
-                                  <span>{assignment.assignment_type}</span>
-                                  <span>
-                                    {submission?.points_awarded !== null &&
-                                    submission?.points_awarded !== undefined
-                                      ? `${formatPoints(
-                                          submission.points_awarded,
-                                        )}/${formatPoints(assignment.points)} pts`
-                                      : "Points pending"}
-                                  </span>
-                                  {submission?.submission_url ? (
-                                    <a
-                                      href={submission.submission_url}
-                                      rel="noreferrer"
-                                      target="_blank"
-                                    >
-                                      Submitted link
-                                    </a>
-                                  ) : null}
+                          ) : (
+                            <div className="student-status-row">
+                              <span className="is-disabled">
+                                Contenido no publicado
+                              </span>
+                            </div>
+                          )}
+                          {lesson.description ? (
+                            <span>{lesson.description}</span>
+                          ) : null}
+                        </div>
+                        {!isLessonCollapsed && isLessonPublished ? (
+                          <div className="student-lesson-body">
+                            {assignment ? (
+                              <section className="student-assignment-panel">
+                                <div className="student-assignment-main">
+                                  <ClipboardCheck
+                                    aria-hidden="true"
+                                    size={17}
+                                    strokeWidth={2.4}
+                                  />
+                                  <div>
+                                    <small>Tarea</small>
+                                    <strong>{assignment.title}</strong>
+                                    {assignment.description ? (
+                                      <p>{assignment.description}</p>
+                                    ) : null}
+                                  </div>
                                 </div>
-                                {submission?.status === "reviewed" ||
-                                submission?.status === "needs_revision" ? (
-                                  <span className="student-assignment-locked">
-                                    Locked
-                                  </span>
+                                {activeAssignmentLessonId !== lesson.id ? (
+                                  <div className="student-assignment-side">
+                                    <div className="student-assignment-meta">
+                                      <span>{assignment.assignment_type}</span>
+                                      <span>
+                                        {submission?.points_awarded !== null &&
+                                        submission?.points_awarded !== undefined
+                                          ? `${formatPoints(
+                                              submission.points_awarded,
+                                            )}/${formatPoints(
+                                              assignment.points,
+                                            )} pts`
+                                          : "Puntos pendientes"}
+                                      </span>
+                                      {submission?.submission_url ? (
+                                        <a
+                                          href={submission.submission_url}
+                                          rel="noreferrer"
+                                          target="_blank"
+                                        >
+                                          Enlace enviado
+                                        </a>
+                                      ) : null}
+                                    </div>
+                                    {submission?.status === "reviewed" ||
+                                    submission?.status === "needs_revision" ? (
+                                      <span className="student-assignment-locked">
+                                        Bloqueado
+                                      </span>
+                                    ) : (
+                                      <button
+                                        className="secondary-action student-submit-action"
+                                        type="button"
+                                        onClick={() =>
+                                          startAssignmentSubmission(
+                                            lesson.id,
+                                            submission ?? null,
+                                          )
+                                        }
+                                      >
+                                        {submission ? "Actualizar" : "Enviar"}
+                                      </button>
+                                    )}
+                                  </div>
                                 ) : (
-                                  <button
-                                    className="secondary-action student-submit-action"
-                                    type="button"
-                                    onClick={() =>
-                                      startAssignmentSubmission(
-                                        lesson.id,
-                                        submission ?? null,
+                                  <form
+                                    className="student-assignment-form"
+                                    onSubmit={(event) =>
+                                      void handleSubmitAssignment(
+                                        event,
+                                        assignment.id,
                                       )
                                     }
                                   >
-                                    {submission ? "Update" : "Submit"}
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              <form
-                                className="student-assignment-form"
-                                onSubmit={(event) =>
-                                  void handleSubmitAssignment(
-                                    event,
-                                    assignment.id,
-                                  )
-                                }
-                              >
                                 <label>
-                                  Submission link
+                                  Enlace de entrega
                                   <input
-                                    placeholder="Google Drive, GitHub, document or video link"
+                                    placeholder="Google Drive, GitHub, documento o video"
                                     type="url"
                                     value={assignmentUrl}
                                     onChange={(event) =>
@@ -767,7 +911,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                   />
                                 </label>
                                 <label>
-                                  Notes
+                                  Notas
                                   <textarea
                                     value={assignmentNotes}
                                     onChange={(event) =>
@@ -783,7 +927,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                     }
                                     type="submit"
                                   >
-                                    Submit
+                                    Enviar
                                   </button>
                                   <button
                                     type="button"
@@ -791,7 +935,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                       setActiveAssignmentLessonId(null)
                                     }
                                   >
-                                    Cancel
+                                    Cancelar
                                   </button>
                                 </div>
                               </form>
@@ -809,13 +953,13 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               <div>
                                 <small>Quiz</small>
                                 <strong>{quiz.title}</strong>
-                                <p>10 questions. Score changes by response time.</p>
+                                <p>10 preguntas. El puntaje cambia segun el tiempo de respuesta.</p>
                               </div>
                             </div>
                             {quizAttempt ? (
                               <div className="student-assignment-meta">
                                 <span className="student-quiz-result">
-                                  Completed
+                                  Completado
                                 </span>
                                 <span>
                                   {formatPoints(quizAttempt.total_score)}/
@@ -833,11 +977,11 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                     <>
                                       <div className="student-quiz-progress">
                                         <span>
-                                          Question {activeQuizQuestionIndex + 1}/
+                                          Pregunta {activeQuizQuestionIndex + 1}/
                                           {quiz.quiz_questions.length}
                                         </span>
                                         <span>
-                                          2 pts under 30s · 1.5 under 60s · 1 after
+                                          2 pts antes de 30s · 1.5 antes de 60s · 1 despues
                                         </span>
                                       </div>
                                       <strong>{question.question_text}</strong>
@@ -881,8 +1025,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                         >
                                           {activeQuizQuestionIndex ===
                                           quiz.quiz_questions.length - 1
-                                            ? "Finish quiz"
-                                            : "Next question"}
+                                            ? "Finalizar quiz"
+                                            : "Siguiente pregunta"}
                                         </button>
                                         <button
                                           type="button"
@@ -890,7 +1034,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                             setActiveQuizLessonId(null)
                                           }
                                         >
-                                          Cancel
+                                          Cancelar
                                         </button>
                                       </div>
                                     </>
@@ -900,7 +1044,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                             ) : (
                               <div className="student-assignment-side">
                                 <div className="student-assignment-meta">
-                                  <span>Points pending</span>
+                                  <span>Puntos pendientes</span>
                                 </div>
                                 <button
                                   className="secondary-action student-submit-action"
@@ -908,7 +1052,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                   type="button"
                                   onClick={() => startQuiz(lesson.id)}
                                 >
-                                  {isQuizReady ? "Start quiz" : "Quiz pending"}
+                                  {isQuizReady ? "Iniciar quiz" : "Quiz pendiente"}
                                 </button>
                               </div>
                             )}
@@ -925,7 +1069,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                 target="_blank"
                               >
                                 <PlayCircle aria-hidden="true" size={16} />
-                                <span>Lesson video</span>
+                                <span>Video de la clase</span>
                               </a>
                             ) : null}
                             {lesson.resources.map((resource) =>
@@ -934,7 +1078,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                           </div>
                         ) : null}
                       </div>
-                    </article>
+                        ) : null}
+                      </article>
                     );
                   })}
                 </div>

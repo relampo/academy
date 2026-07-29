@@ -10,6 +10,17 @@ import type { Enums } from "../types/database.types";
 
 type CourseStatus = Enums<"course_status">;
 
+function formatStatus(value: string) {
+  const labels: Record<string, string> = {
+    draft: "borrador",
+    published: "publicado",
+    enrollment_closed: "inscripcion cerrada",
+    completed: "completado",
+  };
+
+  return labels[value] ?? value.replace(/_/g, " ");
+}
+
 export function AdminCoursesPage() {
   const [courses, setCourses] = useState<CourseWithEditions[]>([]);
   const [title, setTitle] = useState("");
@@ -32,7 +43,7 @@ export function AdminCoursesPage() {
       setCourses(await listCoursesWithEditions());
     } catch (caughtError) {
       setError(
-        caughtError instanceof Error ? caughtError.message : "Could not load courses.",
+        caughtError instanceof Error ? caughtError.message : "No se pudieron cargar los cursos.",
       );
     } finally {
       setIsLoading(false);
@@ -67,13 +78,13 @@ export function AdminCoursesPage() {
       setShortDescription("");
       setCourseStatus("draft");
       setEnrollmentOpen(false);
-      setMessage("Course created.");
+      setMessage("Curso creado.");
       await loadCourses();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not create course.",
+          : "No se pudo crear el curso.",
       );
     } finally {
       setIsSubmitting(false);
@@ -87,13 +98,13 @@ export function AdminCoursesPage() {
 
     try {
       const copiedCourse = await duplicateCourse(courseId);
-      setMessage(`Duplicated "${copiedCourse.title}".`);
+      setMessage(`Duplicado "${copiedCourse.title}".`);
       await loadCourses();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not duplicate course.",
+          : "No se pudo duplicar el curso.",
       );
     } finally {
       setDuplicatingCourseId(null);
@@ -104,8 +115,8 @@ export function AdminCoursesPage() {
     <section className="page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Administration</p>
-          <h1>Courses</h1>
+          <p className="eyebrow">Administracion</p>
+          <h1>Cursos</h1>
         </div>
       </div>
 
@@ -114,13 +125,13 @@ export function AdminCoursesPage() {
 
       <div className="course-admin-grid">
         <section className="content-panel compact-panel course-create-panel">
-          <h2>Create course</h2>
+          <h2>Crear curso</h2>
           <form
             className="stacked-form compact-course-form"
             onSubmit={handleCreateCourse}
           >
             <label>
-              Title
+              Titulo
               <input
                 required
                 type="text"
@@ -129,23 +140,23 @@ export function AdminCoursesPage() {
               />
             </label>
             <label>
-              Short description
+              Descripcion corta
               <textarea
                 value={shortDescription}
                 onChange={(event) => setShortDescription(event.target.value)}
               />
             </label>
             <label>
-              Status
+              Estado
               <select
                 value={courseStatus}
                 onChange={(event) =>
                   setCourseStatus(event.target.value as CourseStatus)
                 }
               >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-                <option value="enrollment_closed">Enrollment closed</option>
+                <option value="draft">Borrador</option>
+                <option value="published">Publicado</option>
+                <option value="enrollment_closed">Inscripcion cerrada</option>
               </select>
             </label>
             <label className="checkbox-row">
@@ -154,18 +165,18 @@ export function AdminCoursesPage() {
                 checked={enrollmentOpen}
                 onChange={(event) => setEnrollmentOpen(event.target.checked)}
               />
-              Enrollment open
+              Inscripcion abierta
             </label>
             <button type="submit" disabled={isSubmitting}>
-              Create course
+              Crear curso
             </button>
           </form>
         </section>
 
         <section className="content-panel course-inventory-panel">
-          <h2>Course inventory</h2>
-          {isLoading ? <p>Loading courses...</p> : null}
-          {!isLoading && courses.length === 0 ? <p>No courses created yet.</p> : null}
+          <h2>Inventario de cursos</h2>
+          {isLoading ? <p>Cargando cursos...</p> : null}
+          {!isLoading && courses.length === 0 ? <p>Todavia no hay cursos creados.</p> : null}
           <div className="course-list">
             {courses.map((course) => {
               const offering = course.course_editions[0];
@@ -174,16 +185,16 @@ export function AdminCoursesPage() {
                 <article className="course-row" key={course.id}>
                   <div>
                     <h2>{course.title}</h2>
-                    <p>{course.short_description || "No description yet."}</p>
+                    <p>{course.short_description || "Sin descripcion todavia."}</p>
                     <div className="mini-list">
-                      <span>{course.status}</span>
+                      <span>{formatStatus(course.status)}</span>
                       <span>
                         {offering?.enrollment_open
-                          ? "Enrollment open"
-                          : "Enrollment closed"}
+                          ? "Inscripcion abierta"
+                          : "Inscripcion cerrada"}
                       </span>
                       {offering?.capacity ? (
-                        <span>{offering.capacity} seats</span>
+                        <span>{offering.capacity} cupos</span>
                       ) : null}
                     </div>
                   </div>
@@ -195,11 +206,11 @@ export function AdminCoursesPage() {
                       onClick={() => void handleDuplicateCourse(course.id)}
                     >
                       {duplicatingCourseId === course.id
-                        ? "Duplicating..."
-                        : "Duplicate"}
+                        ? "Duplicando..."
+                        : "Duplicar"}
                     </button>
                     <a className="action-link" href={`#/admin/courses/${course.id}`}>
-                      Open
+                      Abrir
                     </a>
                   </div>
                 </article>

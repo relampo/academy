@@ -8,6 +8,16 @@ type AppLayoutProps = {
   currentPath: string;
 };
 
+function formatRole(value: string) {
+  const labels: Record<string, string> = {
+    admin: "administrador",
+    instructor: "instructor",
+    student: "estudiante",
+  };
+
+  return labels[value] ?? value;
+}
+
 export function AppLayout({ children, currentPath }: AppLayoutProps) {
   const { profile, signOut, user } = useAuth();
   const role = profile?.role ?? "student";
@@ -17,7 +27,7 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
   );
 
   const displayName =
-    profile?.display_name || user?.email || "Relampo Academy user";
+    profile?.display_name || user?.email || "Usuario de Relampo Academy";
 
   const handleSignOut = () => {
     void signOut().then(() => {
@@ -27,7 +37,7 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar" aria-label="Primary navigation">
+      <aside className="sidebar" aria-label="Navegacion principal">
         <div className="brand">
           <BrandMark />
           <div>
@@ -53,10 +63,10 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
         <div className="sidebar-footer">
           <div>
             <strong>{displayName}</strong>
-            <span>{profile?.role ?? "student"}</span>
+            <span>{formatRole(profile?.role ?? "student")}</span>
           </div>
           <button type="button" onClick={handleSignOut}>
-            Sign out
+            Cerrar sesion
           </button>
         </div>
       </aside>

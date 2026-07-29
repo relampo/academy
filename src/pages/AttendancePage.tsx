@@ -23,13 +23,13 @@ function getStudentName(enrollment: CourseStudentEnrollment) {
   const profile = enrollment.profiles;
 
   if (!profile) {
-    return "Unknown student";
+    return "Estudiante desconocido";
   }
 
   return (
     profile.display_name ||
     `${profile.first_name} ${profile.last_name}`.trim() ||
-    "Unnamed student"
+    "Estudiante sin nombre"
   );
 }
 
@@ -91,7 +91,7 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
         setError(
           caughtError instanceof Error
             ? caughtError.message
-            : "Could not load attendance.",
+            : "No se pudo cargar la asistencia.",
         );
       } finally {
         setIsLoading(false);
@@ -159,13 +159,13 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
 
         return [...withoutCurrent, savedRecord];
       });
-      setMessage("Attendance updated.");
+      setMessage("Asistencia actualizada.");
     } catch (caughtError) {
       setAttendance(previousAttendance);
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not update attendance.",
+          : "No se pudo actualizar la asistencia.",
       );
     } finally {
       setSavingKey(null);
@@ -177,24 +177,24 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
       <div className="page-header">
         <div>
           <p className="eyebrow">Instructor</p>
-          <h1>{course?.title ?? "Attendance"}</h1>
-          <p>Confirm attendance and full-class participation by lesson.</p>
+          <h1>{course?.title ?? "Asistencia"}</h1>
+          <p>Confirma asistencia y clase completa por cada clase.</p>
         </div>
         <a className="text-link" href="#/teaching">
-          Back to teaching
+          Volver a cursos asignados
         </a>
       </div>
 
       {error ? <p className="form-message error">{error}</p> : null}
       {message ? <p className="form-message success">{message}</p> : null}
-      {isLoading ? <p>Loading attendance...</p> : null}
+      {isLoading ? <p>Cargando asistencia...</p> : null}
 
       {!isLoading ? (
         <section className="content-panel">
           <div className="panel-heading">
             <div>
-              <p className="eyebrow">Attendance</p>
-              <h2>{selectedLesson?.title ?? "Select a lesson"}</h2>
+              <p className="eyebrow">Asistencia</p>
+              <h2>{selectedLesson?.title ?? "Selecciona una clase"}</h2>
             </div>
             <select
               className="compact-select"
@@ -211,8 +211,8 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
 
           {students.length === 0 ? (
             <div className="empty-builder">
-              <strong>No approved students yet</strong>
-              <span>Approved enrollments will appear here.</span>
+              <strong>Todavia no hay estudiantes aprobados</strong>
+              <span>Las inscripciones aprobadas apareceran aqui.</span>
             </div>
           ) : null}
 
@@ -243,7 +243,7 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
                         })
                       }
                     />
-                    Attended
+                    Asistio
                   </label>
                   <label className="toggle-row compact-toggle">
                     <input
@@ -257,7 +257,7 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
                         })
                       }
                     />
-                    Full class
+                    Clase completa
                   </label>
                 </article>
               );

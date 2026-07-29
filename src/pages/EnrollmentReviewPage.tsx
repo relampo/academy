@@ -20,18 +20,27 @@ function getStudentName(enrollment: EnrollmentReviewItem) {
   const profile = enrollment.profiles;
 
   if (!profile) {
-    return "Unknown student";
+    return "Estudiante desconocido";
   }
 
   return (
     profile.display_name ||
     `${profile.first_name} ${profile.last_name}`.trim() ||
-    "Unnamed student"
+    "Estudiante sin nombre"
   );
 }
 
 function formatStatus(value: string) {
-  return value.replace(/_/g, " ");
+  const labels: Record<string, string> = {
+    all: "todos",
+    pending: "pendiente",
+    approved: "aprobado",
+    rejected: "rechazado",
+    completed: "completado",
+    withdrawn: "retirado",
+  };
+
+  return labels[value] ?? value.replace(/_/g, " ");
 }
 
 function getCourseIdFilter() {
@@ -40,7 +49,7 @@ function getCourseIdFilter() {
 }
 
 export function EnrollmentReviewPage() {
-  const { user } = useAuth();
+  const { profile, user } = useAuth();
   const [enrollments, setEnrollments] = useState<EnrollmentReviewItem[]>([]);
   const [courseIdFilter, setCourseIdFilter] = useState(getCourseIdFilter);
   const [statusFilter, setStatusFilter] = useState<"all" | EnrollmentStatus>(
@@ -63,7 +72,7 @@ export function EnrollmentReviewPage() {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not load enrollment requests.",
+          : "No se pudieron cargar las solicitudes de inscripcion.",
       );
     } finally {
       setIsLoading(false);
@@ -129,15 +138,15 @@ export function EnrollmentReviewPage() {
       await updateEnrollmentStatus(enrollmentId, nextStatus, user.id);
       setMessage(
         nextStatus === "approved"
-          ? "Enrollment approved."
-          : "Enrollment rejected.",
+          ? "Inscripcion aprobada."
+          : "Inscripcion rechazada.",
       );
       await loadEnrollments();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not update enrollment.",
+          : "No se pudo actualizar la inscripcion.",
       );
     } finally {
       setUpdatingEnrollmentId(null);
@@ -149,14 +158,14 @@ export function EnrollmentReviewPage() {
       <div className="page-header">
         <div>
           <p className="eyebrow">Instructor</p>
-          <h1>{selectedCourseTitle ?? "Enrollment Review"}</h1>
+          <h1>{selectedCourseTitle ?? "Revision de inscripciones"}</h1>
           {courseIdFilter ? (
-            <p>Enrollment requests for this course.</p>
+            <p>Solicitudes de inscripcion para este curso.</p>
           ) : null}
         </div>
         {courseIdFilter ? (
           <a className="text-link" href="#/enrollments">
-            All requests
+            Todas las solicitudes
           </a>
         ) : null}
       </div>
@@ -166,11 +175,11 @@ export function EnrollmentReviewPage() {
 
       <div className="stats-grid">
         <article className="stat-card">
-          <span>Pending requests</span>
+          <span>Solicitudes pendientes</span>
           <strong>{pendingCount}</strong>
         </article>
         <article className="stat-card">
-          <span>Approved enrollments</span>
+          <span>Inscripciones aprobadas</span>
           <strong>{approvedCount}</strong>
         </article>
       </div>
@@ -178,8 +187,8 @@ export function EnrollmentReviewPage() {
       <section className="content-panel">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Enrollment review</p>
-            <h2>{courseIdFilter ? "Course requests" : "Requests"}</h2>
+            <p className="eyebrow">Revision de inscripciones</p>
+            <h2>{courseIdFilter ? "Solicitudes del curso" : "Solicitudes"}</h2>
           </div>
           <select
             className="compact-select"
@@ -190,24 +199,30 @@ export function EnrollmentReviewPage() {
           >
             {reviewStatuses.map((reviewStatus) => (
               <option key={reviewStatus} value={reviewStatus}>
-                {reviewStatus === "all" ? "All statuses" : formatStatus(reviewStatus)}
+                {reviewStatus === "all" ? "Todos los estados" : formatStatus(reviewStatus)}
               </option>
             ))}
           </select>
         </div>
 
-        {isLoading ? <p>Loading enrollment requests...</p> : null}
+        {isLoading ? <p>Cargando solicitudes de inscripcion...</p> : null}
         {!isLoading && filteredEnrollments.length === 0 ? (
           <div className="empty-builder">
-            <strong>No requests here</strong>
-            <span>Enrollment requests will appear in this review queue.</span>
+            <strong>No hay solicitudes aqui</strong>
+            <span>
+              Las solicitudes apareceran cuando un estudiante abra el link de
+              inscripcion y el curso este publicado con inscripcion abierta.
+              {profile?.role === "instructor"
+                ? " Si estas como instructor, tambien debes estar asignado a ese curso para verlas."
+                : ""}
+            </span>
           </div>
         ) : null}
 
         <div className="enrollment-list">
           {filteredEnrollments.map((enrollment) => {
             const edition = enrollment.course_editions;
-            const courseTitle = edition?.courses?.title ?? "Course";
+            const courseTitle = edition?.courses?.title ?? "Curso";
 
             return (
               <article className="enrollment-row" key={enrollment.id}>
@@ -217,11 +232,11 @@ export function EnrollmentReviewPage() {
                   <div className="mini-list">
                     <span>{formatStatus(enrollment.status)}</span>
                     <span>
-                      Requested{" "}
+                      Solicitado{" "}
                       {new Date(enrollment.requested_at).toLocaleDateString()}
                     </span>
                     {edition?.start_date ? (
-                      <span>Starts {edition.start_date}</span>
+                      <span>Inicia {edition.start_date}</span>
                     ) : null}
                   </div>
                 </div>
@@ -234,7 +249,7 @@ export function EnrollmentReviewPage() {
                     }
                     onClick={() => void handleReview(enrollment.id, "approved")}
                   >
-                    Approve
+                    Aprobar
                   </button>
                   <button
                     className="danger-action"
@@ -245,7 +260,7 @@ export function EnrollmentReviewPage() {
                     }
                     onClick={() => void handleReview(enrollment.id, "rejected")}
                   >
-                    Reject
+                    Rechazar
                   </button>
                 </div>
               </article>

@@ -1,36 +1,52 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-import {
-  listPublishedCourseEditions,
-  requestEnrollment,
-} from "../services/courses";
+import { listPublishedCourseEditions } from "../services/courses";
 
 type PublishedEdition = Awaited<
   ReturnType<typeof listPublishedCourseEditions>
 >[number];
 
+function formatStatus(value: string) {
+  const labels: Record<string, string> = {
+    pending: "pendiente",
+    approved: "aprobado",
+    rejected: "rechazado",
+    withdrawn: "retirado",
+    completed: "completado",
+    published: "publicado",
+    enrollment_closed: "inscripcion cerrada",
+  };
+
+  return labels[value] ?? value.replace(/_/g, " ");
+}
+
 export function CoursesPage() {
   const { user } = useAuth();
   const [editions, setEditions] = useState<PublishedEdition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [requestingEditionId, setRequestingEditionId] = useState<string | null>(
-    null,
-  );
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadEditions = async () => {
       setError(null);
+      setIsLoading(true);
+
+      if (!user) {
+        setEditions([]);
+        setIsLoading(false);
+        return;
+      }
 
       try {
-        const nextEditions = await listPublishedCourseEditions(user?.id);
-        setEditions(nextEditions);
+        const nextEditions = await listPublishedCourseEditions(user.id);
+        setEditions(
+          nextEditions.filter((edition) => edition.enrollments.length > 0),
+        );
       } catch (caughtError) {
         setError(
           caughtError instanceof Error
             ? caughtError.message
-            : "Could not load courses.",
+            : "No se pudieron cargar los cursos.",
         );
       } finally {
         setIsLoading(false);
@@ -40,85 +56,44 @@ export function CoursesPage() {
     void loadEditions();
   }, [user?.id]);
 
-  const handleRequestEnrollment = async (courseEditionId: string) => {
-    if (!user) {
-      return;
-    }
-
-    setRequestingEditionId(courseEditionId);
-    setError(null);
-    setMessage(null);
-
-    try {
-      await requestEnrollment(courseEditionId, user.id);
-      setMessage("Enrollment requested.");
-      const nextEditions = await listPublishedCourseEditions(user.id);
-      setEditions(nextEditions);
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Could not request enrollment.",
-      );
-    } finally {
-      setRequestingEditionId(null);
-    }
-  };
-
   return (
     <section className="page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Catalog</p>
-          <h1>My Courses</h1>
+          <p className="eyebrow">Catalogo</p>
+          <h1>Mis cursos</h1>
         </div>
       </div>
 
       {error ? <p className="form-message error">{error}</p> : null}
-      {message ? <p className="form-message success">{message}</p> : null}
-      {isLoading ? <p>Loading courses...</p> : null}
+      {isLoading ? <p>Cargando cursos...</p> : null}
       {!isLoading && editions.length === 0 ? (
         <section className="content-panel compact">
-          <p>No published courses are available yet.</p>
+          <p>Todavia no tienes cursos inscritos o solicitados.</p>
         </section>
       ) : null}
 
       <div className="course-list">
         {editions.map((edition) => {
           const enrollment = edition.enrollments[0];
-          const canRequestAgain =
-            enrollment?.status === "rejected" ||
-            enrollment?.status === "withdrawn";
-          const canRequest =
-            edition.enrollment_open &&
-            edition.status === "published" &&
-            (!enrollment || canRequestAgain);
           const buttonLabel = (() => {
-            if (requestingEditionId === edition.id) {
-              return "Requesting...";
-            }
-
             if (enrollment) {
-              if (canRequestAgain) {
-                return "Request again";
-              }
-
               if (enrollment.status === "approved") {
-                return "Start";
+                return "Comenzar";
               }
 
-              return enrollment.status;
+              return formatStatus(enrollment.status);
             }
 
             if (edition.status !== "published") {
-              return edition.status === "completed" ? "Completed" : "Not available";
+              return edition.status === "completed" ? "Completado" : "No disponible";
             }
 
             if (!edition.enrollment_open) {
-              return "Enrollment closed";
+              return "Inscripcion cerrada";
             }
 
-            return "Enroll";
+            return "Inscribirme";
           })();
 
           return (
@@ -126,32 +101,28 @@ export function CoursesPage() {
               <div>
                 <h2>{edition.courses?.title ?? edition.title}</h2>
                 <p>
-                  {edition.courses?.short_description || "Course open."}
+                  {edition.courses?.short_description || "Curso abierto."}
                 </p>
                 <div className="mini-list">
                   {edition.start_date ? (
-                    <span>Starts {edition.start_date}</span>
+                    <span>Inicia {edition.start_date}</span>
                   ) : null}
                   <span>
                     {edition.enrollment_open
-                      ? "Enrollment open"
-                      : "Enrollment closed"}
+                      ? "Inscripcion abierta"
+                      : "Inscripcion cerrada"}
                   </span>
-                  {enrollment ? <span>{enrollment.status}</span> : null}
+                  {enrollment ? <span>{formatStatus(enrollment.status)}</span> : null}
                 </div>
               </div>
               <div className="row-actions">
-                <span className="status-chip">{edition.status}</span>
-                {enrollment?.status === "approved" && edition.courses ? (
+                <span className="status-chip">{formatStatus(edition.status)}</span>
+                {enrollment.status === "approved" && edition.courses ? (
                   <a className="action-link" href={`#/courses/${edition.courses.id}`}>
-                    Start
+                    Comenzar
                   </a>
                 ) : (
-                  <button
-                    type="button"
-                    disabled={!canRequest || requestingEditionId === edition.id}
-                    onClick={() => void handleRequestEnrollment(edition.id)}
-                  >
+                  <button type="button" disabled>
                     {buttonLabel}
                   </button>
                 )}

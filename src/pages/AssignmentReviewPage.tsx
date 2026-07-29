@@ -38,26 +38,34 @@ function getStudentName(enrollment: CourseStudentEnrollment) {
   const profile = enrollment.profiles;
 
   if (!profile) {
-    return "Unknown student";
+    return "Estudiante desconocido";
   }
 
   return (
     profile.display_name ||
     `${profile.first_name} ${profile.last_name}`.trim() ||
-    "Unnamed student"
+    "Estudiante sin nombre"
   );
 }
 
 function formatStatus(status: string) {
+  const labels: Record<string, string> = {
+    draft: "borrador",
+    published: "publicado",
+    enrollment_closed: "inscripcion cerrada",
+    completed: "completado",
+    submitted: "enviada",
+  };
+
   if (status === "reviewed") {
-    return "Passed";
+    return "Aprobada";
   }
 
   if (status === "needs_revision") {
-    return "Failed";
+    return "Fallada";
   }
 
-  return status.replace(/_/g, " ");
+  return labels[status] ?? status.replace(/_/g, " ");
 }
 
 export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
@@ -97,7 +105,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
         setError(
           caughtError instanceof Error
             ? caughtError.message
-            : "Could not load courses.",
+          : "No se pudieron cargar los cursos.",
         );
       } finally {
         setIsLoading(false);
@@ -145,7 +153,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
         setError(
           caughtError instanceof Error
             ? caughtError.message
-            : "Could not load assignment table.",
+            : "No se pudo cargar la tabla de tareas.",
         );
       } finally {
         setIsLoading(false);
@@ -210,7 +218,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
     const pointsAwarded = Number(pointsValue);
 
     if (!pointsValue || !Number.isFinite(pointsAwarded) || pointsAwarded < 0) {
-      setError("Points are required before marking an assignment.");
+      setError("Debes indicar puntos antes de marcar una tarea.");
       setMessage(null);
       return;
     }
@@ -234,12 +242,12 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
             : currentSubmission,
         ),
       );
-      setMessage(status === "reviewed" ? "Marked as passed." : "Marked as failed.");
+      setMessage(status === "reviewed" ? "Marcada como aprobada." : "Marcada como fallada.");
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Could not update assignment.",
+          : "No se pudo actualizar la tarea.",
       );
     } finally {
       setReviewingSubmissionId(null);
@@ -252,16 +260,16 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
         <div className="page-header">
           <div>
             <p className="eyebrow">Instructor</p>
-            <h1>Assignments</h1>
+            <h1>Tareas</h1>
           </div>
         </div>
 
         {error ? <p className="form-message error">{error}</p> : null}
-        {isLoading ? <p>Loading courses...</p> : null}
+        {isLoading ? <p>Cargando cursos...</p> : null}
 
         {!isLoading && teachingCourses.length === 0 ? (
           <section className="content-panel compact">
-            <p>No courses are assigned to you yet.</p>
+            <p>Todavia no tienes cursos asignados.</p>
           </section>
         ) : null}
 
@@ -277,9 +285,9 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
               <article className="course-row" key={assignment.course_id}>
                 <div>
                   <h2>{assignedCourse.title}</h2>
-                  <p>{assignedCourse.short_description || "No description yet."}</p>
+                  <p>{assignedCourse.short_description || "Sin descripcion todavia."}</p>
                   <div className="mini-list">
-                    <span>{assignedCourse.status.replace(/_/g, " ")}</span>
+                    <span>{formatStatus(assignedCourse.status)}</span>
                   </div>
                 </div>
                 <div className="row-actions">
@@ -287,7 +295,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                     className="action-link"
                     href={`#/assignments/${assignedCourse.id}`}
                   >
-                    Assignments
+                    Tareas
                   </a>
                 </div>
               </article>
@@ -302,29 +310,29 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
     <section className="page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Assignments</p>
-          <h1>{course?.title ?? "Course assignments"}</h1>
+          <p className="eyebrow">Tareas</p>
+          <h1>{course?.title ?? "Tareas del curso"}</h1>
         </div>
         <a className="text-link" href="#/assignments">
-          Back to courses
+          Volver a cursos
         </a>
       </div>
 
       {error ? <p className="form-message error">{error}</p> : null}
       {message ? <p className="form-message success">{message}</p> : null}
-      {isLoading ? <p>Loading assignment table...</p> : null}
+      {isLoading ? <p>Cargando tabla de tareas...</p> : null}
 
       {!isLoading ? (
         <section className="content-panel assignment-gradebook-panel">
           <div className="page-header compact-header">
             <div>
-              <p className="eyebrow">Review</p>
-              <h2>Student assignment table</h2>
+              <p className="eyebrow">Revision</p>
+              <h2>Tabla de tareas por estudiante</h2>
             </div>
             <label className="assignment-search">
-              <span>Search student</span>
+              <span>Buscar estudiante</span>
               <input
-                placeholder="Student name"
+                placeholder="Nombre del estudiante"
                 type="search"
                 value={searchTerm}
                 onChange={(event) => {
@@ -335,9 +343,9 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
             </label>
           </div>
 
-          {students.length === 0 ? <p>No approved students yet.</p> : null}
+          {students.length === 0 ? <p>Todavia no hay estudiantes aprobados.</p> : null}
           {students.length > 0 && columns.length === 0 ? (
-            <p>No assignments are configured for this course yet.</p>
+            <p>Todavia no hay tareas configuradas para este curso.</p>
           ) : null}
           {students.length > 0 && columns.length > 0 ? (
             <>
@@ -345,11 +353,11 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                 <table className="assignment-gradebook-table">
                   <thead>
                     <tr>
-                      <th>Student</th>
+                      <th>Estudiante</th>
                       {columns.map((column) => (
                         <th key={column.assignment.id}>
                           <span>{column.moduleTitle}</span>
-                          <strong>Lesson {column.lessonIndex}</strong>
+                          <strong>Clase {column.lessonIndex}</strong>
                           <small>{column.lessonTitle}</small>
                         </th>
                       ))}
@@ -397,7 +405,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                                     ) : null}
                                   </div>
                                   <label>
-                                    Points
+                                    Puntos
                                     <input
                                       min="0"
                                       required
@@ -427,7 +435,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                                         size={13}
                                         strokeWidth={2.5}
                                       />
-                                      Passed
+                                      Aprobada
                                     </button>
                                     <button
                                       disabled={
@@ -447,13 +455,13 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                                         size={13}
                                         strokeWidth={2.5}
                                       />
-                                      Failed
+                                      Fallada
                                     </button>
                                   </div>
                                 </div>
                               ) : (
                                 <span className="assignment-empty">
-                                  No submission
+                                  Sin entrega
                                 </span>
                               )}
                             </td>
@@ -466,7 +474,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
               </div>
               <div className="assignment-pagination">
                 <span>
-                  {filteredStudents.length} students · page {safeCurrentPage} of{" "}
+                  {filteredStudents.length} estudiantes · pagina {safeCurrentPage} de{" "}
                   {pageCount}
                 </span>
                 <div>
@@ -477,7 +485,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                       setCurrentPage((current) => Math.max(1, current - 1))
                     }
                   >
-                    Previous
+                    Anterior
                   </button>
                   <button
                     disabled={safeCurrentPage === pageCount}
@@ -488,7 +496,7 @@ export function AssignmentReviewPage({ courseId }: AssignmentReviewPageProps) {
                       )
                     }
                   >
-                    Next
+                    Siguiente
                   </button>
                 </div>
               </div>

@@ -3,24 +3,24 @@ export function AdminSettingsPage() {
     <section className="page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Administration</p>
-          <h1>Settings</h1>
+          <p className="eyebrow">Administracion</p>
+          <h1>Configuracion</h1>
         </div>
       </div>
 
       <section className="content-panel compact">
         <dl className="profile-list">
           <div>
-            <dt>Auth provider</dt>
+            <dt>Proveedor de acceso</dt>
             <dd>Supabase email/password</dd>
           </div>
           <div>
-            <dt>Hosting target</dt>
+            <dt>Destino de hosting</dt>
             <dd>GitHub Pages</dd>
           </div>
           <div>
-            <dt>Validation engine</dt>
-            <dd>Planned for final sprint</dd>
+            <dt>Motor de validacion</dt>
+            <dd>Planificado para la fase final</dd>
           </div>
         </dl>
       </section>
