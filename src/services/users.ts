@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import type { Enums, Tables, TablesUpdate } from "../types/database.types";
+import { getAppBaseUrl } from "../lib/appUrl";
 
 export type AcademyUser = Tables<"profiles">;
 export type AcademyUserRole = Enums<"user_role">;
@@ -61,7 +62,7 @@ export async function updateUserProfile(
 }
 
 export async function sendPasswordReset(email: string) {
-  const redirectTo = `${window.location.origin}${window.location.pathname}?reset-password=1`;
+  const redirectTo = `${getAppBaseUrl()}?reset-password=1`;
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
   });

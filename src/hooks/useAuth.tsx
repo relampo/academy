@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { supabase } from "../services/supabase";
+import { getAppBaseUrl } from "../lib/appUrl";
 import type { Tables } from "../types/database.types";
 
 type Profile = Tables<"profiles">;
@@ -155,6 +156,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       email: input.email,
       password: input.password,
       options: {
+        emailRedirectTo: getAppBaseUrl(),
         data: {
           first_name: input.firstName,
           last_name: input.lastName,

@@ -54,6 +54,7 @@ import {
   type CourseInstructorAssignment,
   type InstructorProfile,
 } from "../services/instructors";
+import { getHashUrl } from "../lib/appUrl";
 import type { Enums } from "../types/database.types";
 
 type CourseStatus = Enums<"course_status">;
@@ -1078,9 +1079,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
 
   const primaryOffering = course?.course_editions[0] ?? null;
   const enrollmentLink = course
-    ? `${window.location.origin}${window.location.pathname}#/enroll/${encodeURIComponent(
-        course.slug || course.id,
-      )}`
+    ? getHashUrl(`/enroll/${encodeURIComponent(course.slug || course.id)}`)
     : "";
   const assignmentByLesson = new Map(
     lessonAssignments.map((assignment) => [assignment.lesson_id, assignment]),
