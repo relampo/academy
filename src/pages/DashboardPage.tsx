@@ -193,6 +193,7 @@ export function DashboardPage() {
             let assignmentPending = 0;
             let earnedPoints = 0;
             let maxPoints = 0;
+            let completedLessons = 0;
 
             lessonList.forEach((lesson) => {
               const attendanceRecord = attendanceByLesson.get(lesson.id);
@@ -203,6 +204,7 @@ export function DashboardPage() {
                 ? submissionByAssignment.get(assignment.id)
                 : null;
               const assignmentMaxPoints = assignment?.points ?? 10;
+              const isQuizConfigured = (quiz?.quiz_questions.length ?? 0) === 10;
 
               maxPoints += attendancePoints + quizMaxPoints + assignmentMaxPoints;
               earnedPoints += attendanceRecord?.attended
@@ -224,6 +226,18 @@ export function DashboardPage() {
               if (submission?.status !== "reviewed") {
                 assignmentPending += 1;
               }
+
+              if (
+                attendanceRecord?.attended &&
+                assignment &&
+                ["reviewed", "needs_revision"].includes(
+                  submission?.status ?? "",
+                ) &&
+                isQuizConfigured &&
+                quizAttempt
+              ) {
+                completedLessons += 1;
+              }
             });
 
             const nextLesson =
@@ -239,12 +253,12 @@ export function DashboardPage() {
               courseId,
               title: edition.courses?.title ?? edition.title,
               totalLessons: lessonList.length,
-              viewedLessons: viewedLessonIds.size,
+              viewedLessons: completedLessons,
               earnedPoints,
               maxPoints,
               progressPercent:
                 lessonList.length > 0
-                  ? Math.round((viewedLessonIds.size / lessonList.length) * 100)
+                  ? Math.round((completedLessons / lessonList.length) * 100)
                   : 0,
               attendancePending,
               quizPending,
@@ -587,7 +601,7 @@ export function DashboardPage() {
                       <strong>{summary.title}</strong>
                       <span>
                         {summary.viewedLessons}/{summary.totalLessons} clases
-                        vistas
+                        completadas
                       </span>
                     </div>
                     <a
