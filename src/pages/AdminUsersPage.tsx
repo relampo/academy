@@ -81,18 +81,20 @@ export function AdminUsersPage() {
       }
 
       setSelectedEditionByUserId((currentSelections) => {
-        const firstEditionId = nextCourses
-          .flatMap((course) => course.course_editions)
-          .find((edition) => !edition.archived_at)?.id;
-
-        if (!firstEditionId) {
-          return currentSelections;
-        }
+        const activeEditionIds = new Set(
+          nextCourses.flatMap((course) =>
+            course.course_editions
+              .filter((edition) => !edition.archived_at)
+              .map((edition) => edition.id),
+          ),
+        );
 
         return Object.fromEntries(
           nextUsers.map((academyUser) => [
             academyUser.id,
-            currentSelections[academyUser.id] ?? firstEditionId,
+            activeEditionIds.has(currentSelections[academyUser.id] ?? "")
+              ? currentSelections[academyUser.id]
+              : "",
           ]),
         );
       });
@@ -382,9 +384,7 @@ export function AdminUsersPage() {
                   const leaderboardEntry = leaderboardByUser[academyUser.id];
                   const isCurrentUser = academyUser.id === currentUser?.id;
                   const selectedEditionId =
-                    selectedEditionByUserId[academyUser.id] ??
-                    assignableEditions[0]?.id ??
-                    "";
+                    selectedEditionByUserId[academyUser.id] ?? "";
                   const isSelectedEditionAssigned = (
                     enrollmentByUser[academyUser.id] ?? []
                   ).some(
@@ -447,9 +447,11 @@ export function AdminUsersPage() {
                               }
                               value={selectedEditionId}
                             >
-                              {assignableEditions.length === 0 ? (
-                                <option value="">Sin cursos disponibles</option>
-                              ) : null}
+                              <option value="">
+                                {assignableEditions.length === 0
+                                  ? "Sin cursos disponibles"
+                                  : "Seleccionar curso"}
+                              </option>
                               {assignableEditions.map((edition) => (
                                 <option key={edition.id} value={edition.id}>
                                   {edition.courseTitle}
