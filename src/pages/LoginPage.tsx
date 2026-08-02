@@ -57,6 +57,17 @@ function peekReturnPath() {
   );
 }
 
+function navigateToReturnPath(returnTo: string) {
+  if (returnTo.startsWith("/enroll/")) {
+    window.location.assign(
+      `${window.location.origin}${window.location.pathname}${window.location.search}#${returnTo}`,
+    );
+    return;
+  }
+
+  window.location.hash = returnTo;
+}
+
 export function LoginPage() {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<AuthMode>(getInitialMode);
@@ -94,11 +105,11 @@ export function LoginPage() {
             : "Cuenta creada. Revisa tu email, inicia sesión y volverás al curso.";
         setMessage(successMessage);
         window.sessionStorage.setItem("relampo:notice", successMessage);
-        window.location.hash = returnTo;
+        navigateToReturnPath(returnTo);
       } else {
         await signIn(email, password);
         getReturnPath();
-        window.location.hash = returnTo;
+        navigateToReturnPath(returnTo);
       }
     } catch (caughtError) {
       const errorMessage =

@@ -77,6 +77,9 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
 
     try {
       await requestEnrollment(offering.id, user.id);
+      window.sessionStorage.removeItem("relampo:autoEnroll");
+      window.sessionStorage.removeItem("relampo:returnTo");
+      window.localStorage.removeItem("relampo:returnTo");
       setMessage("Solicitud enviada. Un instructor debe aprobar tu acceso.");
       const nextCourse = await getCourseEnrollmentOffering(courseRef, user.id);
       setCourse(nextCourse);
@@ -121,7 +124,6 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
       return;
     }
 
-    window.sessionStorage.removeItem("relampo:autoEnroll");
     void requestEnrollmentForOffering();
   }, [canRequest, courseRef, isLoading, isSubmitting, offering?.id, user?.id]);
 
