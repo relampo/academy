@@ -125,10 +125,10 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
     void requestEnrollmentForOffering();
   }, [canRequest, courseRef, isLoading, isSubmitting, offering?.id, user?.id]);
 
-  const goToLogin = (mode: "sign-in" | "sign-up") => {
+  const goToSignUp = () => {
     const currentPath = window.location.hash.replace(/^#/, "") || "/";
     window.sessionStorage.setItem("relampo:returnTo", currentPath);
-    window.sessionStorage.setItem("relampo:authMode", mode);
+    window.sessionStorage.setItem("relampo:authMode", "sign-up");
     window.sessionStorage.setItem("relampo:autoEnroll", courseRef);
     window.location.hash = "/login";
   };
@@ -212,11 +212,8 @@ export function EnrollPage({ courseRef }: EnrollPageProps) {
 
           {!session ? (
             <div className="enroll-actions">
-              <button type="button" onClick={() => goToLogin("sign-up")}>
-                Crear cuenta
-              </button>
-              <button type="button" onClick={() => goToLogin("sign-in")}>
-                Iniciar sesión
+              <button type="button" onClick={goToSignUp}>
+                Inscribirse
               </button>
             </div>
           ) : enrollment?.status === "approved" ? (

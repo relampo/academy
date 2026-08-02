@@ -11,6 +11,15 @@ function getFriendlyAuthError(errorMessage: string) {
     return "Se alcanzó el límite de correos por ahora. Intenta nuevamente más tarde.";
   }
 
+  if (
+    normalizedMessage.includes("already registered") ||
+    normalizedMessage.includes("already exists") ||
+    normalizedMessage.includes("already has an account") ||
+    normalizedMessage.includes("ya tiene una cuenta")
+  ) {
+    return "Este email ya tiene una cuenta. Inicia sesión para inscribirte.";
+  }
+
   return errorMessage;
 }
 

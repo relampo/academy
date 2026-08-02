@@ -152,7 +152,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signUp = useCallback(async (input: SignUpInput) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
       options: {
@@ -168,6 +168,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (error) {
       throw error;
+    }
+
+    if (data.user && data.user.identities?.length === 0) {
+      throw new Error(
+        "Este email ya tiene una cuenta. Inicia sesión para inscribirte.",
+      );
     }
   }, []);
 
