@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import worldMap from "@svg-maps/world";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
 import { getCountryByCode } from "../lib/countries";
@@ -88,15 +89,60 @@ type CountryCount = {
   code: string;
   name: string;
   count: number;
-  x: number;
-  y: number;
+};
+
+type SvgMapLocation = {
+  id: string;
+  name: string;
+  path: string;
 };
 
 function CommunityMap({ countries }: { countries: CountryCount[] }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const activeCountries = countries.filter((country) => country.count > 0);
+  const countByCode = new Map(
+    activeCountries.map((country) => [country.code.toLowerCase(), country]),
+  );
   const totalStudents = activeCountries.reduce(
     (total, country) => total + country.count,
     0,
+  );
+  const renderMap = (isModal = false) => (
+    <div
+      className={`world-map${isModal ? " world-map-expanded" : ""}`}
+      aria-label="Mapa de estudiantes por país"
+    >
+      <svg viewBox={worldMap.viewBox} role="img" aria-label={worldMap.label}>
+        {worldMap.locations.map((location: SvgMapLocation) => {
+          const country = countByCode.get(location.id);
+          const studentCount = country?.count ?? 0;
+          const label = `${country?.name ?? location.name}: ${studentCount} ${
+            studentCount === 1 ? "estudiante" : "estudiantes"
+          }`;
+
+          return (
+            <path
+              key={location.id}
+              className={studentCount > 0 ? "map-country is-active" : "map-country"}
+              d={location.path}
+              tabIndex={0}
+              aria-label={label}
+              data-tooltip={label}
+              onMouseEnter={() => setHoveredCountry(label)}
+              onMouseLeave={() => setHoveredCountry(null)}
+              onFocus={() => setHoveredCountry(label)}
+              onBlur={() => setHoveredCountry(null)}
+            >
+              <title>{label}</title>
+            </path>
+          );
+        })}
+      </svg>
+      <span className="map-tooltip">
+        {hoveredCountry ?? "Pasa por encima de un país"}
+      </span>
+    </div>
   );
 
   return (
@@ -109,25 +155,15 @@ function CommunityMap({ countries }: { countries: CountryCount[] }) {
         <strong>{totalStudents}</strong>
       </div>
 
-      <div className="world-map" aria-label="Mapa de estudiantes por país">
-        <svg viewBox="0 0 100 56" role="presentation" aria-hidden="true">
-          <path d="M14 16c8-8 23-9 30-2 5 5 1 13-7 15-9 2-11 10-20 7-7-2-10-14-3-20Z" />
-          <path d="M47 13c9-7 28-6 35 1 7 8 1 18-12 19-10 1-15 7-24 2-8-5-8-15 1-22Z" />
-          <path d="M50 36c8-3 19-2 23 4 4 5-1 11-12 11-9 0-17-5-11-15Z" />
-        </svg>
-        {activeCountries.map((country) => (
-          <button
-            key={country.code}
-            type="button"
-            className="country-marker"
-            style={{ left: `${country.x}%`, top: `${country.y}%` }}
-            aria-label={`${country.name}: ${country.count} estudiantes`}
-            data-tooltip={`${country.name}: ${country.count} estudiantes`}
-          >
-            <span>{country.count}</span>
-          </button>
-        ))}
-      </div>
+      {renderMap()}
+
+      <button
+        className="map-expand-action"
+        type="button"
+        onClick={() => setIsExpanded(true)}
+      >
+        Ampliar mapa
+      </button>
 
       {activeCountries.length === 0 ? (
         <p className="community-empty">Aún no hay países registrados.</p>
@@ -140,6 +176,25 @@ function CommunityMap({ countries }: { countries: CountryCount[] }) {
           ))}
         </div>
       )}
+
+      <p className="map-credit">Mapa base: @svg-maps/world, CC BY 4.0.</p>
+
+      {isExpanded ? (
+        <div className="map-modal" role="dialog" aria-modal="true" aria-labelledby="map-modal-title">
+          <div className="map-modal-panel">
+            <div className="page-header compact-header">
+              <div>
+                <p className="eyebrow">Comunidad LATAM</p>
+                <h2 id="map-modal-title">Mapa de estudiantes por país</h2>
+              </div>
+              <button type="button" onClick={() => setIsExpanded(false)}>
+                Cerrar
+              </button>
+            </div>
+            {renderMap(true)}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -479,8 +534,6 @@ export function DashboardPage() {
               code: record.country,
               name: country?.name ?? record.country,
               count: record.student_count,
-              x: country?.x ?? 50,
-              y: country?.y ?? 50,
             };
           }),
         );
