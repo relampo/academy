@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 import type { Enums, Tables, TablesUpdate } from "../types/database.types";
 import { getAppBaseUrl } from "../lib/appUrl";
 
-const productionAppUrl = "https://relampo.github.io/academy";
+const productionAppUrl = "https://performancelatam.com";
 
 export type AcademyUser = Tables<"profiles">;
 export type AcademyUserRole = Enums<"user_role">;
