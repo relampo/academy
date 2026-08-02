@@ -3,6 +3,7 @@ import { listCoursesWithEditions, type CourseWithEditions } from "../services/co
 import { getCourseLeaderboard, type LeaderboardEntry } from "../services/leaderboard";
 import {
   assignUserToCourseEdition,
+  deleteStudentProfile,
   listAcademyUsers,
   listUserEnrollmentSummaries,
   updateUserProfile,
@@ -44,7 +45,8 @@ function getUserInitials(user: AcademyUser) {
 }
 
 export function AdminUsersPage() {
-  const { user: currentUser } = useAuth();
+  const { profile, user: currentUser } = useAuth();
+  const isAdmin = profile?.role === "admin";
   const [users, setUsers] = useState<AcademyUser[]>([]);
   const [enrollments, setEnrollments] = useState<UserEnrollmentSummary[]>([]);
   const [courses, setCourses] = useState<CourseWithEditions[]>([]);
@@ -143,7 +145,10 @@ export function AdminUsersPage() {
         (academyUser.leaderboard_name ?? "")
           .toLowerCase()
           .includes(normalizedSearch);
-      const matchesRole = roleFilter === "all" || academyUser.role === roleFilter;
+      const matchesRole =
+        isAdmin
+          ? roleFilter === "all" || academyUser.role === roleFilter
+          : academyUser.role === "student";
       const matchesStatus =
         statusFilter === "all" || academyUser.status === statusFilter;
       const matchesCourse =
@@ -162,6 +167,7 @@ export function AdminUsersPage() {
     selectedCourseId,
     statusFilter,
     users,
+    isAdmin,
   ]);
 
   const handleRoleChange = async (
@@ -216,6 +222,30 @@ export function AdminUsersPage() {
     await loadData();
   };
 
+  const handleDeleteStudent = async (targetUser: AcademyUser) => {
+    if (targetUser.id === currentUser?.id) {
+      setActionMessage("No puedes eliminar tu propia cuenta desde esta tabla.");
+      return;
+    }
+
+    if (targetUser.role !== "student") {
+      setActionMessage("Solo puedes eliminar usuarios con rol estudiante.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Eliminar al estudiante ${getUserName(targetUser)}? Esta acción quitará su perfil y sus registros de estudiante.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    await deleteStudentProfile(targetUser.id);
+    setActionMessage("Estudiante eliminado.");
+    await loadData();
+  };
+
   return (
     <section className="page">
       <div className="page-header">
@@ -259,20 +289,22 @@ export function AdminUsersPage() {
               ))}
             </select>
           </label>
-          <label>
-            <span>Rol</span>
-            <select
-              onChange={(event) =>
-                setRoleFilter(event.target.value as AcademyUserRole | "all")
-              }
-              value={roleFilter}
-            >
-              <option value="all">Todos los roles</option>
-              <option value="admin">Administrador</option>
-              <option value="instructor">Instructor</option>
-              <option value="student">Estudiante</option>
-            </select>
-          </label>
+          {isAdmin ? (
+            <label>
+              <span>Rol</span>
+              <select
+                onChange={(event) =>
+                  setRoleFilter(event.target.value as AcademyUserRole | "all")
+                }
+                value={roleFilter}
+              >
+                <option value="all">Todos los roles</option>
+                <option value="admin">Administrador</option>
+                <option value="instructor">Instructor</option>
+                <option value="student">Estudiante</option>
+              </select>
+            </label>
+          ) : null}
           <label>
             <span>Estado</span>
             <select
@@ -291,25 +323,27 @@ export function AdminUsersPage() {
           </label>
         </div>
 
-        <div className="admin-course-assignment-bar">
-          <label>
-            <span>Asignar curso</span>
-            <select
-              onChange={(event) => setCourseEditionToAssign(event.target.value)}
-              value={courseEditionToAssign}
-            >
-              {assignableEditions.map((edition) => (
-                <option key={edition.id} value={edition.id}>
-                  {edition.courseTitle}
-                </option>
-              ))}
-            </select>
-          </label>
-          <span>
-            La asignación desde aquí queda aprobada automáticamente para el
-            estudiante.
-          </span>
-        </div>
+        {isAdmin ? (
+          <div className="admin-course-assignment-bar">
+            <label>
+              <span>Asignar curso</span>
+              <select
+                onChange={(event) => setCourseEditionToAssign(event.target.value)}
+                value={courseEditionToAssign}
+              >
+                {assignableEditions.map((edition) => (
+                  <option key={edition.id} value={edition.id}>
+                    {edition.courseTitle}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span>
+              La asignación desde aquí queda aprobada automáticamente para el
+              estudiante.
+            </span>
+          </div>
+        ) : null}
 
         {actionMessage ? (
           <p className="admin-users-message">{actionMessage}</p>
@@ -363,7 +397,7 @@ export function AdminUsersPage() {
                       </td>
                       <td>
                         <select
-                          disabled={isCurrentUser}
+                          disabled={!isAdmin || isCurrentUser}
                           onChange={(event) =>
                             void handleRoleChange(
                               academyUser,
@@ -408,40 +442,54 @@ export function AdminUsersPage() {
                       </td>
                       <td>
                         <div className="admin-user-actions">
-                          <button
-                            className="secondary-button"
-                            disabled={!courseEditionToAssign}
-                            onClick={() => void handleAssignCourse(academyUser)}
-                            type="button"
-                          >
-                            Asignar
-                          </button>
-                          {academyUser.status === "suspended" ? (
-                            <button
-                              className="secondary-button"
-                              disabled={isCurrentUser}
-                              onClick={() =>
-                                void handleStatusChange(academyUser, "active")
-                              }
-                              type="button"
-                            >
-                              Activar
-                            </button>
-                          ) : (
+                          {isAdmin ? (
+                            <>
+                              <button
+                                className="secondary-button"
+                                disabled={!courseEditionToAssign}
+                                onClick={() => void handleAssignCourse(academyUser)}
+                                type="button"
+                              >
+                                Asignar
+                              </button>
+                              {academyUser.status === "suspended" ? (
+                                <button
+                                  className="secondary-button"
+                                  disabled={isCurrentUser}
+                                  onClick={() =>
+                                    void handleStatusChange(academyUser, "active")
+                                  }
+                                  type="button"
+                                >
+                                  Activar
+                                </button>
+                              ) : (
+                                <button
+                                  className="danger-button"
+                                  disabled={isCurrentUser}
+                                  onClick={() =>
+                                    void handleStatusChange(
+                                      academyUser,
+                                      "suspended",
+                                    )
+                                  }
+                                  type="button"
+                                >
+                                  Desactivar
+                                </button>
+                              )}
+                            </>
+                          ) : null}
+                          {academyUser.role === "student" ? (
                             <button
                               className="danger-button"
                               disabled={isCurrentUser}
-                              onClick={() =>
-                                void handleStatusChange(
-                                  academyUser,
-                                  "suspended",
-                                )
-                              }
+                              onClick={() => void handleDeleteStudent(academyUser)}
                               type="button"
                             >
-                              Desactivar
+                              Eliminar
                             </button>
-                          )}
+                          ) : null}
                         </div>
                       </td>
                     </tr>

@@ -82,7 +82,7 @@ export const appRoutes: AppRoute[] = [
     path: "/admin/users",
     label: "Usuarios",
     Component: AdminUsersPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "instructor"],
     navGroup: "admin",
   },
   {
