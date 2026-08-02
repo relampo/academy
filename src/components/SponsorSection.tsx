@@ -24,7 +24,6 @@ export function SponsorSection({ compact = false }: SponsorSectionProps) {
           <span className="sponsor-logo-frame">
             <img className="sponsor-logo" src={relampoLogoUrl} alt="Relampo" />
           </span>
-          <span className="sponsor-link-label">Visitar web oficial</span>
         </a>
       </div>
       <p className="sponsor-contact">
