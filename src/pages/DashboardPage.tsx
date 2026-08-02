@@ -24,6 +24,27 @@ import { formatPoints } from "../lib/leaderboardIdentity";
 const attendancePoints = 10;
 const quizMaxPoints = 20;
 
+const getStartedCoursesKey = (userId: string) =>
+  `relampo:started-courses:${userId}`;
+
+function readStartedCourseIds(userId: string) {
+  try {
+    const savedValue = window.localStorage.getItem(getStartedCoursesKey(userId));
+    const parsedValue = savedValue ? (JSON.parse(savedValue) as string[]) : [];
+
+    return new Set(parsedValue);
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function writeStartedCourseIds(userId: string, courseIds: Set<string>) {
+  window.localStorage.setItem(
+    getStartedCoursesKey(userId),
+    JSON.stringify(Array.from(courseIds)),
+  );
+}
+
 function formatRole(value: string) {
   const labels: Record<string, string> = {
     admin: "administrador",
@@ -70,6 +91,9 @@ export function DashboardPage() {
   const [courseSummaries, setCourseSummaries] = useState<
     CourseDashboardSummary[]
   >([]);
+  const [startedCourseIds, setStartedCourseIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [instructorSummaries, setInstructorSummaries] = useState<
     InstructorCourseSummary[]
   >([]);
@@ -95,6 +119,7 @@ export function DashboardPage() {
             ),
         );
         setCourses(nextCourses);
+        setStartedCourseIds(readStartedCourseIds(user.id));
         setSelectedCourseId((current) => current || nextCourses[0]?.course_id || "");
       } catch (caughtError) {
         setError(
@@ -230,6 +255,17 @@ export function DashboardPage() {
           }),
         );
 
+        setStartedCourseIds((current) => {
+          const nextCourseIds = new Set(current);
+          summaries.forEach((summary) => {
+            if (summary.viewedLessons > 0) {
+              nextCourseIds.add(summary.courseId);
+            }
+          });
+          writeStartedCourseIds(user.id, nextCourseIds);
+
+          return nextCourseIds;
+        });
         setCourseSummaries(summaries);
       } catch (caughtError) {
         setError(
@@ -353,13 +389,28 @@ export function DashboardPage() {
     [leaderboard, user?.id],
   );
   const currentRank = leaderboard.findIndex((entry) => entry.student_id === user?.id) + 1;
+  const hasStartedCourse = (courseId: string, viewedLessons: number) =>
+    viewedLessons > 0 || startedCourseIds.has(courseId);
   const startedCourseSummaries = courseSummaries.filter(
-    (summary) => summary.viewedLessons > 0,
+    (summary) => hasStartedCourse(summary.courseId, summary.viewedLessons),
   );
   const visibleStudentCourseSummaries =
     startedCourseSummaries.length > 0
       ? startedCourseSummaries.slice(0, 2)
       : courseSummaries.slice(0, 2);
+  const markCourseStarted = (courseId: string) => {
+    if (!user) {
+      return;
+    }
+
+    setStartedCourseIds((current) => {
+      const nextCourseIds = new Set(current);
+      nextCourseIds.add(courseId);
+      writeStartedCourseIds(user.id, nextCourseIds);
+
+      return nextCourseIds;
+    });
+  };
   const hasInstructorBoard =
     ["admin", "instructor"].includes(profile?.role ?? "") &&
     instructorSummaries.length > 0;
@@ -539,8 +590,11 @@ export function DashboardPage() {
                         vistas
                       </span>
                     </div>
-                    <a href={summary.nextLessonHref}>
-                      {summary.viewedLessons === 0
+                    <a
+                      href={summary.nextLessonHref}
+                      onClick={() => markCourseStarted(summary.courseId)}
+                    >
+                      {!hasStartedCourse(summary.courseId, summary.viewedLessons)
                         ? "Comenzar"
                         : summary.nextLessonTitle
                           ? "Continuar"
