@@ -6451,3 +6451,109 @@ button,
     justify-self: start;
   }
 }
+
+@media (max-width: 640px) {
+  .student-progress-panel {
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .student-progress-panel > div:first-child {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .student-progress-panel strong {
+    font-size: 1.45rem;
+    line-height: 1;
+  }
+
+  .student-requirements {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .student-requirements > div:first-child div {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .student-requirements small {
+    width: 100%;
+    justify-content: center;
+    min-height: 34px;
+    border-radius: 999px;
+    padding: 6px 12px;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .student-course-points {
+    justify-items: start;
+  }
+
+  .student-course-points strong {
+    font-size: 1.55rem;
+  }
+
+  .student-module {
+    border-left-width: 4px;
+  }
+
+  .student-module-header {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 12px;
+    padding: 18px 16px;
+  }
+
+  .student-module-header > span {
+    min-height: 30px;
+    align-self: auto;
+    justify-self: start;
+    font-size: 0.72rem;
+    line-height: 1.1;
+    padding: 4px 12px;
+  }
+
+  .student-module-header h2 {
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+
+  .student-module-header p {
+    font-size: 0.95rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .student-module-header small {
+    justify-self: start;
+    min-height: 32px;
+    padding: 6px 12px;
+    white-space: normal;
+  }
+
+  .student-module-header .student-availability-icon,
+  .student-module-header > svg:last-child {
+    grid-column: auto;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 420px) {
+  .student-progress-panel {
+    padding: 14px;
+  }
+
+  .student-module-header {
+    padding: 16px 14px;
+  }
+
+  .student-module-header p {
+    font-size: 0.9rem;
+  }
+}
