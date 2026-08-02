@@ -6559,3 +6559,59 @@ button,
     font-size: 0.9rem;
   }
 }
+
+.student-lesson-header > div > span,
+.student-assignment-panel small,
+.student-quiz-panel small {
+  color: #cbd5e1;
+}
+
+.student-lesson-summary .student-lesson-description {
+  border-color: rgba(148, 163, 184, 0.24);
+  background: rgba(8, 13, 21, 0.72);
+  color: #dbe5f1;
+}
+
+.student-status-row span,
+.student-assignment-meta span,
+.student-assignment-meta a,
+.student-assignment-locked,
+.student-submit-action,
+.student-duration,
+.student-points-badge {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(8, 13, 21, 0.72);
+  color: #dbe5f1;
+}
+
+.student-status-row .is-confirmed {
+  border-color: rgba(126, 224, 164, 0.3);
+  background: rgba(43, 189, 110, 0.14);
+  color: #9af0bb;
+}
+
+.student-status-row .is-submitted,
+.student-points-badge {
+  border-color: rgba(255, 199, 18, 0.26);
+  background: rgba(255, 199, 18, 0.12);
+  color: #ffe08a;
+}
+
+.student-status-row .is-needs-revision {
+  border-color: rgba(255, 142, 127, 0.28);
+  background: rgba(154, 51, 40, 0.14);
+  color: #ffc1b8;
+}
+
+.student-assignment-panel strong,
+.student-assignment-panel .student-required-title,
+.student-quiz-panel strong,
+.student-quiz-panel .student-required-title {
+  color: #f8fafc;
+}
+
+.student-assignment-panel p,
+.student-quiz-panel p,
+.student-assignment-meta a {
+  color: #dbe5f1;
+}
