@@ -27,6 +27,10 @@ export function SponsorSection({ compact = false }: SponsorSectionProps) {
           <span className="sponsor-link-label">Visitar web oficial</span>
         </a>
       </div>
+      <p className="sponsor-contact">
+        ¿Interesado en sponsorizar? Escríbenos a{" "}
+        <a href="mailto:info@relampo.com">info@relampo.com</a>
+      </p>
     </section>
   );
 }

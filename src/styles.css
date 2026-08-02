@@ -6183,7 +6183,7 @@ button,
 }
 
 .sponsor-card img {
-  width: min(100%, 320px);
+  width: min(100%, 300px);
   height: auto;
   border-radius: 0;
   object-fit: contain;
@@ -6193,6 +6193,18 @@ button,
 .sponsor-link-label {
   color: #f8fafc;
   font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.sponsor-contact {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.sponsor-contact a {
+  color: #fde68a;
   font-weight: 700;
 }
 
