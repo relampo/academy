@@ -4,6 +4,17 @@ import { sendPasswordReset } from "../services/users";
 
 type AuthMode = "sign-in" | "sign-up";
 
+function isExistingAccountError(errorMessage: string) {
+  const normalizedMessage = errorMessage.toLowerCase();
+
+  return (
+    normalizedMessage.includes("already registered") ||
+    normalizedMessage.includes("already exists") ||
+    normalizedMessage.includes("already has an account") ||
+    normalizedMessage.includes("ya tiene una cuenta")
+  );
+}
+
 function getFriendlyAuthError(errorMessage: string) {
   const normalizedMessage = errorMessage.toLowerCase();
 
@@ -11,12 +22,7 @@ function getFriendlyAuthError(errorMessage: string) {
     return "Se alcanzó el límite de correos por ahora. Intenta nuevamente más tarde.";
   }
 
-  if (
-    normalizedMessage.includes("already registered") ||
-    normalizedMessage.includes("already exists") ||
-    normalizedMessage.includes("already has an account") ||
-    normalizedMessage.includes("ya tiene una cuenta")
-  ) {
+  if (isExistingAccountError(errorMessage)) {
     return "Este email ya tiene una cuenta. Inicia sesión para inscribirte.";
   }
 
@@ -58,6 +64,12 @@ export function LoginPage() {
 
   const isSignUp = mode === "sign-up";
 
+  const handleModeChange = (nextMode: AuthMode) => {
+    setMode(nextMode);
+    setError(null);
+    setMessage(null);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
@@ -82,11 +94,23 @@ export function LoginPage() {
         window.location.hash = returnTo;
       }
     } catch (caughtError) {
-      setError(
+      const errorMessage =
         caughtError instanceof Error
           ? getFriendlyAuthError(caughtError.message)
-          : "No se pudo autenticar.",
-      );
+          : "No se pudo autenticar.";
+
+      if (
+        isSignUp &&
+        caughtError instanceof Error &&
+        isExistingAccountError(caughtError.message)
+      ) {
+        setMode("sign-in");
+        setPassword("");
+        setMessage("Ya tienes cuenta. Inicia sesión y te llevamos al curso.");
+        setError(errorMessage);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -135,14 +159,14 @@ export function LoginPage() {
           <button
             type="button"
             className={mode === "sign-in" ? "selected" : ""}
-            onClick={() => setMode("sign-in")}
+            onClick={() => handleModeChange("sign-in")}
           >
             Iniciar sesión
           </button>
           <button
             type="button"
             className={mode === "sign-up" ? "selected" : ""}
-            onClick={() => setMode("sign-up")}
+            onClick={() => handleModeChange("sign-up")}
           >
             Registrarme
           </button>
