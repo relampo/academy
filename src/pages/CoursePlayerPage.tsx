@@ -850,10 +850,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                         </a>
                                       ) : null}
                                     </div>
-                                    {submission?.status === "reviewed" ||
-                                    submission?.status === "needs_revision" ? (
+                                    {submission?.status === "reviewed" ? (
                                       <span className="student-assignment-locked">
-                                        Bloqueado
+                                        Tarea revisada
                                       </span>
                                     ) : (
                                       <button
@@ -866,7 +865,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                           )
                                         }
                                       >
-                                        {submission ? "Actualizar" : "Enviar"}
+                                        {submission ? "Editar entrega" : "Enviar"}
                                       </button>
                                     )}
                                   </div>
@@ -881,9 +880,10 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                     }
                                   >
                                 <label>
-                                  Enlace de entrega
+                                  Enlace de Google Drive
                                   <input
-                                    placeholder="Google Drive, GitHub, documento o video"
+                                    placeholder="Pega aquí el enlace compartido de Google Drive"
+                                    required
                                     type="url"
                                     value={assignmentUrl}
                                     onChange={(event) =>
@@ -908,7 +908,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                     }
                                     type="submit"
                                   >
-                                    Enviar
+                                    {submission ? "Guardar cambios" : "Enviar"}
                                   </button>
                                   <button
                                     type="button"
