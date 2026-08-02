@@ -75,6 +75,14 @@ function formatPoints(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
+function formatAssignmentDescription(description: string | null) {
+  if (description === "Submit the required evidence for this class.") {
+    return "Envía la evidencia requerida para esta clase.";
+  }
+
+  return description;
+}
+
 function getAttendancePoints(record?: LessonAttendance) {
   if (!record?.attended) {
     return 0;
@@ -811,8 +819,14 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                     <span className="student-required-title">
                                       {assignment.title}
                                     </span>
-                                    {assignment.description ? (
-                                      <p>{assignment.description}</p>
+                                    {formatAssignmentDescription(
+                                      assignment.description,
+                                    ) ? (
+                                      <p>
+                                        {formatAssignmentDescription(
+                                          assignment.description,
+                                        )}
+                                      </p>
                                     ) : null}
                                   </div>
                                 </div>
