@@ -203,7 +203,7 @@ function createBlankQuizQuestions(): QuizQuestionDraft[] {
 }
 
 export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) {
-  const { user } = useAuth();
+  const { profile, user } = useAuth();
   const [course, setCourse] = useState<CourseWithEditions | null>(null);
   const [modules, setModules] = useState<ModuleWithLessons[]>([]);
   const [instructors, setInstructors] = useState<InstructorProfile[]>([]);
@@ -518,7 +518,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
       });
 
       setMessage("Curso eliminado.");
-      window.location.hash = "/admin/courses";
+      window.location.hash = profile?.role === "admin" ? "/admin/courses" : "/teaching";
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -1078,6 +1078,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
   };
 
   const primaryOffering = course?.course_editions[0] ?? null;
+  const coursesBackPath = profile?.role === "admin" ? "/admin/courses" : "/teaching";
   const enrollmentLink = course
     ? getHashUrl(`/enroll/${encodeURIComponent(course.slug || course.id)}`)
     : "";
@@ -1125,7 +1126,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
             </div>
           ) : null}
         </div>
-        <a className="text-link" href="#/admin/courses">
+        <a className="text-link" href={`#${coursesBackPath}`}>
           Volver a cursos
         </a>
       </div>
@@ -1274,70 +1275,74 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
             )}
             </section>
 
-            <section className="details-block">
-              <div className="subsection-heading">
-                <h3>Instructores</h3>
-              </div>
-            <div className="stacked-form">
-              <label>
-                Asignar instructor
-                <div className="inline-picker">
-                  <select
-                    disabled={availableInstructors.length === 0 || isSubmitting}
-                    value={selectedInstructorId}
-                    onChange={(event) => setSelectedInstructorId(event.target.value)}
-                  >
-                    {availableInstructors.length === 0 ? (
-                      <option value="">
-                        {instructors.length === 0
-                          ? "No hay instructores activos"
-                          : "Todos los instructores están asignados"}
-                      </option>
-                    ) : null}
-                    {availableInstructors.map((instructor) => (
-                      <option key={instructor.id} value={instructor.id}>
-                        {getProfileName(instructor)}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    className="secondary-action"
-                    disabled={
-                      !selectedInstructorId ||
-                      availableInstructors.length === 0 ||
-                      isSubmitting
-                    }
-                    type="button"
-                    onClick={() => void handleAddInstructor()}
-                  >
-                    Agregar
-                  </button>
+            {profile?.role === "admin" ? (
+              <section className="details-block">
+                <div className="subsection-heading">
+                  <h3>Instructores</h3>
                 </div>
-              </label>
-            </div>
-            <div className="mini-list instructor-list">
-              {assignedInstructors.length === 0 ? (
-                <span>No hay instructores asignados</span>
-              ) : null}
-              {assignedInstructors.map((assignment) => (
-                <span className="removable-chip" key={assignment.instructor_id}>
-                  {getProfileName(assignment.profiles)}
-                  {isEditingCourse ? (
-                    <button
-                      aria-label={`Quitar ${getProfileName(assignment.profiles)}`}
-                      disabled={isSubmitting}
-                      type="button"
-                      onClick={() =>
-                        void handleRemoveInstructor(assignment.instructor_id)
-                      }
-                    >
-                      x
-                    </button>
+                <div className="stacked-form">
+                  <label>
+                    Asignar instructor
+                    <div className="inline-picker">
+                      <select
+                        disabled={availableInstructors.length === 0 || isSubmitting}
+                        value={selectedInstructorId}
+                        onChange={(event) =>
+                          setSelectedInstructorId(event.target.value)
+                        }
+                      >
+                        {availableInstructors.length === 0 ? (
+                          <option value="">
+                            {instructors.length === 0
+                              ? "No hay instructores activos"
+                              : "Todos los instructores están asignados"}
+                          </option>
+                        ) : null}
+                        {availableInstructors.map((instructor) => (
+                          <option key={instructor.id} value={instructor.id}>
+                            {getProfileName(instructor)}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        className="secondary-action"
+                        disabled={
+                          !selectedInstructorId ||
+                          availableInstructors.length === 0 ||
+                          isSubmitting
+                        }
+                        type="button"
+                        onClick={() => void handleAddInstructor()}
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                  </label>
+                </div>
+                <div className="mini-list instructor-list">
+                  {assignedInstructors.length === 0 ? (
+                    <span>No hay instructores asignados</span>
                   ) : null}
-                </span>
-              ))}
-            </div>
-            </section>
+                  {assignedInstructors.map((assignment) => (
+                    <span className="removable-chip" key={assignment.instructor_id}>
+                      {getProfileName(assignment.profiles)}
+                      {isEditingCourse ? (
+                        <button
+                          aria-label={`Quitar ${getProfileName(assignment.profiles)}`}
+                          disabled={isSubmitting}
+                          type="button"
+                          onClick={() =>
+                            void handleRemoveInstructor(assignment.instructor_id)
+                          }
+                        >
+                          x
+                        </button>
+                      ) : null}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </div>
           <div className="course-setup-actions">
             {!isEditingCourse ? (

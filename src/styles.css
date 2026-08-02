@@ -382,6 +382,23 @@ p {
   color: var(--brand-text);
 }
 
+.teaching-course-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teaching-course-card-actions .danger-action {
+  min-height: 32px;
+  border: 1px solid #efc3bb;
+  border-radius: 8px;
+  background: #fff8f6;
+  color: #9a3328;
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 0 10px;
+}
+
 .instructor-pending-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }

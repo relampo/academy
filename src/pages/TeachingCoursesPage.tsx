@@ -10,6 +10,8 @@ import {
 import {
   listApprovedCourseStudents,
   listEnrollmentReviews,
+  updateCourse,
+  updateCourseOfferings,
 } from "../services/courses";
 import {
   listTeachingCourses,
@@ -42,91 +44,131 @@ export function TeachingCoursesPage() {
   const [summaryByCourseId, setSummaryByCourseId] = useState<
     Record<string, TeachingCourseSummary>
   >({});
+  const [pendingDeleteCourse, setPendingDeleteCourse] =
+    useState<TeachingCourseAssignment["courses"]>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadAssignments = async () => {
-      if (!user) {
-        return;
-      }
+  const loadAssignments = async () => {
+    if (!user) {
+      return;
+    }
 
-      setError(null);
-      setIsLoading(true);
+    setError(null);
+    setIsLoading(true);
 
-      try {
-        const [nextAssignments, enrollments] = await Promise.all([
-          listTeachingCourses(user.id),
-          listEnrollmentReviews(),
-        ]);
-        const nextSummaries = await Promise.all(
-          nextAssignments
-            .filter((assignment) => assignment.courses)
-            .map(async (assignment) => {
-              const course = assignment.courses!;
-              const [modules, students, attendance, courseAssignments, quizzes] =
-                await Promise.all([
-                  listCourseContent(course.id),
-                  listApprovedCourseStudents(course.id),
-                  listLessonAttendance(course.id),
-                  listLessonAssignments(course.id),
-                  listLessonQuizzes(course.id),
-                ]);
-              const lessons = modules.flatMap((module) => module.lessons);
-              const submissions =
-                await listAssignmentSubmissionsByAssignmentIds(
-                  courseAssignments.map((courseAssignment) => courseAssignment.id),
-                );
-              const attendanceKeys = new Set(
-                attendance.map(
-                  (record) => `${record.lesson_id}:${record.student_id}`,
-                ),
+    try {
+      const [nextAssignments, enrollments] = await Promise.all([
+        listTeachingCourses(user.id),
+        listEnrollmentReviews(),
+      ]);
+      const nextSummaries = await Promise.all(
+        nextAssignments
+          .filter((assignment) => assignment.courses)
+          .map(async (assignment) => {
+            const course = assignment.courses!;
+            const [modules, students, attendance, courseAssignments, quizzes] =
+              await Promise.all([
+                listCourseContent(course.id),
+                listApprovedCourseStudents(course.id),
+                listLessonAttendance(course.id),
+                listLessonAssignments(course.id),
+                listLessonQuizzes(course.id),
+              ]);
+            const lessons = modules.flatMap((module) => module.lessons);
+            const submissions =
+              await listAssignmentSubmissionsByAssignmentIds(
+                courseAssignments.map((courseAssignment) => courseAssignment.id),
               );
+            const attendanceKeys = new Set(
+              attendance.map((record) => `${record.lesson_id}:${record.student_id}`),
+            );
 
-              return [
-                course.id,
-                {
-                  studentsCount: students.length,
-                  lessonsCount: lessons.length,
-                  pendingEnrollments: enrollments.filter(
-                    (enrollment) =>
-                      enrollment.status === "pending" &&
-                      enrollment.course_editions?.course_id === course.id,
-                  ).length,
-                  attendancePending: Math.max(
-                    0,
-                    lessons.length * students.length - attendanceKeys.size,
-                  ),
-                  assignmentsToReview: submissions.filter(
-                    (submission) => submission.status === "submitted",
-                  ).length,
-                  quizzesMissing: lessons.filter((lesson) => {
-                    const quiz = quizzes.find(
-                      (candidate) => candidate.lesson_id === lesson.id,
-                    );
+            return [
+              course.id,
+              {
+                studentsCount: students.length,
+                lessonsCount: lessons.length,
+                pendingEnrollments: enrollments.filter(
+                  (enrollment) =>
+                    enrollment.status === "pending" &&
+                    enrollment.course_editions?.course_id === course.id,
+                ).length,
+                attendancePending: Math.max(
+                  0,
+                  lessons.length * students.length - attendanceKeys.size,
+                ),
+                assignmentsToReview: submissions.filter(
+                  (submission) => submission.status === "submitted",
+                ).length,
+                quizzesMissing: lessons.filter((lesson) => {
+                  const quiz = quizzes.find(
+                    (candidate) => candidate.lesson_id === lesson.id,
+                  );
 
-                    return (quiz?.quiz_questions.length ?? 0) < 10;
-                  }).length,
-                },
-              ] as const;
-            }),
-        );
+                  return (quiz?.quiz_questions.length ?? 0) < 10;
+                }).length,
+              },
+            ] as const;
+          }),
+      );
 
-        setAssignments(nextAssignments);
-        setSummaryByCourseId(Object.fromEntries(nextSummaries));
-      } catch (caughtError) {
-        setError(
-          caughtError instanceof Error
-            ? caughtError.message
-            : "No se pudieron cargar los cursos asignados.",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      setAssignments(nextAssignments);
+      setSummaryByCourseId(Object.fromEntries(nextSummaries));
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "No se pudieron cargar los cursos asignados.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     void loadAssignments();
   }, [user]);
+
+  const handleDeleteCourse = async () => {
+    if (!pendingDeleteCourse) {
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      await updateCourse(pendingDeleteCourse.id, {
+        title: pendingDeleteCourse.title,
+        slug: pendingDeleteCourse.slug,
+        short_description: pendingDeleteCourse.short_description,
+        description: pendingDeleteCourse.description,
+        status: "archived",
+      });
+
+      await updateCourseOfferings(pendingDeleteCourse.id, {
+        title: pendingDeleteCourse.title,
+        status: "archived",
+        enrollment_open: false,
+      });
+
+      setPendingDeleteCourse(null);
+      setMessage("Curso eliminado.");
+      await loadAssignments();
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "No se pudo eliminar el curso.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section className="page">
@@ -138,6 +180,7 @@ export function TeachingCoursesPage() {
       </div>
 
       {error ? <p className="form-message error">{error}</p> : null}
+      {message ? <p className="form-message success">{message}</p> : null}
       {isLoading ? <p>Cargando cursos asignados...</p> : null}
 
       {!isLoading && assignments.length === 0 ? (
@@ -180,7 +223,17 @@ export function TeachingCoursesPage() {
                         {formatStatus(course.status)} - Asignado {assignedDate}
                       </span>
                     </div>
-                    <a href={`#/admin/courses/${course.id}`}>Abrir</a>
+                    <div className="teaching-course-card-actions">
+                      <a href={`#/admin/courses/${course.id}`}>Abrir</a>
+                      <button
+                        className="danger-action"
+                        disabled={isSubmitting}
+                        type="button"
+                        onClick={() => setPendingDeleteCourse(course)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
 
                   <div
@@ -207,6 +260,44 @@ export function TeachingCoursesPage() {
             })}
           </div>
         </section>
+      ) : null}
+
+      {pendingDeleteCourse ? (
+        <div
+          aria-labelledby="delete-course-dialog-title"
+          aria-modal="true"
+          className="modal-backdrop"
+          role="dialog"
+        >
+          <section className="confirm-dialog">
+            <div>
+              <p className="eyebrow">Confirmar eliminación</p>
+              <h2 id="delete-course-dialog-title">
+                Eliminar {pendingDeleteCourse.title}?
+              </h2>
+              <p>
+                Esto lo quitará de la gestión activa. Los registros existentes
+                se mantienen para historial.
+              </p>
+            </div>
+            <div className="confirm-actions">
+              <button
+                type="button"
+                onClick={() => setPendingDeleteCourse(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="danger-action"
+                disabled={isSubmitting}
+                type="button"
+                onClick={() => void handleDeleteCourse()}
+              >
+                Eliminar
+              </button>
+            </div>
+          </section>
+        </div>
       ) : null}
     </section>
   );

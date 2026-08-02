@@ -61,7 +61,7 @@ function renderDynamicRoute(path: string): DynamicRoute | null {
 
   if (adminCourseMatch?.[1]) {
     return {
-      allowedRoles: ["admin"],
+      allowedRoles: ["admin", "instructor"],
       element: <AdminCourseDetailPage courseId={adminCourseMatch[1]} />,
       navPath: "/admin/courses",
     };
