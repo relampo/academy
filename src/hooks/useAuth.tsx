@@ -170,7 +170,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       throw error;
     }
 
-    if (data.user && data.user.identities?.length === 0) {
+    if (
+      data.user &&
+      !data.session &&
+      (data.user.identities?.length ?? 0) === 0
+    ) {
       throw new Error(
         "Este email ya tiene una cuenta. Inicia sesión para inscribirte.",
       );

@@ -114,7 +114,7 @@ export function LoginPage() {
         setMode("sign-in");
         setPassword("");
         setMessage("Ya tienes cuenta. Inicia sesión y te llevamos al curso.");
-        setError(errorMessage);
+        setError(null);
       } else {
         setError(errorMessage);
       }
