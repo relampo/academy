@@ -61,18 +61,6 @@ export async function updateUserProfile(
   return data;
 }
 
-export async function deleteStudentProfile(userId: string) {
-  const { error } = await supabase
-    .from("profiles")
-    .delete()
-    .eq("id", userId)
-    .eq("role", "student");
-
-  if (error) {
-    throw error;
-  }
-}
-
 export async function sendPasswordReset(email: string) {
   const redirectTo = `${getAppBaseUrl()}?reset-password=1`;
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
