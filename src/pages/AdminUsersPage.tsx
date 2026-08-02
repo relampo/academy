@@ -3,6 +3,7 @@ import { listCoursesWithEditions, type CourseWithEditions } from "../services/co
 import { getCourseLeaderboard, type LeaderboardEntry } from "../services/leaderboard";
 import {
   assignUserToCourseEdition,
+  deleteStudentProfile,
   listAcademyUsers,
   listUserEnrollmentSummaries,
   updateUserProfile,
@@ -213,6 +214,30 @@ export function AdminUsersPage() {
       currentUser.id,
     );
     setActionMessage("Curso asignado y aprobado.");
+    await loadData();
+  };
+
+  const handleDeleteStudent = async (targetUser: AcademyUser) => {
+    if (targetUser.id === currentUser?.id) {
+      setActionMessage("No puedes eliminar tu propia cuenta desde esta tabla.");
+      return;
+    }
+
+    if (targetUser.role !== "student") {
+      setActionMessage("Solo puedes eliminar usuarios con rol estudiante.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Eliminar al estudiante ${getUserName(targetUser)}? Esta acción quitará su perfil y sus registros de estudiante.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    await deleteStudentProfile(targetUser.id);
+    setActionMessage("Estudiante eliminado.");
     await loadData();
   };
 
@@ -442,6 +467,14 @@ export function AdminUsersPage() {
                               Desactivar
                             </button>
                           )}
+                          <button
+                            className="danger-button"
+                            disabled={isCurrentUser || academyUser.role !== "student"}
+                            onClick={() => void handleDeleteStudent(academyUser)}
+                            type="button"
+                          >
+                            Eliminar
+                          </button>
                         </div>
                       </td>
                     </tr>
