@@ -6176,16 +6176,16 @@ button,
   display: grid;
   place-items: center;
   width: 100%;
-  min-height: 76px;
-  padding: 10px;
+  min-height: 94px;
+  padding: 12px;
   border-radius: 8px;
   background: #050505;
 }
 
 .sponsor-card img {
-  width: min(100%, 230px);
-  height: 56px;
-  border-radius: 8px;
+  width: min(100%, 320px);
+  height: auto;
+  border-radius: 0;
   object-fit: contain;
   object-position: center;
 }
