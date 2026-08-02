@@ -3626,7 +3626,7 @@ p {
 
 .auth-panel {
   display: grid;
-  width: min(100%, 440px);
+  width: min(100%, 520px);
   gap: 22px;
   padding: 28px;
 }
@@ -6201,11 +6201,18 @@ button,
   color: #cbd5e1;
   font-size: 0.9rem;
   line-height: 1.5;
+  white-space: nowrap;
 }
 
 .sponsor-contact a {
   color: #fde68a;
   font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .sponsor-contact {
+    white-space: normal;
+  }
 }
 
 /* Admin users */
