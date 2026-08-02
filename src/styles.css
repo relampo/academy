@@ -6241,9 +6241,51 @@ button,
   font-weight: 400;
 }
 
-.admin-user-course-picker {
+.admin-user-course-cell {
   display: grid;
   min-width: 280px;
+  gap: 10px;
+}
+
+.admin-user-assigned-courses {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-user-assigned-course {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  padding: 8px;
+  background: rgba(15, 23, 42, 0.34);
+}
+
+.admin-user-assigned-course span {
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.danger-text-button {
+  border: 0;
+  background: transparent;
+  color: #fca5a5;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 0;
+}
+
+.danger-text-button:hover {
+  color: #fecaca;
+}
+
+.admin-user-course-picker {
+  display: grid;
   grid-template-columns: minmax(190px, 1fr) auto;
   gap: 8px;
 }

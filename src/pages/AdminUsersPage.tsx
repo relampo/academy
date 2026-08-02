@@ -45,6 +45,18 @@ function getUserInitials(user: AcademyUser) {
     .join("");
 }
 
+function getEnrollmentCourseTitle(enrollment: UserEnrollmentSummary) {
+  const edition = enrollment.course_editions;
+
+  if (!edition?.courses) {
+    return "Curso sin nombre";
+  }
+
+  return edition.title === "default"
+    ? edition.courses.title
+    : `${edition.courses.title} - ${edition.title}`;
+}
+
 export function AdminUsersPage() {
   const { profile, user: currentUser } = useAuth();
   const isAdmin = profile?.role === "admin";
@@ -401,21 +413,14 @@ export function AdminUsersPage() {
                 filteredUsers.map((academyUser) => {
                   const leaderboardEntry = leaderboardByUser[academyUser.id];
                   const isCurrentUser = academyUser.id === currentUser?.id;
+                  const approvedEnrollments = (
+                    enrollmentByUser[academyUser.id] ?? []
+                  ).filter((enrollment) => enrollment.status === "approved");
                   const selectedEditionId =
                     selectedEditionByUserId[academyUser.id] ?? "";
-                  const isSelectedEditionAssigned = (
-                    enrollmentByUser[academyUser.id] ?? []
-                  ).some(
+                  const selectedEnrollment = approvedEnrollments.find(
                     (enrollment) =>
-                      enrollment.course_edition_id === selectedEditionId &&
-                      enrollment.status === "approved",
-                  );
-                  const selectedEnrollment = (
-                    enrollmentByUser[academyUser.id] ?? []
-                  ).find(
-                    (enrollment) =>
-                      enrollment.course_edition_id === selectedEditionId &&
-                      enrollment.status === "approved",
+                      enrollment.course_edition_id === selectedEditionId,
                   );
 
                   return (
@@ -461,46 +466,75 @@ export function AdminUsersPage() {
                       </td>
                       <td>
                         {academyUser.role === "student" ? (
-                          <div className="admin-user-course-picker">
-                            <select
-                              disabled={assignableEditions.length === 0}
-                              onChange={(event) =>
-                                setSelectedEditionByUserId((current) => ({
-                                  ...current,
-                                  [academyUser.id]: event.target.value,
-                                }))
-                              }
-                              value={selectedEditionId}
-                            >
-                              <option value="">
-                                {assignableEditions.length === 0
-                                  ? "Sin cursos disponibles"
-                                  : "Seleccionar curso"}
-                              </option>
-                              {assignableEditions.map((edition) => (
-                                <option key={edition.id} value={edition.id}>
-                                  {edition.courseTitle}
+                          <div className="admin-user-course-cell">
+                            {approvedEnrollments.length > 0 ? (
+                              <div className="admin-user-assigned-courses">
+                                {approvedEnrollments.map((enrollment) => (
+                                  <div
+                                    className="admin-user-assigned-course"
+                                    key={enrollment.id}
+                                  >
+                                    <span>
+                                      {getEnrollmentCourseTitle(enrollment)}
+                                    </span>
+                                    <button
+                                      className="text-button danger-text-button"
+                                      onClick={() =>
+                                        void handleUnassignCourse(
+                                          academyUser,
+                                          enrollment.id,
+                                        )
+                                      }
+                                      type="button"
+                                    >
+                                      Quitar
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="muted-text">
+                                Sin curso asignado
+                              </span>
+                            )}
+
+                            <div className="admin-user-course-picker">
+                              <select
+                                disabled={assignableEditions.length === 0}
+                                onChange={(event) =>
+                                  setSelectedEditionByUserId((current) => ({
+                                    ...current,
+                                    [academyUser.id]: event.target.value,
+                                  }))
+                                }
+                                value={selectedEditionId}
+                              >
+                                <option value="">
+                                  {assignableEditions.length === 0
+                                    ? "Sin cursos disponibles"
+                                    : "Seleccionar curso"}
                                 </option>
-                              ))}
-                            </select>
-                            <button
-                              className="secondary-button"
-                              disabled={
-                                !selectedEditionId ||
-                                assignableEditions.length === 0
-                              }
-                              onClick={() =>
-                                selectedEnrollment
-                                  ? void handleUnassignCourse(
-                                      academyUser,
-                                      selectedEnrollment.id,
-                                    )
-                                  : void handleAssignCourse(academyUser)
-                              }
-                              type="button"
-                            >
-                              {isSelectedEditionAssigned ? "Quitar" : "Asignar"}
-                            </button>
+                                {assignableEditions.map((edition) => (
+                                  <option key={edition.id} value={edition.id}>
+                                    {edition.courseTitle}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                className="secondary-button"
+                                disabled={
+                                  !selectedEditionId ||
+                                  Boolean(selectedEnrollment) ||
+                                  assignableEditions.length === 0
+                                }
+                                onClick={() =>
+                                  void handleAssignCourse(academyUser)
+                                }
+                                type="button"
+                              >
+                                Asignar
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <span className="muted-text">No aplica</span>
