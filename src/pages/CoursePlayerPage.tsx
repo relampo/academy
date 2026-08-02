@@ -172,6 +172,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       ? module.lessons.filter((lesson) => lesson.status === "published")
       : [],
   );
+  const courseLessons = modules.flatMap((module) => module.lessons);
   const attendanceByLesson = new Map(
     attendance.map((record) => [record.lesson_id, record]),
   );
@@ -275,7 +276,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         return `Clase ${index + 1}: ${summary.label}\n${summary.tooltip}`;
       })
       .join("\n\n");
-  const coursePointSummaries = availableLessons.map((lesson) =>
+  const coursePointSummaries = courseLessons.map((lesson) =>
     getLessonPointSummary(lesson.id),
   );
   const courseEarnedPoints = coursePointSummaries.reduce(
