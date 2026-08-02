@@ -27,7 +27,7 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
   );
 
   const displayName =
-    profile?.display_name || user?.email || "Usuario de Relampo Academy";
+    profile?.display_name || user?.email || "Usuario de Performance LATAM";
 
   const handleSignOut = () => {
     void signOut().then(() => {
@@ -41,8 +41,8 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
         <div className="brand">
           <BrandMark />
           <div>
-            <strong>Relampo</strong>
-            <span>Academy</span>
+            <strong>Performance</strong>
+            <span>LATAM</span>
           </div>
         </div>
 

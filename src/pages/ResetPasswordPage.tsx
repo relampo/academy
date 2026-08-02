@@ -55,7 +55,7 @@ export function ResetPasswordPage() {
     <main className="auth-page">
       <section className="auth-panel" aria-labelledby="reset-password-title">
         <div>
-          <p className="eyebrow">Relampo Academy</p>
+          <p className="eyebrow">Performance LATAM</p>
           <h1 id="reset-password-title">Restablecer contraseña</h1>
           <p>Define una nueva contraseña para volver a entrar a tu cuenta.</p>
         </div>

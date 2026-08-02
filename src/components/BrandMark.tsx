@@ -1,4 +1,4 @@
-import logoUrl from "../assets/sqaadvisory-logo.jpeg";
+import logoUrl from "../assets/performance-latam-logo.jpeg";
 
 type BrandMarkProps = {
   size?: "normal" | "large";
@@ -9,7 +9,7 @@ export function BrandMark({ size = "normal" }: BrandMarkProps) {
     <img
       className={`brand-mark brand-mark-${size}`}
       src={logoUrl}
-      alt="Relampo Academy"
+      alt="Performance LATAM"
     />
   );
 }

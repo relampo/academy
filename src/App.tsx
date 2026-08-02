@@ -218,7 +218,7 @@ export function App() {
       return (
         <main className="loading-screen">
           <BrandMark size="large" />
-          <strong>Cargando Relampo Academy</strong>
+          <strong>Cargando Performance LATAM</strong>
         </main>
       );
     }

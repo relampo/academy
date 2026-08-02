@@ -163,7 +163,7 @@ export function LoginPage() {
     <main className="auth-page">
       <section className="auth-panel" aria-labelledby="login-title">
         <div>
-          <p className="eyebrow">Relampo Academy</p>
+          <p className="eyebrow">Performance LATAM</p>
           <h1 id="login-title">
             {isSignUp ? "Crear cuenta" : "Iniciar sesión"}
           </h1>
