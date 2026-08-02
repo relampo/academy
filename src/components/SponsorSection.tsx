@@ -1,4 +1,4 @@
-import relampoLogoUrl from "../assets/sqaadvisory-logo.jpeg";
+import relampoLogoUrl from "../assets/relampo-sponsor-logo.png";
 
 type SponsorSectionProps = {
   compact?: boolean;
@@ -21,7 +21,7 @@ export function SponsorSection({ compact = false }: SponsorSectionProps) {
           rel="noreferrer"
           target="_blank"
         >
-          <img src={relampoLogoUrl} alt="Relampo" />
+          <img className="sponsor-logo" src={relampoLogoUrl} alt="Relampo" />
           <div>
             <strong>Relampo</strong>
             <span>Web oficial</span>

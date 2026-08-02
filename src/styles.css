@@ -6138,7 +6138,7 @@ button,
 
 .sponsor-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 260px));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 360px));
   gap: 12px;
 }
 
@@ -6148,11 +6148,11 @@ button,
 
 .sponsor-card {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   gap: 12px;
-  min-height: 64px;
-  padding: 10px;
+  min-height: 96px;
+  padding: 12px;
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 8px;
   background: rgba(8, 13, 21, 0.58);
@@ -6173,10 +6173,12 @@ button,
 }
 
 .sponsor-card img {
-  width: 42px;
-  height: 42px;
+  width: min(100%, 260px);
+  height: auto;
+  max-height: 86px;
   border-radius: 8px;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .sponsor-card div {
