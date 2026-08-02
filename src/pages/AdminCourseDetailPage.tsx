@@ -1911,7 +1911,7 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                           {!collapsedLessonIds.has(lesson.id) &&
                           editingLessonId !== lesson.id ? (
                             <div className="lesson-details">
-                              <span>
+                              <span className="lesson-description-text">
                                 {lesson.description || "Sin descripción todavía."}
                               </span>
                               <div className="assignment-summary">
@@ -1929,10 +1929,10 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                       />
                                       <div>
                                         <small>Tarea obligatoria</small>
-                                        <strong>
+                                        <span className="required-item-title">
                                           {assignment?.title ??
                                             `Tarea - ${lesson.title}`}
-                                        </strong>
+                                        </span>
                                       </div>
                                       <span>
                                         {assignment?.assignment_type ?? "report"}
@@ -1956,9 +1956,9 @@ export function AdminCourseDetailPage({ courseId }: AdminCourseDetailPageProps) 
                                       />
                                       <div>
                                         <small>Quiz obligatorio</small>
-                                        <strong>
+                                        <span className="required-item-title">
                                           {quiz?.title ?? `Quiz - ${lesson.title}`}
-                                        </strong>
+                                        </span>
                                       </div>
                                       <span>{questionCount}/10 preguntas</span>
                                       <button

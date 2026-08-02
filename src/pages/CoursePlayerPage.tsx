@@ -766,7 +766,9 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                             </div>
                           )}
                           {lesson.description ? (
-                            <span>{lesson.description}</span>
+                            <span className="student-lesson-description">
+                              {lesson.description}
+                            </span>
                           ) : null}
                           {isLessonPublished ? (
                             <button
@@ -805,8 +807,10 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                     strokeWidth={2.4}
                                   />
                                   <div>
-                                    <small>Tarea</small>
-                                    <strong>{assignment.title}</strong>
+                                    <small>Tarea obligatoria</small>
+                                    <span className="student-required-title">
+                                      {assignment.title}
+                                    </span>
                                     {assignment.description ? (
                                       <p>{assignment.description}</p>
                                     ) : null}
@@ -918,8 +922,10 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                 strokeWidth={2.4}
                               />
                               <div>
-                                <small>Quiz</small>
-                                <strong>{quiz.title}</strong>
+                                <small>Quiz obligatorio</small>
+                                <span className="student-required-title">
+                                  {quiz.title}
+                                </span>
                                 <p>10 preguntas. El puntaje cambia según el tiempo de respuesta.</p>
                               </div>
                             </div>

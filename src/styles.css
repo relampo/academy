@@ -1115,6 +1115,16 @@ p {
   padding: 0 14px 14px 42px;
 }
 
+.lesson-description-text {
+  display: block;
+  border: 1px solid #e1e7f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #657286;
+  line-height: 1.5;
+  padding: 12px 14px;
+}
+
 .lesson-support-row {
   display: flex;
   flex-wrap: wrap;
@@ -1163,6 +1173,12 @@ p {
   color: #18212f;
   font-size: 0.94rem;
   font-weight: 800;
+}
+
+.assignment-summary .required-item-title {
+  color: #18212f;
+  font-size: 0.94rem;
+  font-weight: 400;
 }
 
 .assignment-summary > span {
@@ -1944,6 +1960,15 @@ p {
   line-height: 1.45;
 }
 
+.student-lesson-summary .student-lesson-description {
+  display: block;
+  border: 1px solid #e1e7f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  line-height: 1.5;
+  padding: 12px 14px;
+}
+
 .student-duration,
 .student-points-badge {
   display: inline-flex;
@@ -2058,6 +2083,17 @@ p {
   white-space: nowrap;
 }
 
+.student-required-title {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: #18212f;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .student-assignment-panel p {
   display: -webkit-box;
   overflow: hidden;
@@ -2168,6 +2204,10 @@ p {
 .student-quiz-panel strong {
   display: block;
   margin-top: 2px;
+}
+
+.student-quiz-panel .student-required-title {
+  color: #18212f;
 }
 
 .student-quiz-panel p {
@@ -5027,6 +5067,7 @@ p,
 .curriculum-panel .lesson-heading strong,
 .curriculum-panel .assignment-summary strong,
 .curriculum-panel .quiz-summary strong,
+.curriculum-panel .required-item-title,
 .curriculum-panel .resource-chip span,
 .curriculum-panel .resource-chip-link {
   color: #f8fafc;
@@ -5035,10 +5076,16 @@ p,
 .curriculum-panel .module-heading p,
 .curriculum-panel .lesson-details,
 .curriculum-panel .lesson-details > span,
+.curriculum-panel .lesson-description-text,
 .curriculum-panel .assignment-summary small,
 .curriculum-panel .quiz-summary small,
 .curriculum-panel .builder-label {
   color: #9aa8ba;
+}
+
+.curriculum-panel .lesson-description-text {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(10, 16, 28, 0.7);
 }
 
 .curriculum-panel .lesson-list::before {
