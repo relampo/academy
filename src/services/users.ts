@@ -7,6 +7,10 @@ const productionAppUrl = "https://performancelatam.com";
 export type AcademyUser = Tables<"profiles">;
 export type AcademyUserRole = Enums<"user_role">;
 export type AcademyUserStatus = Enums<"user_status">;
+export type StudentCountryCount = {
+  country: string;
+  student_count: number;
+};
 
 export type UserEnrollmentSummary = Pick<
   Tables<"enrollments">,
@@ -47,7 +51,7 @@ export async function listUserEnrollmentSummaries() {
 
 export async function updateUserProfile(
   userId: string,
-  input: Pick<TablesUpdate<"profiles">, "role" | "status">,
+  input: Pick<TablesUpdate<"profiles">, "role" | "status" | "country">,
 ) {
   const { data, error } = await supabase
     .from("profiles")
@@ -61,6 +65,16 @@ export async function updateUserProfile(
   }
 
   return data;
+}
+
+export async function listStudentCountryCounts() {
+  const { data, error } = await supabase.rpc("get_student_country_counts");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as StudentCountryCount[];
 }
 
 export async function deleteStudentProfile(userId: string) {

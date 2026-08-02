@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
+import { getCountryByCode } from "../lib/countries";
 import {
   listEnrollmentReviews,
   listApprovedCourseStudents,
@@ -20,6 +21,7 @@ import {
   getCourseLeaderboard,
   type LeaderboardEntry,
 } from "../services/leaderboard";
+import { listStudentCountryCounts } from "../services/users";
 import { formatPoints } from "../lib/leaderboardIdentity";
 
 const attendancePoints = 10;
@@ -82,6 +84,66 @@ type InstructorCourseSummary = {
   quizzesMissing: number;
 };
 
+type CountryCount = {
+  code: string;
+  name: string;
+  count: number;
+  x: number;
+  y: number;
+};
+
+function CommunityMap({ countries }: { countries: CountryCount[] }) {
+  const activeCountries = countries.filter((country) => country.count > 0);
+  const totalStudents = activeCountries.reduce(
+    (total, country) => total + country.count,
+    0,
+  );
+
+  return (
+    <section className="content-panel community-panel">
+      <div className="page-header compact-header">
+        <div>
+          <p className="eyebrow">Comunidad LATAM</p>
+          <h2>Estudiantes por país</h2>
+        </div>
+        <strong>{totalStudents}</strong>
+      </div>
+
+      <div className="world-map" aria-label="Mapa de estudiantes por país">
+        <svg viewBox="0 0 100 56" role="presentation" aria-hidden="true">
+          <path d="M14 16c8-8 23-9 30-2 5 5 1 13-7 15-9 2-11 10-20 7-7-2-10-14-3-20Z" />
+          <path d="M47 13c9-7 28-6 35 1 7 8 1 18-12 19-10 1-15 7-24 2-8-5-8-15 1-22Z" />
+          <path d="M50 36c8-3 19-2 23 4 4 5-1 11-12 11-9 0-17-5-11-15Z" />
+        </svg>
+        {activeCountries.map((country) => (
+          <button
+            key={country.code}
+            type="button"
+            className="country-marker"
+            style={{ left: `${country.x}%`, top: `${country.y}%` }}
+            aria-label={`${country.name}: ${country.count} estudiantes`}
+            data-tooltip={`${country.name}: ${country.count} estudiantes`}
+          >
+            <span>{country.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {activeCountries.length === 0 ? (
+        <p className="community-empty">Aún no hay países registrados.</p>
+      ) : (
+        <div className="country-count-list">
+          {activeCountries.slice(0, 6).map((country) => (
+            <span key={country.code}>
+              {country.name} <strong>{country.count}</strong>
+            </span>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function DashboardPage() {
   const { profile, user } = useAuth();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -98,6 +160,7 @@ export function DashboardPage() {
   const [instructorSummaries, setInstructorSummaries] = useState<
     InstructorCourseSummary[]
   >([]);
+  const [countryCounts, setCountryCounts] = useState<CountryCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const name = profile?.first_name || profile?.display_name || "Relampo";
@@ -399,6 +462,36 @@ export function DashboardPage() {
     void loadLeaderboard();
   }, [selectedCourseId]);
 
+  useEffect(() => {
+    const loadCountryCounts = async () => {
+      if (!user) {
+        setCountryCounts([]);
+        return;
+      }
+
+      try {
+        const counts = await listStudentCountryCounts();
+        setCountryCounts(
+          counts.map((record) => {
+            const country = getCountryByCode(record.country);
+
+            return {
+              code: record.country,
+              name: country?.name ?? record.country,
+              count: record.student_count,
+              x: country?.x ?? 50,
+              y: country?.y ?? 50,
+            };
+          }),
+        );
+      } catch {
+        setCountryCounts([]);
+      }
+    };
+
+    void loadCountryCounts();
+  }, [user]);
+
   const currentEntry = useMemo(
     () => leaderboard.find((entry) => entry.student_id === user?.id),
     [leaderboard, user?.id],
@@ -468,177 +561,196 @@ export function DashboardPage() {
       {error ? <p className="form-message error">{error}</p> : null}
       {isLoading ? <p>Cargando inicio...</p> : null}
 
-      <div className="stats-grid">
-        <article className="stat-card">
-          <span>Cursos activos</span>
-          <strong>{courses.length}</strong>
-        </article>
-        <article className="stat-card">
-          <span>Posición</span>
-          <strong>{currentRank > 0 ? `#${currentRank}` : "-"}</strong>
-        </article>
-        <article className="stat-card">
-          <span>Nivel actual</span>
-          <strong>{currentEntry?.level ?? "Chispa"}</strong>
-        </article>
-        <article className="stat-card">
-          <span>Acumulado</span>
-          <strong>
-            {formatPoints(currentEntry?.total_score ?? 0)}
-            <small> pts</small>
-          </strong>
-        </article>
-      </div>
+      <div className="dashboard-home-grid">
+        <div className="dashboard-main-column">
+          <div className="stats-grid">
+            <article className="stat-card">
+              <span>Cursos activos</span>
+              <strong>{courses.length}</strong>
+            </article>
+            <article className="stat-card">
+              <span>Posición</span>
+              <strong>{currentRank > 0 ? `#${currentRank}` : "-"}</strong>
+            </article>
+            <article className="stat-card">
+              <span>Nivel actual</span>
+              <strong>{currentEntry?.level ?? "Chispa"}</strong>
+            </article>
+            <article className="stat-card">
+              <span>Acumulado</span>
+              <strong>
+                {formatPoints(currentEntry?.total_score ?? 0)}
+                <small> pts</small>
+              </strong>
+            </article>
+          </div>
 
-      {hasInstructorBoard ? (
-        <section className="content-panel instructor-overview-panel">
-          <div className="page-header compact-header">
+          {hasStudentCourses ? (
+            <section className="content-panel student-overview-panel">
+              <div className="page-header compact-header">
+                <div>
+                  <p className="eyebrow">Panel del estudiante</p>
+                  <h2>Qué sigue ahora</h2>
+                </div>
+              </div>
+
+              {courseSummaries.length === 0 ? (
+                <p>Cargando progreso de cursos...</p>
+              ) : (
+                <div className="student-course-grid">
+                  {visibleStudentCourseSummaries.map((summary) => (
+                    <article
+                      className="student-course-card"
+                      key={summary.courseId}
+                    >
+                      <div className="student-course-card-header">
+                        <div>
+                          <strong>{summary.title}</strong>
+                          <span>
+                            {summary.viewedLessons}/{summary.totalLessons} clases
+                            completadas
+                          </span>
+                        </div>
+                        <a
+                          href={summary.nextLessonHref}
+                          onClick={() => markCourseStarted(summary.courseId)}
+                        >
+                          {!hasStartedCourse(
+                            summary.courseId,
+                            summary.viewedLessons,
+                          )
+                            ? "Comenzar"
+                            : summary.nextLessonTitle
+                              ? "Continuar"
+                              : "Revisar"}
+                        </a>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : null}
+
+          {hasInstructorBoard ? (
+            <section className="content-panel instructor-overview-panel">
+              <div className="page-header compact-header">
+                <div>
+                  <p className="eyebrow">Panel del profesor</p>
+                  <h2>Pendientes de hoy</h2>
+                </div>
+                <a className="secondary-action" href="#/teaching">
+                  Ver cursos
+                </a>
+              </div>
+
+              <div className="instructor-metric-grid">
+                <article>
+                  <span>Solicitudes</span>
+                  <strong>{instructorTotals.pendingEnrollments}</strong>
+                </article>
+                <article>
+                  <span>Tareas por revisar</span>
+                  <strong>{instructorTotals.assignmentsToReview}</strong>
+                </article>
+                <article>
+                  <span>Asistencias pendientes</span>
+                  <strong>{instructorTotals.attendancePending}</strong>
+                </article>
+                <article>
+                  <span>Quizzes incompletos</span>
+                  <strong>{instructorTotals.quizzesMissing}</strong>
+                </article>
+              </div>
+
+              {priorityInstructorCourses.length === 0 ? (
+                <div className="empty-builder">
+                  <strong>No hay pendientes urgentes</strong>
+                  <span>Todos tus cursos asignados están al día.</span>
+                </div>
+              ) : (
+                <div className="instructor-course-grid">
+                  {priorityInstructorCourses.map((summary) => (
+                    <article
+                      className="instructor-course-card"
+                      key={summary.courseId}
+                    >
+                      <div className="instructor-course-card-header">
+                        <div>
+                          <strong>{summary.title}</strong>
+                          <span>
+                            {summary.studentsCount} estudiantes ·{" "}
+                            {summary.lessonsCount} clases
+                          </span>
+                        </div>
+                        <a href={`#/admin/courses/${summary.courseId}`}>Abrir</a>
+                      </div>
+                      <div className="student-pending-grid instructor-pending-grid">
+                        <span
+                          className={
+                            summary.pendingEnrollments === 0 ? "is-clear" : ""
+                          }
+                        >
+                          Solicitudes {summary.pendingEnrollments}
+                        </span>
+                        <span
+                          className={
+                            summary.assignmentsToReview === 0 ? "is-clear" : ""
+                          }
+                        >
+                          Tareas {summary.assignmentsToReview}
+                        </span>
+                        <span
+                          className={
+                            summary.attendancePending === 0 ? "is-clear" : ""
+                          }
+                        >
+                          Asistencia {summary.attendancePending}
+                        </span>
+                        <span
+                          className={
+                            summary.quizzesMissing === 0 ? "is-clear" : ""
+                          }
+                        >
+                          Quiz {summary.quizzesMissing}
+                        </span>
+                      </div>
+                      <div className="instructor-course-actions">
+                        <a href={`#/attendance/${summary.courseId}`}>
+                          Asistencia
+                        </a>
+                        <a href={`#/assignments/${summary.courseId}`}>Tareas</a>
+                        <a href={`#/enrollments?courseId=${summary.courseId}`}>
+                          Solicitudes
+                        </a>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : null}
+
+          <section className="content-panel dashboard-leaderboard-card">
             <div>
-              <p className="eyebrow">Panel del profesor</p>
-              <h2>Pendientes de hoy</h2>
+              <p className="eyebrow">Leaderboard</p>
+              <h2>Compite por una licencia Relampo</h2>
+              <p>
+                Los 3 primeros lugares reciben una licencia para generar más de
+                1000 usuarios gratis durante 2 meses.
+              </p>
             </div>
-            <a className="secondary-action" href="#/teaching">
-              Ver cursos
+            <a className="primary-action" href="#/leaderboard">
+              Abrir leaderboard
             </a>
-          </div>
-
-          <div className="instructor-metric-grid">
-            <article>
-              <span>Solicitudes</span>
-              <strong>{instructorTotals.pendingEnrollments}</strong>
-            </article>
-            <article>
-              <span>Tareas por revisar</span>
-              <strong>{instructorTotals.assignmentsToReview}</strong>
-            </article>
-            <article>
-              <span>Asistencias pendientes</span>
-              <strong>{instructorTotals.attendancePending}</strong>
-            </article>
-            <article>
-              <span>Quizzes incompletos</span>
-              <strong>{instructorTotals.quizzesMissing}</strong>
-            </article>
-          </div>
-
-          {priorityInstructorCourses.length === 0 ? (
-            <div className="empty-builder">
-              <strong>No hay pendientes urgentes</strong>
-              <span>Todos tus cursos asignados están al día.</span>
-            </div>
-          ) : (
-            <div className="instructor-course-grid">
-              {priorityInstructorCourses.map((summary) => (
-                <article className="instructor-course-card" key={summary.courseId}>
-                  <div className="instructor-course-card-header">
-                    <div>
-                      <strong>{summary.title}</strong>
-                      <span>
-                        {summary.studentsCount} estudiantes ·{" "}
-                        {summary.lessonsCount} clases
-                      </span>
-                    </div>
-                    <a href={`#/admin/courses/${summary.courseId}`}>Abrir</a>
-                  </div>
-                  <div className="student-pending-grid instructor-pending-grid">
-                    <span
-                      className={
-                        summary.pendingEnrollments === 0 ? "is-clear" : ""
-                      }
-                    >
-                      Solicitudes {summary.pendingEnrollments}
-                    </span>
-                    <span
-                      className={
-                        summary.assignmentsToReview === 0 ? "is-clear" : ""
-                      }
-                    >
-                      Tareas {summary.assignmentsToReview}
-                    </span>
-                    <span
-                      className={
-                        summary.attendancePending === 0 ? "is-clear" : ""
-                      }
-                    >
-                      Asistencia {summary.attendancePending}
-                    </span>
-                    <span
-                      className={summary.quizzesMissing === 0 ? "is-clear" : ""}
-                    >
-                      Quiz {summary.quizzesMissing}
-                    </span>
-                  </div>
-                  <div className="instructor-course-actions">
-                    <a href={`#/attendance/${summary.courseId}`}>Asistencia</a>
-                    <a href={`#/assignments/${summary.courseId}`}>Tareas</a>
-                    <a href={`#/enrollments?courseId=${summary.courseId}`}>
-                      Solicitudes
-                    </a>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      ) : null}
-
-      {hasStudentCourses ? (
-        <section className="content-panel student-overview-panel">
-          <div className="page-header compact-header">
-            <div>
-              <p className="eyebrow">Panel del estudiante</p>
-              <h2>Qué sigue ahora</h2>
-            </div>
-          </div>
-
-          {courseSummaries.length === 0 ? (
-            <p>Cargando progreso de cursos...</p>
-          ) : (
-            <div className="student-course-grid">
-              {visibleStudentCourseSummaries.map((summary) => (
-                <article className="student-course-card" key={summary.courseId}>
-                  <div className="student-course-card-header">
-                    <div>
-                      <strong>{summary.title}</strong>
-                      <span>
-                        {summary.viewedLessons}/{summary.totalLessons} clases
-                        completadas
-                      </span>
-                    </div>
-                    <a
-                      href={summary.nextLessonHref}
-                      onClick={() => markCourseStarted(summary.courseId)}
-                    >
-                      {!hasStartedCourse(summary.courseId, summary.viewedLessons)
-                        ? "Comenzar"
-                        : summary.nextLessonTitle
-                          ? "Continuar"
-                          : "Revisar"}
-                    </a>
-                  </div>
-
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      ) : null}
-
-      <section className="content-panel dashboard-leaderboard-card">
-        <div>
-          <p className="eyebrow">Leaderboard</p>
-          <h2>Compite por una licencia Relampo</h2>
-          <p>
-            Los 3 primeros lugares reciben una licencia para generar más de
-            1000 usuarios gratis durante 2 meses.
-          </p>
+          </section>
         </div>
-        <a className="primary-action" href="#/leaderboard">
-          Abrir leaderboard
-        </a>
-      </section>
 
-      <SponsorSection />
+        <aside className="dashboard-side-column">
+          <SponsorSection />
+          <CommunityMap countries={countryCounts} />
+        </aside>
+      </div>
     </section>
   );
 }

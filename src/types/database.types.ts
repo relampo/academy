@@ -965,6 +965,13 @@ export type Database = {
         Args: { score_ratio: number }
         Returns: string
       }
+      get_student_country_counts: {
+        Args: never
+        Returns: {
+          country: string
+          student_count: number
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_enrolled_in_course: {
         Args: { target_course_id: string }

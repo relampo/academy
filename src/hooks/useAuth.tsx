@@ -30,7 +30,16 @@ type SignUpInput = {
   password: string;
   firstName: string;
   lastName: string;
+  country: string;
 };
+
+const productionAppUrl = "https://performancelatam.com";
+
+function getAuthRedirectUrl() {
+  const appBaseUrl = getAppBaseUrl();
+
+  return appBaseUrl.includes("localhost") ? productionAppUrl : appBaseUrl;
+}
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -156,12 +165,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       email: input.email,
       password: input.password,
       options: {
-        emailRedirectTo: getAppBaseUrl(),
+        emailRedirectTo: getAuthRedirectUrl(),
         data: {
           first_name: input.firstName,
           last_name: input.lastName,
           display_name: `${input.firstName} ${input.lastName}`.trim(),
           email: input.email,
+          country: input.country,
         },
       },
     });

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
+import { countryOptions } from "../lib/countries";
 import { sendPasswordReset } from "../services/users";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -76,6 +77,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [country, setCountry] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,7 +101,13 @@ export function LoginPage() {
       const returnTo = peekReturnPath();
 
       if (isSignUp) {
-        const result = await signUp({ email, password, firstName, lastName });
+        const result = await signUp({
+          email,
+          password,
+          firstName,
+          lastName,
+          country,
+        });
         const successMessage =
           result.hasSession
             ? "Cuenta creada. Solicitud de inscripción en proceso."
@@ -213,6 +221,23 @@ export function LoginPage() {
                 />
               </label>
             </div>
+          ) : null}
+          {isSignUp ? (
+            <label>
+              País
+              <select
+                required
+                value={country}
+                onChange={(event) => setCountry(event.target.value)}
+              >
+                <option value="">Selecciona tu país</option>
+                {countryOptions.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           ) : null}
           <label>
             Email
