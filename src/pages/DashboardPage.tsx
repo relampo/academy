@@ -353,9 +353,13 @@ export function DashboardPage() {
     [leaderboard, user?.id],
   );
   const currentRank = leaderboard.findIndex((entry) => entry.student_id === user?.id) + 1;
-  const startedCourseSummaries = courseSummaries
-    .filter((summary) => summary.viewedLessons > 0)
-    .slice(0, 2);
+  const startedCourseSummaries = courseSummaries.filter(
+    (summary) => summary.viewedLessons > 0,
+  );
+  const visibleStudentCourseSummaries =
+    startedCourseSummaries.length > 0
+      ? startedCourseSummaries.slice(0, 2)
+      : courseSummaries.slice(0, 2);
   const hasInstructorBoard =
     ["admin", "instructor"].includes(profile?.role ?? "") &&
     instructorSummaries.length > 0;
@@ -517,17 +521,15 @@ export function DashboardPage() {
           <div className="page-header compact-header">
             <div>
               <p className="eyebrow">Panel del estudiante</p>
-              <h2>Que sigue ahora</h2>
+              <h2>Qué sigue ahora</h2>
             </div>
           </div>
 
           {courseSummaries.length === 0 ? (
             <p>Cargando progreso de cursos...</p>
-          ) : startedCourseSummaries.length === 0 ? (
-            <p>Todavía no hay cursos iniciados.</p>
           ) : (
             <div className="student-course-grid">
-              {startedCourseSummaries.map((summary) => (
+              {visibleStudentCourseSummaries.map((summary) => (
                 <article className="student-course-card" key={summary.courseId}>
                   <div className="student-course-card-header">
                     <div>
@@ -538,7 +540,11 @@ export function DashboardPage() {
                       </span>
                     </div>
                     <a href={summary.nextLessonHref}>
-                      {summary.nextLessonTitle ? "Continuar" : "Revisar"}
+                      {summary.viewedLessons === 0
+                        ? "Comenzar"
+                        : summary.nextLessonTitle
+                          ? "Continuar"
+                          : "Revisar"}
                     </a>
                   </div>
 
