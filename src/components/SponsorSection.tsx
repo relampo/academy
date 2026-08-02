@@ -21,11 +21,10 @@ export function SponsorSection({ compact = false }: SponsorSectionProps) {
           rel="noreferrer"
           target="_blank"
         >
-          <img className="sponsor-logo" src={relampoLogoUrl} alt="Relampo" />
-          <div>
-            <strong>Relampo</strong>
-            <span>Web oficial</span>
-          </div>
+          <span className="sponsor-logo-frame">
+            <img className="sponsor-logo" src={relampoLogoUrl} alt="Relampo" />
+          </span>
+          <span className="sponsor-link-label">Visitar web oficial</span>
         </a>
       </div>
     </section>

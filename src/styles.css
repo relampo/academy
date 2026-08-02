@@ -6138,7 +6138,7 @@ button,
 
 .sponsor-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 360px));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 320px));
   gap: 12px;
 }
 
@@ -6149,9 +6149,9 @@ button,
 .sponsor-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  gap: 12px;
-  min-height: 96px;
+  justify-items: start;
+  gap: 10px;
+  min-height: 112px;
   padding: 12px;
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 8px;
@@ -6172,30 +6172,28 @@ button,
   outline: none;
 }
 
+.sponsor-logo-frame {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 76px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #050505;
+}
+
 .sponsor-card img {
-  width: min(100%, 260px);
-  height: auto;
-  max-height: 86px;
+  width: min(100%, 230px);
+  height: 56px;
   border-radius: 8px;
   object-fit: contain;
-  object-position: left center;
+  object-position: center;
 }
 
-.sponsor-card div {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.sponsor-card strong {
-  overflow-wrap: anywhere;
+.sponsor-link-label {
   color: #f8fafc;
-  font-size: 0.98rem;
-}
-
-.sponsor-card span {
-  color: #94a3b8;
-  font-size: 0.86rem;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 /* Admin users */
