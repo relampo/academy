@@ -644,9 +644,7 @@ p {
 
 .map-tooltip {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
-  z-index: 5;
+  z-index: 8;
   display: inline-flex;
   align-items: center;
   min-height: 32px;
@@ -660,7 +658,18 @@ p {
   line-height: 1.25;
   padding: 7px 9px;
   pointer-events: none;
+  opacity: 0.95;
+  transform: translate(12px, -50%);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+}
+
+.map-tooltip-hint {
+  right: 12px;
+  bottom: 12px;
+  left: auto;
+  top: auto;
   opacity: 0.82;
+  transform: none;
 }
 
 .map-expand-action {

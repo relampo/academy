@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import worldMap from "@svg-maps/world";
 import { SponsorSection } from "../components/SponsorSection";
@@ -100,7 +100,11 @@ type SvgMapLocation = {
 
 function CommunityMap({ countries }: { countries: CountryCount[] }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+  const [mapTooltip, setMapTooltip] = useState<{
+    label: string;
+    x: number;
+    y: number;
+  } | null>(null);
   const activeCountries = countries.filter((country) => country.count > 0);
   const countByCode = new Map(
     activeCountries.map((country) => [country.code.toLowerCase(), country]),
@@ -109,6 +113,24 @@ function CommunityMap({ countries }: { countries: CountryCount[] }) {
     (total, country) => total + country.count,
     0,
   );
+  const updateTooltipPosition = (
+    event: MouseEvent<SVGPathElement>,
+    label: string,
+  ) => {
+    const mapElement = event.currentTarget.closest(".world-map");
+
+    if (!mapElement) {
+      setMapTooltip({ label, x: 16, y: 16 });
+      return;
+    }
+
+    const rect = mapElement.getBoundingClientRect();
+    setMapTooltip({
+      label,
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+  };
   const renderMap = (isModal = false) => (
     <div
       className={`world-map${isModal ? " world-map-expanded" : ""}`}
@@ -129,18 +151,30 @@ function CommunityMap({ countries }: { countries: CountryCount[] }) {
               d={location.path}
               tabIndex={0}
               aria-label={label}
-              data-tooltip={label}
-              onMouseEnter={() => setHoveredCountry(label)}
-              onMouseLeave={() => setHoveredCountry(null)}
-              onFocus={() => setHoveredCountry(label)}
-              onBlur={() => setHoveredCountry(null)}
+              onMouseEnter={(event) => updateTooltipPosition(event, label)}
+              onMouseMove={(event) => updateTooltipPosition(event, label)}
+              onMouseLeave={() => setMapTooltip(null)}
+              onFocus={() => setMapTooltip({ label, x: 16, y: 16 })}
+              onBlur={() => setMapTooltip(null)}
             />
           );
         })}
       </svg>
-      <span className="map-tooltip">
-        {hoveredCountry ?? "Pasa por encima de un país"}
-      </span>
+      {mapTooltip ? (
+        <span
+          className="map-tooltip is-visible"
+          style={{
+            left: `${mapTooltip.x}px`,
+            top: `${mapTooltip.y}px`,
+          }}
+        >
+          {mapTooltip.label}
+        </span>
+      ) : (
+        <span className="map-tooltip map-tooltip-hint">
+          Pasa por encima de un país
+        </span>
+      )}
     </div>
   );
 
