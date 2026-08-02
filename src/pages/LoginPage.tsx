@@ -40,6 +40,10 @@ function getReturnPath() {
   return returnTo || "/";
 }
 
+function peekReturnPath() {
+  return window.sessionStorage.getItem("relampo:returnTo") || "/";
+}
+
 export function LoginPage() {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<AuthMode>(getInitialMode);
@@ -61,17 +65,21 @@ export function LoginPage() {
     setIsSubmitting(true);
 
     try {
+      const returnTo = peekReturnPath();
+
       if (isSignUp) {
-        await signUp({ email, password, firstName, lastName });
-        const returnTo = getReturnPath();
+        const result = await signUp({ email, password, firstName, lastName });
         const successMessage =
-          "Cuenta creada. Revisa tu email si la confirmación está activa.";
+          result.hasSession
+            ? "Cuenta creada. Solicitud de inscripción en proceso."
+            : "Cuenta creada. Revisa tu email, inicia sesión y volverás al curso.";
         setMessage(successMessage);
         window.sessionStorage.setItem("relampo:notice", successMessage);
         window.location.hash = returnTo;
       } else {
         await signIn(email, password);
-        window.location.hash = getReturnPath();
+        getReturnPath();
+        window.location.hash = returnTo;
       }
     } catch (caughtError) {
       setError(

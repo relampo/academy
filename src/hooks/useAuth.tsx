@@ -20,7 +20,7 @@ type AuthContextValue = {
   profile: Profile | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (input: SignUpInput) => Promise<void>;
+  signUp: (input: SignUpInput) => Promise<{ hasSession: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
@@ -175,6 +175,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         "Este email ya tiene una cuenta. Inicia sesión para inscribirte.",
       );
     }
+
+    return { hasSession: Boolean(data.session) };
   }, []);
 
   const signOut = useCallback(async () => {

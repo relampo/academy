@@ -154,6 +154,7 @@ export function App() {
 
     if (!isLoading && session && path === "/login") {
       const returnTo = window.sessionStorage.getItem("relampo:returnTo");
+      window.sessionStorage.removeItem("relampo:returnTo");
       window.location.hash = returnTo || "/";
     }
   }, [isLoading, path, session]);
