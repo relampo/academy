@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import worldMap from "@svg-maps/world";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
@@ -133,9 +134,7 @@ function CommunityMap({ countries }: { countries: CountryCount[] }) {
               onMouseLeave={() => setHoveredCountry(null)}
               onFocus={() => setHoveredCountry(label)}
               onBlur={() => setHoveredCountry(null)}
-            >
-              <title>{label}</title>
-            </path>
+            />
           );
         })}
       </svg>
@@ -179,7 +178,8 @@ function CommunityMap({ countries }: { countries: CountryCount[] }) {
 
       <p className="map-credit">Mapa base: @svg-maps/world, CC BY 4.0.</p>
 
-      {isExpanded ? (
+      {isExpanded
+        ? createPortal(
         <div className="map-modal" role="dialog" aria-modal="true" aria-labelledby="map-modal-title">
           <div className="map-modal-panel">
             <div className="page-header compact-header">
@@ -193,8 +193,10 @@ function CommunityMap({ countries }: { countries: CountryCount[] }) {
             </div>
             {renderMap(true)}
           </div>
-        </div>
-      ) : null}
+        </div>,
+          document.body,
+        )
+        : null}
     </section>
   );
 }

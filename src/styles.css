@@ -600,7 +600,8 @@ p {
   position: relative;
   overflow: hidden;
   aspect-ratio: 16 / 9;
-  min-height: 210px;
+  width: 100%;
+  min-height: clamp(170px, 18vw, 250px);
   border: 1px solid #e1e7f0;
   border-radius: 8px;
   background:
@@ -612,6 +613,7 @@ p {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: contain;
 }
 
 .map-country {
@@ -637,7 +639,7 @@ p {
 }
 
 .map-country[data-tooltip] {
-  cursor: help;
+  cursor: default;
 }
 
 .map-tooltip {
@@ -682,19 +684,21 @@ p {
 .map-modal {
   position: fixed;
   inset: 0;
-  z-index: 80;
-  display: grid;
-  place-items: center;
-  padding: 22px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(14px, 3vw, 32px);
   background: rgba(2, 6, 23, 0.72);
 }
 
 .map-modal-panel {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 16px;
-  width: min(1120px, 96vw);
-  max-height: 92vh;
-  overflow: auto;
+  width: min(1180px, 96vw);
+  height: min(760px, 90vh);
+  overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.98);
@@ -718,7 +722,10 @@ p {
 }
 
 .world-map-expanded {
-  min-height: 560px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
 }
 
 .country-count-list {
@@ -4379,6 +4386,20 @@ p {
 
   .world-map {
     min-height: 190px;
+  }
+
+  .map-modal {
+    padding: 10px;
+  }
+
+  .map-modal-panel {
+    width: 96vw;
+    height: min(620px, 88vh);
+    padding: 14px;
+  }
+
+  .map-modal-panel .compact-header {
+    gap: 10px;
   }
 
   .student-pending-grid {
