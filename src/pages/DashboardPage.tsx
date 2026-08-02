@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
 import {
   listEnrollmentReviews,
@@ -636,6 +637,8 @@ export function DashboardPage() {
           Abrir leaderboard
         </a>
       </section>
+
+      <SponsorSection />
     </section>
   );
 }

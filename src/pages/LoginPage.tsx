@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
 import { sendPasswordReset } from "../services/users";
 
@@ -253,6 +254,8 @@ export function LoginPage() {
             {isSubmitting ? "Procesando..." : "Continuar"}
           </button>
         </form>
+
+        <SponsorSection compact />
       </section>
     </main>
   );
