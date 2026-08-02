@@ -2,6 +2,8 @@ import { supabase } from "./supabase";
 import type { Enums, Tables, TablesUpdate } from "../types/database.types";
 import { getAppBaseUrl } from "../lib/appUrl";
 
+const productionAppUrl = "https://performancelatam.com";
+
 export type AcademyUser = Tables<"profiles">;
 export type AcademyUserRole = Enums<"user_role">;
 export type AcademyUserStatus = Enums<"user_status">;
@@ -74,7 +76,11 @@ export async function deleteStudentProfile(userId: string) {
 }
 
 export async function sendPasswordReset(email: string) {
-  const redirectTo = `${getAppBaseUrl()}?reset-password=1`;
+  const appBaseUrl = getAppBaseUrl();
+  const redirectBaseUrl = appBaseUrl.includes("localhost")
+    ? productionAppUrl
+    : appBaseUrl;
+  const redirectTo = `${redirectBaseUrl}?reset-password=1`;
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
   });
