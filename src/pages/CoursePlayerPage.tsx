@@ -167,11 +167,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const availableLessons = modules.flatMap((module) =>
-    module.status === "published"
-      ? module.lessons.filter((lesson) => lesson.status === "published")
-      : [],
-  );
   const courseLessons = modules.flatMap((module) => module.lessons);
   const attendanceByLesson = new Map(
     attendance.map((record) => [record.lesson_id, record]),
@@ -209,12 +204,12 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     );
   };
 
-  const completedCount = availableLessons.filter((lesson) =>
+  const completedCount = courseLessons.filter((lesson) =>
     isLessonSystemComplete(lesson.id),
   ).length;
   const progress =
-    availableLessons.length > 0
-      ? Math.round((completedCount / availableLessons.length) * 100)
+    courseLessons.length > 0
+      ? Math.round((completedCount / courseLessons.length) * 100)
       : 0;
 
   const getLessonPointSummary = (lessonId: string) => {
@@ -555,7 +550,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
             <span style={{ width: `${progress}%` }} />
           </div>
           <p>
-            {completedCount} de {availableLessons.length} clases completadas
+            {completedCount} de {courseLessons.length} clases completadas
           </p>
           <div className="student-requirements">
             <div>
