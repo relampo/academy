@@ -41,13 +41,20 @@ function getInitialMode(): AuthMode {
 }
 
 function getReturnPath() {
-  const returnTo = window.sessionStorage.getItem("relampo:returnTo");
+  const returnTo =
+    window.sessionStorage.getItem("relampo:returnTo") ||
+    window.localStorage.getItem("relampo:returnTo");
   window.sessionStorage.removeItem("relampo:returnTo");
+  window.localStorage.removeItem("relampo:returnTo");
   return returnTo || "/";
 }
 
 function peekReturnPath() {
-  return window.sessionStorage.getItem("relampo:returnTo") || "/";
+  return (
+    window.sessionStorage.getItem("relampo:returnTo") ||
+    window.localStorage.getItem("relampo:returnTo") ||
+    "/"
+  );
 }
 
 export function LoginPage() {
