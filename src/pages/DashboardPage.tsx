@@ -602,41 +602,6 @@ export function DashboardPage() {
                     </a>
                   </div>
 
-                  <div className="student-course-progress">
-                    <span>{summary.progressPercent}% visto</span>
-                    <strong>
-                      {formatPoints(summary.earnedPoints)}/
-                      {formatPoints(summary.maxPoints)} pts
-                    </strong>
-                    <div>
-                      <i style={{ width: `${summary.progressPercent}%` }} />
-                    </div>
-                  </div>
-
-                  <div className="student-next-lesson">
-                    <span>Próxima clase</span>
-                    <strong>{summary.nextLessonTitle ?? "Curso revisado"}</strong>
-                  </div>
-
-                  <div className="student-pending-grid">
-                    <span
-                      className={
-                        summary.attendancePending === 0 ? "is-clear" : ""
-                      }
-                    >
-                      Asistencia {summary.attendancePending}
-                    </span>
-                    <span className={summary.quizPending === 0 ? "is-clear" : ""}>
-                      Quiz {summary.quizPending}
-                    </span>
-                    <span
-                      className={
-                        summary.assignmentPending === 0 ? "is-clear" : ""
-                      }
-                    >
-                      Tarea {summary.assignmentPending}
-                    </span>
-                  </div>
                 </article>
               ))}
             </div>
