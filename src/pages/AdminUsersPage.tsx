@@ -425,7 +425,7 @@ export function AdminUsersPage() {
 
                   return (
                     <tr key={academyUser.id}>
-                      <td>
+                      <td data-label="Usuario">
                         <div className="admin-user-cell">
                           <span>{getUserInitials(academyUser) || "U"}</span>
                           <div>
@@ -434,14 +434,14 @@ export function AdminUsersPage() {
                           </div>
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Email">
                         {academyUser.email ? (
                           academyUser.email
                         ) : (
                           <span className="muted-text">Sin email</span>
                         )}
                       </td>
-                      <td>
+                      <td data-label="Rol">
                         <select
                           disabled={!isAdmin || isCurrentUser}
                           onChange={(event) =>
@@ -457,14 +457,14 @@ export function AdminUsersPage() {
                           <option value="student">Estudiante</option>
                         </select>
                       </td>
-                      <td>
+                      <td data-label="Estado">
                         <span
                           className={`status-pill status-pill-${academyUser.status}`}
                         >
                           {STATUS_LABELS[academyUser.status]}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Curso">
                         {academyUser.role === "student" ? (
                           <div className="admin-user-course-cell">
                             {approvedEnrollments.length > 0 ? (
@@ -540,12 +540,12 @@ export function AdminUsersPage() {
                           <span className="muted-text">No aplica</span>
                         )}
                       </td>
-                      <td>
+                      <td data-label="Alias público">
                         {leaderboardEntry?.display_name ||
                           academyUser.leaderboard_name ||
                           "Sin alias"}
                       </td>
-                      <td>
+                      <td data-label="Puntos">
                         {leaderboardEntry ? (
                           <strong>
                             {leaderboardEntry.total_score}/
@@ -555,14 +555,14 @@ export function AdminUsersPage() {
                           <span className="muted-text">Elige un curso</span>
                         )}
                       </td>
-                      <td>
+                      <td data-label="Posición">
                         {leaderboardEntry ? (
                           <strong>#{leaderboardEntry.rank}</strong>
                         ) : (
                           <span className="muted-text">-</span>
                         )}
                       </td>
-                      <td>
+                      <td data-label="Acciones">
                         <div className="admin-user-actions">
                           {isAdmin ? (
                             <>
