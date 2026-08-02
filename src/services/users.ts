@@ -138,3 +138,23 @@ export async function assignUserToCourseEdition(
 
   return data;
 }
+
+export async function unassignUserFromCourseEdition(enrollmentId: string) {
+  const { data, error } = await supabase
+    .from("enrollments")
+    .update({
+      status: "withdrawn",
+      approved_at: null,
+      approved_by: null,
+      rejection_reason: null,
+    })
+    .eq("id", enrollmentId)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}

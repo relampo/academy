@@ -6,6 +6,7 @@ import {
   deleteStudentProfile,
   listAcademyUsers,
   listUserEnrollmentSummaries,
+  unassignUserFromCourseEdition,
   updateUserProfile,
   type AcademyUser,
   type AcademyUserRole,
@@ -250,6 +251,23 @@ export function AdminUsersPage() {
     await loadData();
   };
 
+  const handleUnassignCourse = async (
+    targetUser: AcademyUser,
+    enrollmentId: string,
+  ) => {
+    const confirmed = window.confirm(
+      `¿Quitar a ${getUserName(targetUser)} de este curso?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    await unassignUserFromCourseEdition(enrollmentId);
+    setActionMessage("Estudiante quitado del curso.");
+    await loadData();
+  };
+
   const handleDeleteStudent = async (targetUser: AcademyUser) => {
     if (targetUser.id === currentUser?.id) {
       setActionMessage("No puedes eliminar tu propia cuenta desde esta tabla.");
@@ -392,6 +410,13 @@ export function AdminUsersPage() {
                       enrollment.course_edition_id === selectedEditionId &&
                       enrollment.status === "approved",
                   );
+                  const selectedEnrollment = (
+                    enrollmentByUser[academyUser.id] ?? []
+                  ).find(
+                    (enrollment) =>
+                      enrollment.course_edition_id === selectedEditionId &&
+                      enrollment.status === "approved",
+                  );
 
                   return (
                     <tr key={academyUser.id}>
@@ -462,13 +487,19 @@ export function AdminUsersPage() {
                               className="secondary-button"
                               disabled={
                                 !selectedEditionId ||
-                                isSelectedEditionAssigned ||
                                 assignableEditions.length === 0
                               }
-                              onClick={() => void handleAssignCourse(academyUser)}
+                              onClick={() =>
+                                selectedEnrollment
+                                  ? void handleUnassignCourse(
+                                      academyUser,
+                                      selectedEnrollment.id,
+                                    )
+                                  : void handleAssignCourse(academyUser)
+                              }
                               type="button"
                             >
-                              {isSelectedEditionAssigned ? "Asignado" : "Asignar"}
+                              {isSelectedEditionAssigned ? "Quitar" : "Asignar"}
                             </button>
                           </div>
                         ) : (
