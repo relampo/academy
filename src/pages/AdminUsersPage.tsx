@@ -52,7 +52,9 @@ export function AdminUsersPage() {
   const [courses, setCourses] = useState<CourseWithEditions[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("all");
-  const [courseEditionToAssign, setCourseEditionToAssign] = useState("");
+  const [selectedEditionByUserId, setSelectedEditionByUserId] = useState<
+    Record<string, string>
+  >({});
   const [roleFilter, setRoleFilter] = useState<AcademyUserRole | "all">("all");
   const [statusFilter, setStatusFilter] = useState<AcademyUserStatus | "all">(
     "all",
@@ -78,10 +80,22 @@ export function AdminUsersPage() {
         setSelectedCourseId(nextCourses[0].id);
       }
 
-      const firstEdition = nextCourses[0]?.course_editions[0];
-      if (!courseEditionToAssign && firstEdition) {
-        setCourseEditionToAssign(firstEdition.id);
-      }
+      setSelectedEditionByUserId((currentSelections) => {
+        const firstEditionId = nextCourses
+          .flatMap((course) => course.course_editions)
+          .find((edition) => !edition.archived_at)?.id;
+
+        if (!firstEditionId) {
+          return currentSelections;
+        }
+
+        return Object.fromEntries(
+          nextUsers.map((academyUser) => [
+            academyUser.id,
+            currentSelections[academyUser.id] ?? firstEditionId,
+          ]),
+        );
+      });
     } finally {
       setIsLoading(false);
     }
@@ -126,10 +140,15 @@ export function AdminUsersPage() {
   const assignableEditions = useMemo(
     () =>
       courses.flatMap((course) =>
-        course.course_editions.map((edition) => ({
-          ...edition,
-          courseTitle: course.title,
-        })),
+        course.course_editions
+          .filter((edition) => !edition.archived_at)
+          .map((edition) => ({
+            ...edition,
+            courseTitle:
+              edition.slug === "default"
+                ? course.title
+                : `${course.title} - ${edition.title}`,
+          })),
       ),
     [courses],
   );
@@ -209,13 +228,20 @@ export function AdminUsersPage() {
   };
 
   const handleAssignCourse = async (targetUser: AcademyUser) => {
-    if (!currentUser || !courseEditionToAssign) {
+    const selectedEditionId = selectedEditionByUserId[targetUser.id];
+
+    if (!currentUser || !selectedEditionId) {
+      return;
+    }
+
+    if (targetUser.role !== "student") {
+      setActionMessage("Solo puedes asignar cursos a estudiantes.");
       return;
     }
 
     await assignUserToCourseEdition(
       targetUser.id,
-      courseEditionToAssign,
+      selectedEditionId,
       currentUser.id,
     );
     setActionMessage("Curso asignado y aprobado.");
@@ -323,28 +349,6 @@ export function AdminUsersPage() {
           </label>
         </div>
 
-        {isAdmin ? (
-          <div className="admin-course-assignment-bar">
-            <label>
-              <span>Asignar curso</span>
-              <select
-                onChange={(event) => setCourseEditionToAssign(event.target.value)}
-                value={courseEditionToAssign}
-              >
-                {assignableEditions.map((edition) => (
-                  <option key={edition.id} value={edition.id}>
-                    {edition.courseTitle}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <span>
-              La asignación desde aquí queda aprobada automáticamente para el
-              estudiante.
-            </span>
-          </div>
-        ) : null}
-
         {actionMessage ? (
           <p className="admin-users-message">{actionMessage}</p>
         ) : null}
@@ -357,6 +361,7 @@ export function AdminUsersPage() {
                 <th>Email</th>
                 <th>Rol</th>
                 <th>Estado</th>
+                <th>Curso</th>
                 <th>Alias público</th>
                 <th>Puntos</th>
                 <th>Posición</th>
@@ -366,16 +371,27 @@ export function AdminUsersPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8}>Cargando usuarios...</td>
+                  <td colSpan={9}>Cargando usuarios...</td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>No hay usuarios para estos filtros.</td>
+                  <td colSpan={9}>No hay usuarios para estos filtros.</td>
                 </tr>
               ) : (
                 filteredUsers.map((academyUser) => {
                   const leaderboardEntry = leaderboardByUser[academyUser.id];
                   const isCurrentUser = academyUser.id === currentUser?.id;
+                  const selectedEditionId =
+                    selectedEditionByUserId[academyUser.id] ??
+                    assignableEditions[0]?.id ??
+                    "";
+                  const isSelectedEditionAssigned = (
+                    enrollmentByUser[academyUser.id] ?? []
+                  ).some(
+                    (enrollment) =>
+                      enrollment.course_edition_id === selectedEditionId &&
+                      enrollment.status === "approved",
+                  );
 
                   return (
                     <tr key={academyUser.id}>
@@ -419,6 +435,45 @@ export function AdminUsersPage() {
                         </span>
                       </td>
                       <td>
+                        {academyUser.role === "student" ? (
+                          <div className="admin-user-course-picker">
+                            <select
+                              disabled={assignableEditions.length === 0}
+                              onChange={(event) =>
+                                setSelectedEditionByUserId((current) => ({
+                                  ...current,
+                                  [academyUser.id]: event.target.value,
+                                }))
+                              }
+                              value={selectedEditionId}
+                            >
+                              {assignableEditions.length === 0 ? (
+                                <option value="">Sin cursos disponibles</option>
+                              ) : null}
+                              {assignableEditions.map((edition) => (
+                                <option key={edition.id} value={edition.id}>
+                                  {edition.courseTitle}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              className="secondary-button"
+                              disabled={
+                                !selectedEditionId ||
+                                isSelectedEditionAssigned ||
+                                assignableEditions.length === 0
+                              }
+                              onClick={() => void handleAssignCourse(academyUser)}
+                              type="button"
+                            >
+                              {isSelectedEditionAssigned ? "Asignado" : "Asignar"}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="muted-text">No aplica</span>
+                        )}
+                      </td>
+                      <td>
                         {leaderboardEntry?.display_name ||
                           academyUser.leaderboard_name ||
                           "Sin alias"}
@@ -444,14 +499,6 @@ export function AdminUsersPage() {
                         <div className="admin-user-actions">
                           {isAdmin ? (
                             <>
-                              <button
-                                className="secondary-button"
-                                disabled={!courseEditionToAssign}
-                                onClick={() => void handleAssignCourse(academyUser)}
-                                type="button"
-                              >
-                                Asignar
-                              </button>
                               {academyUser.status === "suspended" ? (
                                 <button
                                   className="secondary-button"

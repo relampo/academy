@@ -6241,6 +6241,19 @@ button,
   font-weight: 400;
 }
 
+.admin-user-course-picker {
+  display: grid;
+  min-width: 280px;
+  grid-template-columns: minmax(190px, 1fr) auto;
+  gap: 8px;
+}
+
+.admin-user-course-picker button {
+  min-height: 40px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
