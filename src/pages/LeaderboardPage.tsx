@@ -482,6 +482,14 @@ export function LeaderboardPage() {
     () => leaderboard.find((entry) => entry.student_id === user?.id),
     [leaderboard, user?.id],
   );
+  useEffect(() => {
+    if (profile?.leaderboard_name || !currentEntry?.display_name) {
+      return;
+    }
+
+    setLeaderboardName(currentEntry.display_name.split("·")[0]?.trim() || "");
+  }, [currentEntry?.display_name, profile?.leaderboard_name]);
+
   const currentRank =
     leaderboard.findIndex((entry) => entry.student_id === user?.id) + 1;
   const baseAvatarPreset =
@@ -735,11 +743,6 @@ export function LeaderboardPage() {
                     entry.avatar_url,
                     entry.student_id,
                   );
-                  const displayName =
-                    entry.student_id === user?.id
-                      ? previewDisplayName
-                      : entry.display_name;
-
                   return (
                     <article
                       className={`leaderboard-row ${getLevelClass(entry.level)}${
@@ -754,7 +757,7 @@ export function LeaderboardPage() {
                         size={17}
                       />
                       <div>
-                        <strong>{displayName}</strong>
+                        <strong>{entry.display_name}</strong>
                         <span className={`league-level-badge ${getLevelClass(entry.level)}`}>
                           {entry.level}
                         </span>
