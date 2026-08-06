@@ -75,6 +75,11 @@ type LeaderboardCourseOption = {
   title: string;
 };
 
+const defaultLeaderboardCourse: LeaderboardCourseOption = {
+  course_id: "0ac11057-0025-485d-abef-265af3c21a62",
+  title: "Grupo de Estudio: Performance Testing LATAM",
+};
+
 const avatarIcons: Record<string, LucideIcon> = {
   activity: Activity,
   asterisk: Asterisk,
@@ -371,6 +376,7 @@ export function LeaderboardPage() {
   useEffect(() => {
     const loadCourses = async () => {
       if (!user || !profile) {
+        setIsLoading(false);
         return;
       }
 
@@ -378,7 +384,7 @@ export function LeaderboardPage() {
       setIsLoading(true);
 
       try {
-        const nextCourses: LeaderboardCourseOption[] =
+        const loadedCourses: LeaderboardCourseOption[] =
           profile.role === "student"
             ? (await listPublishedCourseEditions(user.id))
                 .filter((edition) =>
@@ -403,6 +409,11 @@ export function LeaderboardPage() {
                   course_id: course.id,
                   title: course.title,
                 }));
+        const nextCourses = loadedCourses.some(
+          (course) => course.course_id === defaultLeaderboardCourse.course_id,
+        )
+          ? loadedCourses
+          : [defaultLeaderboardCourse, ...loadedCourses];
 
         setCourses(nextCourses);
         setSelectedCourseId((current) =>
