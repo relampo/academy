@@ -364,7 +364,7 @@ export function LeaderboardPage() {
 
   useEffect(() => {
     const loadCourses = async () => {
-      if (!user) {
+      if (!user || !profile) {
         return;
       }
 
@@ -372,15 +372,20 @@ export function LeaderboardPage() {
       setIsLoading(true);
 
       try {
-        const approvedCourses = (await listPublishedCourseEditions(user.id)).filter(
-          (edition) =>
-            edition.enrollments.some(
-              (enrollment) => enrollment.status === "approved",
-            ),
-        );
-        setCourses(approvedCourses);
-        setSelectedCourseId(
-          (current) => current || approvedCourses[0]?.course_id || "",
+        const nextCourses =
+          profile.role === "student"
+            ? (await listPublishedCourseEditions(user.id)).filter((edition) =>
+                edition.enrollments.some(
+                  (enrollment) => enrollment.status === "approved",
+                ),
+              )
+            : await listPublishedCourseEditions();
+
+        setCourses(nextCourses);
+        setSelectedCourseId((current) =>
+          current && nextCourses.some((course) => course.course_id === current)
+            ? current
+            : nextCourses[0]?.course_id || "",
         );
       } catch (caughtError) {
         setError(
@@ -394,7 +399,7 @@ export function LeaderboardPage() {
     };
 
     void loadCourses();
-  }, [user]);
+  }, [profile, user]);
 
   useEffect(() => {
     const loadLeaderboard = async () => {
