@@ -4185,12 +4185,38 @@ p {
   }
 
   .leaderboard-rank-board .leaderboard-row {
-    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "rank avatar name"
+      "rank avatar score";
+    grid-template-columns: 40px 46px minmax(0, 1fr);
+    align-items: center;
+    row-gap: 6px;
+    min-height: 0;
+  }
+
+  .leaderboard-rank-board .leaderboard-rank {
+    grid-area: rank;
+  }
+
+  .leaderboard-rank-board .leaderboard-avatar {
+    grid-area: avatar;
+  }
+
+  .leaderboard-rank-board .leaderboard-row div:first-of-type {
+    grid-area: name;
+  }
+
+  .leaderboard-rank-board .leaderboard-row div:first-of-type strong {
+    white-space: normal;
   }
 
   .leaderboard-rank-board .leaderboard-score {
-    grid-column: 3;
+    grid-area: score;
     justify-self: start;
+  }
+
+  .leaderboard-rank-board .leaderboard-score strong {
+    font-size: 1rem;
   }
 
   .league-reward-banner {
