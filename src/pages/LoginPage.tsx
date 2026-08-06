@@ -274,12 +274,6 @@ export function LoginPage() {
             </p>
           </div>
 
-          <p className="form-message success">
-            Estamos dejando listo el registro. Les informaremos por Discord o
-            WhatsApp cuando esté disponible. Agradecemos la paciencia. Nos
-            vemos pronto.
-          </p>
-
           <div className="segmented-control" aria-label="Modo de autenticación">
             <button
               type="button"
