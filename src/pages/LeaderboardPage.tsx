@@ -756,7 +756,7 @@ export function LeaderboardPage() {
                         preset={avatarPreset}
                         size={17}
                       />
-                      <div>
+                      <div className="leaderboard-student-cell">
                         <strong>{entry.display_name}</strong>
                         <span className={`league-level-badge ${getLevelClass(entry.level)}`}>
                           {entry.level}

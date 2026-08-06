@@ -2923,20 +2923,20 @@ p {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.48));
 }
 
-.leaderboard-row div:first-of-type {
+.leaderboard-row .leaderboard-student-cell {
   display: grid;
   gap: 2px;
   min-width: 0;
 }
 
-.leaderboard-row div:first-of-type strong {
+.leaderboard-row .leaderboard-student-cell strong {
   overflow: hidden;
   color: #18212f;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.leaderboard-row div:first-of-type span {
+.leaderboard-row .leaderboard-student-cell span {
   color: #657286;
   font-size: 0.8rem;
   font-weight: 900;
@@ -4187,10 +4187,10 @@ p {
   .leaderboard-rank-board .leaderboard-row {
     grid-template-areas:
       "rank avatar name"
-      "rank avatar score";
+      "score score score";
     grid-template-columns: 40px 46px minmax(0, 1fr);
     align-items: center;
-    row-gap: 6px;
+    row-gap: 8px;
     min-height: 0;
   }
 
@@ -4202,23 +4202,26 @@ p {
     grid-area: avatar;
   }
 
-  .leaderboard-rank-board .leaderboard-row div:first-of-type {
+  .leaderboard-rank-board .leaderboard-student-cell {
     grid-area: name;
   }
 
-  .leaderboard-rank-board .leaderboard-row div:first-of-type strong {
+  .leaderboard-rank-board .leaderboard-student-cell strong {
     white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .leaderboard-rank-board .leaderboard-score {
     grid-area: score;
-    justify-self: start;
+    justify-self: stretch;
+    justify-content: flex-start;
     width: 100%;
     max-width: 100%;
-    padding: 3px 8px;
-    border-radius: 999px;
+    padding: 6px 10px;
+    border-radius: 8px;
     background: rgba(148, 163, 184, 0.12);
     line-height: 1.2;
+    white-space: normal;
   }
 
   .leaderboard-rank-board .leaderboard-score strong {
@@ -5204,7 +5207,7 @@ p,
 }
 
 .leaderboard-profile-preview strong,
-.leaderboard-row div:first-of-type strong,
+.leaderboard-row .leaderboard-student-cell strong,
 .leaderboard-score strong,
 .leaderboard-summary-card strong {
   color: #f8fafc;
@@ -5282,7 +5285,7 @@ p,
 }
 
 .leaderboard-score,
-.leaderboard-row div:first-of-type span,
+.leaderboard-row .leaderboard-student-cell span,
 .leaderboard-summary-card span,
 .leaderboard-progress > span {
   color: #9aa8ba;
@@ -5917,7 +5920,7 @@ button,
 .assignment-summary strong,
 .quiz-summary strong,
 .leaderboard-profile-preview strong,
-.leaderboard-row div:first-of-type strong,
+.leaderboard-row .leaderboard-student-cell strong,
 .student-course-card-header strong,
 .student-next-lesson strong,
 .instructor-course-card-header strong,
