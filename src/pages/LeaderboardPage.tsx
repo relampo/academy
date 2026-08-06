@@ -646,7 +646,11 @@ export function LeaderboardPage() {
                 onChange={(event) => setSelectedCourseId(event.target.value)}
               >
                 {courses.length === 0 ? (
-                  <option value="">No hay cursos aprobados</option>
+                  <option value="">
+                    {profile?.role === "student"
+                      ? "No hay cursos aprobados"
+                      : "No hay cursos disponibles"}
+                  </option>
                 ) : null}
                 {courses.map((edition) => (
                   <option key={edition.course_id} value={edition.course_id}>
