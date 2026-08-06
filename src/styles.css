@@ -7004,6 +7004,98 @@ button,
   color: #dbe5f1;
 }
 
+@media (max-width: 640px) {
+  .student-module,
+  .student-lesson,
+  .student-lesson-header,
+  .student-lesson-summary,
+  .student-lesson-body,
+  .student-assignment-panel,
+  .student-quiz-panel,
+  .student-assignment-main,
+  .student-assignment-main > div,
+  .student-assignment-side,
+  .student-assignment-meta,
+  .student-resource-list {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .student-lesson-header {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .student-lesson-summary {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .student-lesson-body {
+    margin-right: 14px;
+    margin-left: 14px;
+    padding-left: 0;
+  }
+
+  .student-assignment-panel,
+  .student-quiz-panel {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .student-assignment-main {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .student-required-title,
+  .student-assignment-panel strong,
+  .student-assignment-panel p,
+  .student-quiz-panel strong,
+  .student-quiz-panel p,
+  .student-lesson-summary > span,
+  .student-lesson-summary .student-lesson-description {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .student-assignment-panel p {
+    display: block;
+    -webkit-line-clamp: unset;
+  }
+
+  .student-assignment-side {
+    display: grid;
+    justify-content: stretch;
+    gap: 10px;
+  }
+
+  .student-assignment-meta {
+    display: flex;
+  }
+
+  .student-assignment-meta span,
+  .student-assignment-meta a,
+  .student-resource-chip {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .student-resource-chip {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 8px;
+  }
+
+  .student-resource-chip span {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
 /* Community-first public home */
 .auth-page {
   display: grid;
