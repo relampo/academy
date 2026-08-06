@@ -43,6 +43,10 @@ function isExistingAccountError(errorMessage: string) {
 function getFriendlyAuthError(errorMessage: string) {
   const normalizedMessage = errorMessage.toLowerCase();
 
+  if (!errorMessage.trim() || errorMessage.trim() === "{}") {
+    return "No se pudo completar el registro. Intenta nuevamente o avísanos para revisarlo.";
+  }
+
   if (normalizedMessage.includes("email rate limit exceeded")) {
     return "Se alcanzó el límite de correos por ahora. Intenta nuevamente más tarde.";
   }
@@ -51,7 +55,55 @@ function getFriendlyAuthError(errorMessage: string) {
     return "Este email ya tiene una cuenta. Inicia sesión para inscribirte.";
   }
 
+  if (
+    normalizedMessage.includes("database error") ||
+    normalizedMessage.includes("saving new user") ||
+    normalizedMessage.includes("unexpected_failure")
+  ) {
+    return "No pudimos crear tu perfil en este momento. Avísanos y revisamos la configuración de registro.";
+  }
+
+  if (normalizedMessage.includes("password")) {
+    return "La contraseña no cumple los requisitos. Usa al menos 6 caracteres.";
+  }
+
+  if (normalizedMessage.includes("invalid email")) {
+    return "Revisa el email e intenta nuevamente.";
+  }
+
   return errorMessage;
+}
+
+function getAuthErrorMessage(caughtError: unknown, fallbackMessage: string) {
+  if (caughtError instanceof Error) {
+    return getFriendlyAuthError(caughtError.message);
+  }
+
+  if (typeof caughtError === "string") {
+    return getFriendlyAuthError(caughtError);
+  }
+
+  if (caughtError && typeof caughtError === "object") {
+    const maybeError = caughtError as {
+      message?: unknown;
+      error_description?: unknown;
+      error?: unknown;
+    };
+    const message =
+      typeof maybeError.message === "string"
+        ? maybeError.message
+        : typeof maybeError.error_description === "string"
+          ? maybeError.error_description
+          : typeof maybeError.error === "string"
+            ? maybeError.error
+            : "";
+
+    if (message) {
+      return getFriendlyAuthError(message);
+    }
+  }
+
+  return fallbackMessage;
 }
 
 function getInitialMode(): AuthMode {
@@ -144,10 +196,14 @@ export function LoginPage() {
         navigateToReturnPath(returnTo);
       }
     } catch (caughtError) {
-      const errorMessage =
-        caughtError instanceof Error
-          ? getFriendlyAuthError(caughtError.message)
-          : "No se pudo autenticar.";
+      console.error("Auth submit failed", caughtError);
+
+      const errorMessage = getAuthErrorMessage(
+        caughtError,
+        isSignUp
+          ? "No se pudo completar el registro. Intenta nuevamente."
+          : "No se pudo autenticar.",
+      );
 
       if (
         isSignUp &&
@@ -181,10 +237,12 @@ export function LoginPage() {
       await sendPasswordReset(email.trim());
       setMessage("Te enviamos un correo para restablecer tu contraseña.");
     } catch (caughtError) {
+      console.error("Password reset failed", caughtError);
       setError(
-        caughtError instanceof Error
-          ? getFriendlyAuthError(caughtError.message)
-          : "No se pudo enviar el correo de recuperación.",
+        getAuthErrorMessage(
+          caughtError,
+          "No se pudo enviar el correo de recuperación.",
+        ),
       );
     } finally {
       setIsSendingReset(false);

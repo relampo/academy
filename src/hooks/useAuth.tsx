@@ -161,17 +161,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signUp = useCallback(async (input: SignUpInput) => {
+    const email = input.email.trim().toLowerCase();
+    const firstName = input.firstName.trim();
+    const lastName = input.lastName.trim();
+    const country = input.country.trim();
+
     const { data, error } = await supabase.auth.signUp({
-      email: input.email,
+      email,
       password: input.password,
       options: {
         emailRedirectTo: getAuthRedirectUrl(),
         data: {
-          first_name: input.firstName,
-          last_name: input.lastName,
-          display_name: `${input.firstName} ${input.lastName}`.trim(),
-          email: input.email,
-          country: input.country,
+          first_name: firstName,
+          last_name: lastName,
+          display_name: `${firstName} ${lastName}`.trim(),
+          email,
+          country,
         },
       },
     });
