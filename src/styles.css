@@ -4213,10 +4213,20 @@ p {
   .leaderboard-rank-board .leaderboard-score {
     grid-area: score;
     justify-self: start;
+    width: 100%;
+    max-width: 100%;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.12);
+    line-height: 1.2;
   }
 
   .leaderboard-rank-board .leaderboard-score strong {
     font-size: 1rem;
+  }
+
+  .leaderboard-rank-board .leaderboard-score span {
+    font-size: 0.88rem;
   }
 
   .league-reward-banner {
@@ -4446,6 +4456,26 @@ p {
 
   .student-pending-grid {
     grid-template-columns: 1fr;
+  }
+
+  .leaderboard-rank-board .leaderboard-row {
+    grid-template-columns: 34px 38px minmax(0, 1fr);
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .leaderboard-rank-board .leaderboard-rank {
+    width: 30px;
+    height: 30px;
+  }
+
+  .leaderboard-rank-board .leaderboard-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .leaderboard-rank-board .leaderboard-score {
+    white-space: normal;
   }
 
   .avatar-picker > div {
