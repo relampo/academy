@@ -2521,7 +2521,7 @@ p {
 
 .attendance-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 16px;
   border: 1px solid #d9e0ea;
@@ -2544,6 +2544,13 @@ p {
   gap: 8px;
   margin: 0;
   white-space: nowrap;
+}
+
+@media (max-width: 980px) {
+  .attendance-row {
+    grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+    gap: 12px;
+  }
 }
 
 .compact-course-form {
