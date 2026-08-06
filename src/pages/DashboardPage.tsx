@@ -220,7 +220,7 @@ export function DashboardPage() {
               earnedPoints += quizAttempt?.total_score ?? 0;
               earnedPoints += submission?.points_awarded ?? 0;
 
-              if (!attendanceRecord?.attended) {
+              if (!attendanceRecord) {
                 attendancePending += 1;
               }
 

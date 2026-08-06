@@ -92,8 +92,12 @@ function getAttendancePoints(record?: LessonAttendance) {
 }
 
 function getAttendanceLabel(record?: LessonAttendance) {
-  if (!record?.attended) {
+  if (!record) {
     return "pendiente";
+  }
+
+  if (!record.attended) {
+    return "no asistió";
   }
 
   return record.stayed_until_end ? "clase completa" : "asistió";
@@ -228,7 +232,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       (submission?.points_awarded ?? 0);
     const max = attendancePoints + quizMaxPoints + assignmentMaxPoints;
     const hasPending =
-      !attendanceRecord?.attended ||
+      !attendanceRecord ||
       !quizAttempt ||
       submission?.points_awarded === null ||
       submission?.points_awarded === undefined;
@@ -241,7 +245,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         : `${formatPoints(earned)}/${formatPoints(max)} pts`,
       tooltip: [
         `Asistencia: ${
-          attendanceRecord?.attended
+          attendanceRecord
             ? `${getAttendanceLabel(attendanceRecord)} · ${formatPoints(
                 earnedAttendancePoints,
               )}/${attendancePoints} pts`
@@ -743,11 +747,15 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                 className={
                                   attendanceRecord?.attended
                                     ? "is-confirmed"
+                                    : attendanceRecord
+                                      ? "is-needs-revision"
                                     : ""
                                 }
                               >
                                 {attendanceRecord?.attended
                                   ? "Asistencia confirmada"
+                                  : attendanceRecord
+                                    ? "No asistió"
                                   : "Asistencia pendiente"}
                               </span>
                               <span className={quizStatusClass}>

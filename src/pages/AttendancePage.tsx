@@ -221,6 +221,7 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
               const record = attendanceByStudent.get(student.student_id);
               const attended = record?.attended ?? false;
               const stayedUntilEnd = record?.stayed_until_end ?? false;
+              const markedAbsent = record ? !record.attended : false;
               const key = `${selectedLessonId}:${student.student_id}`;
 
               return (
@@ -231,30 +232,51 @@ export function AttendancePage({ courseId }: AttendancePageProps) {
                   </div>
                   <label className="toggle-row compact-toggle">
                     <input
-                      checked={attended}
+                      checked={markedAbsent}
                       disabled={savingKey === key}
-                      type="checkbox"
+                      type="radio"
+                      name={`attendance-${student.student_id}`}
                       onChange={(event) =>
-                        void handleAttendanceChange(student.student_id, {
-                          attended: event.target.checked,
-                          stayedUntilEnd: event.target.checked
-                            ? stayedUntilEnd
-                            : false,
-                        })
+                        event.target.checked
+                          ? void handleAttendanceChange(student.student_id, {
+                              attended: false,
+                              stayedUntilEnd: false,
+                            })
+                          : undefined
+                      }
+                    />
+                    No asistió
+                  </label>
+                  <label className="toggle-row compact-toggle">
+                    <input
+                      checked={attended && !stayedUntilEnd}
+                      disabled={savingKey === key}
+                      type="radio"
+                      name={`attendance-${student.student_id}`}
+                      onChange={(event) =>
+                        event.target.checked
+                          ? void handleAttendanceChange(student.student_id, {
+                              attended: true,
+                              stayedUntilEnd: false,
+                            })
+                          : undefined
                       }
                     />
                     Asistió
                   </label>
                   <label className="toggle-row compact-toggle">
                     <input
-                      checked={stayedUntilEnd}
-                      disabled={!attended || savingKey === key}
-                      type="checkbox"
+                      checked={attended && stayedUntilEnd}
+                      disabled={savingKey === key}
+                      type="radio"
+                      name={`attendance-${student.student_id}`}
                       onChange={(event) =>
-                        void handleAttendanceChange(student.student_id, {
-                          attended,
-                          stayedUntilEnd: event.target.checked,
-                        })
+                        event.target.checked
+                          ? void handleAttendanceChange(student.student_id, {
+                              attended: true,
+                              stayedUntilEnd: true,
+                            })
+                          : undefined
                       }
                     />
                     Clase completa
