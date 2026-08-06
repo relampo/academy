@@ -4185,27 +4185,27 @@ p {
   }
 
   .leaderboard-rank-board .leaderboard-row {
-    grid-template-areas:
-      "rank name name"
-      "score score score";
-    grid-template-columns: 40px minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 8px 10px;
-    min-height: 0;
+    grid-template-columns: 32px 36px minmax(0, 1fr) max-content;
+    align-items: center;
+    gap: 8px;
+    min-height: 54px;
+    padding: 8px 10px;
   }
 
   .leaderboard-rank-board .leaderboard-rank {
-    grid-area: rank;
+    width: 28px;
+    height: 28px;
+    font-size: 0.82rem;
   }
 
   .leaderboard-rank-board .leaderboard-avatar {
-    display: none;
-    grid-area: avatar;
+    display: grid;
+    width: 32px;
+    height: 32px;
   }
 
   .leaderboard-rank-board .leaderboard-student-cell {
-    grid-area: name;
-    align-content: start;
+    min-width: 0;
   }
 
   .leaderboard-rank-board .leaderboard-student-cell strong {
@@ -4213,29 +4213,39 @@ p {
     max-width: 100%;
     font-size: 1rem;
     line-height: 1.2;
-    white-space: normal;
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .leaderboard-rank-board .leaderboard-student-cell .league-level-badge {
+    display: none;
   }
 
   .leaderboard-rank-board .leaderboard-score {
-    grid-area: score;
-    justify-self: stretch;
-    justify-content: flex-start;
-    width: 100%;
-    max-width: 100%;
-    padding: 6px 10px;
-    border-radius: 8px;
-    background: rgba(148, 163, 184, 0.12);
+    justify-self: end;
+    justify-content: flex-end;
+    min-width: 54px;
+    padding: 0;
+    background: transparent;
     line-height: 1.2;
-    white-space: normal;
+    text-align: right;
+    white-space: nowrap;
   }
 
   .leaderboard-rank-board .leaderboard-score strong {
-    font-size: 1rem;
+    font-size: 0.98rem;
   }
 
   .leaderboard-rank-board .leaderboard-score span {
-    font-size: 0.88rem;
+    display: none;
+  }
+
+  .leaderboard-rank-board .leaderboard-score::after {
+    content: " pts";
+    color: #9aa8ba;
+    font-size: 0.72rem;
+    font-weight: 800;
   }
 
   .league-reward-banner {
@@ -4468,21 +4478,28 @@ p {
   }
 
   .leaderboard-rank-board .leaderboard-row {
-    grid-template-areas:
-      "rank name"
-      "score score";
-    grid-template-columns: 34px minmax(0, 1fr);
-    gap: 8px;
-    padding: 10px;
+    grid-template-columns: 26px 30px minmax(0, 1fr) max-content;
+    gap: 6px;
+    padding: 8px;
   }
 
   .leaderboard-rank-board .leaderboard-rank {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
+    font-size: 0.76rem;
   }
 
-  .leaderboard-rank-board .leaderboard-score {
-    white-space: normal;
+  .leaderboard-rank-board .leaderboard-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .leaderboard-rank-board .leaderboard-student-cell strong {
+    font-size: 0.92rem;
+  }
+
+  .leaderboard-rank-board .leaderboard-score strong {
+    font-size: 0.9rem;
   }
 
   .avatar-picker > div {
