@@ -4186,11 +4186,11 @@ p {
 
   .leaderboard-rank-board .leaderboard-row {
     grid-template-areas:
-      "rank avatar name"
+      "rank name name"
       "score score score";
-    grid-template-columns: 40px 46px minmax(0, 1fr);
-    align-items: center;
-    row-gap: 8px;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 8px 10px;
     min-height: 0;
   }
 
@@ -4199,14 +4199,20 @@ p {
   }
 
   .leaderboard-rank-board .leaderboard-avatar {
+    display: none;
     grid-area: avatar;
   }
 
   .leaderboard-rank-board .leaderboard-student-cell {
     grid-area: name;
+    align-content: start;
   }
 
   .leaderboard-rank-board .leaderboard-student-cell strong {
+    display: block;
+    max-width: 100%;
+    font-size: 1rem;
+    line-height: 1.2;
     white-space: normal;
     overflow-wrap: anywhere;
   }
@@ -4462,7 +4468,10 @@ p {
   }
 
   .leaderboard-rank-board .leaderboard-row {
-    grid-template-columns: 34px 38px minmax(0, 1fr);
+    grid-template-areas:
+      "rank name"
+      "score score";
+    grid-template-columns: 34px minmax(0, 1fr);
     gap: 8px;
     padding: 10px;
   }
@@ -4470,11 +4479,6 @@ p {
   .leaderboard-rank-board .leaderboard-rank {
     width: 30px;
     height: 30px;
-  }
-
-  .leaderboard-rank-board .leaderboard-avatar {
-    width: 34px;
-    height: 34px;
   }
 
   .leaderboard-rank-board .leaderboard-score {
