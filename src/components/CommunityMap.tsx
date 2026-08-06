@@ -37,7 +37,7 @@ export function CommunityMap({
   totalLabel = "miembros",
   listLimit = 6,
   showExpand = true,
-  showCredit = true,
+  showCredit = false,
   showList = true,
   showTotal = true,
   variant = "panel",
