@@ -51,7 +51,10 @@ import {
   getLevelClass,
   leaderboardLevels,
 } from "../lib/leaderboardIdentity";
-import { listPublishedCourseEditions } from "../services/courses";
+import {
+  listCoursesWithEditions,
+  listPublishedCourseEditions,
+} from "../services/courses";
 import {
   getCourseLeaderboard,
   updateLeaderboardProfile,
@@ -65,6 +68,11 @@ const levelIcons: Record<string, LucideIcon> = {
   Rayo: Bolt,
   Relámpago: Trophy,
   Relampago: Trophy,
+};
+
+type LeaderboardCourseOption = {
+  course_id: string;
+  title: string;
 };
 
 const avatarIcons: Record<string, LucideIcon> = {
@@ -341,9 +349,7 @@ function normalizeGeneratedName(value: string) {
 
 export function LeaderboardPage() {
   const { profile, refreshProfile, user } = useAuth();
-  const [courses, setCourses] = useState<
-    Awaited<ReturnType<typeof listPublishedCourseEditions>>
-  >([]);
+  const [courses, setCourses] = useState<LeaderboardCourseOption[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardName, setLeaderboardName] = useState("");
@@ -372,14 +378,31 @@ export function LeaderboardPage() {
       setIsLoading(true);
 
       try {
-        const nextCourses =
+        const nextCourses: LeaderboardCourseOption[] =
           profile.role === "student"
-            ? (await listPublishedCourseEditions(user.id)).filter((edition) =>
-                edition.enrollments.some(
-                  (enrollment) => enrollment.status === "approved",
-                ),
-              )
-            : await listPublishedCourseEditions();
+            ? (await listPublishedCourseEditions(user.id))
+                .filter((edition) =>
+                  edition.enrollments.some(
+                    (enrollment) => enrollment.status === "approved",
+                  ),
+                )
+                .map((edition) => ({
+                  course_id: edition.course_id,
+                  title: edition.courses?.title ?? edition.title,
+                }))
+            : (await listCoursesWithEditions())
+                .filter((course) =>
+                  course.course_editions.some(
+                    (edition) =>
+                      ["published", "enrollment_closed", "completed"].includes(
+                        edition.status,
+                      ) && !edition.archived_at,
+                  ),
+                )
+                .map((course) => ({
+                  course_id: course.id,
+                  title: course.title,
+                }));
 
         setCourses(nextCourses);
         setSelectedCourseId((current) =>
@@ -627,7 +650,7 @@ export function LeaderboardPage() {
                 ) : null}
                 {courses.map((edition) => (
                   <option key={edition.course_id} value={edition.course_id}>
-                    {edition.courses?.title ?? edition.title}
+                    {edition.title}
                   </option>
                 ))}
               </select>
