@@ -160,6 +160,18 @@ export function App() {
       window.localStorage.removeItem("relampo:returnTo");
       window.location.hash = returnTo || "/";
     }
+
+    if (!isLoading && session && path === "/") {
+      const returnTo =
+        window.sessionStorage.getItem("relampo:returnTo") ||
+        window.localStorage.getItem("relampo:returnTo");
+
+      if (returnTo?.startsWith("/enroll/")) {
+        window.sessionStorage.removeItem("relampo:returnTo");
+        window.localStorage.removeItem("relampo:returnTo");
+        window.location.hash = returnTo;
+      }
+    }
   }, [isLoading, path, session]);
 
   useEffect(() => {

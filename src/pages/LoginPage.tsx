@@ -186,7 +186,7 @@ export function LoginPage() {
         const successMessage =
           result.hasSession
             ? "Cuenta creada. Solicitud de inscripción en proceso."
-            : "Cuenta creada. Revisa tu email, inicia sesión y volverás al curso.";
+            : "Cuenta creada. Revisa tu email para confirmar la cuenta; al volver, solicitaremos tu inscripción automáticamente.";
         setMessage(successMessage);
         window.sessionStorage.setItem("relampo:notice", successMessage);
         navigateToReturnPath(returnTo);
