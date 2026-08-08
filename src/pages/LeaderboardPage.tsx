@@ -359,6 +359,22 @@ function normalizeGeneratedName(value: string) {
   return normalizeAliasPart(value).toLowerCase();
 }
 
+// Aliases are unique database-side, so a student can lose a race the local
+// usedNames check cannot see: it only knows the aliases of the course on
+// screen. Translate the raw constraint violation into something readable.
+function isDuplicateAliasError(error: unknown) {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const { code, message } = error as { code?: string; message?: string };
+
+  return (
+    code === "23505" ||
+    Boolean(message?.includes("profiles_leaderboard_name_unique"))
+  );
+}
+
 export function LeaderboardPage() {
   const { profile, refreshProfile, user } = useAuth();
   const [courses, setCourses] = useState<LeaderboardCourseOption[]>([]);
@@ -630,9 +646,11 @@ export function LeaderboardPage() {
       setMessage("Identidad pública actualizada.");
     } catch (caughtError) {
       setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "No se pudo actualizar tu identidad pública.",
+        isDuplicateAliasError(caughtError)
+          ? "Ese nombre ya lo tiene otro estudiante. Genera otro."
+          : caughtError instanceof Error
+            ? caughtError.message
+            : "No se pudo actualizar tu identidad pública.",
       );
     } finally {
       setIsSaving(false);
