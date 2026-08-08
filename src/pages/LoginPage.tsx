@@ -3,7 +3,7 @@ import { MessageCircle, MessagesSquare } from "lucide-react";
 import { CommunityMap, type CountryCount } from "../components/CommunityMap";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
-import { countryOptions } from "../lib/countries";
+import { countryPickerOptions } from "../lib/countries";
 import { sendPasswordReset } from "../services/users";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -323,7 +323,7 @@ export function LoginPage() {
                   onChange={(event) => setCountry(event.target.value)}
                 >
                   <option value="">Selecciona tu país</option>
-                  {countryOptions.map((option) => (
+                  {countryPickerOptions.map((option) => (
                     <option key={option.code} value={option.code}>
                       {option.name}
                     </option>

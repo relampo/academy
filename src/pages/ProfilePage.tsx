@@ -1,6 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { countryOptions, getCountryByCode } from "../lib/countries";
+import {
+  countryPickerOptions,
+  getCountryFlag,
+  getCountryName,
+} from "../lib/countries";
 import { updateUserProfile } from "../services/users";
 
 function formatValue(value: string) {
@@ -87,7 +91,9 @@ export function ProfilePage() {
           <div>
             <dt>País</dt>
             <dd>
-              {getCountryByCode(profile?.country)?.name || "Sin configurar"}
+              {profile?.country
+                ? `${getCountryFlag(profile.country)} ${getCountryName(profile.country)}`.trim()
+                : "Sin configurar"}
             </dd>
           </div>
           <div>
@@ -112,7 +118,7 @@ export function ProfilePage() {
               onChange={(event) => setCountry(event.target.value)}
             >
               <option value="">Selecciona tu país</option>
-              {countryOptions.map((option) => (
+              {countryPickerOptions.map((option) => (
                 <option key={option.code} value={option.code}>
                   {option.name}
                 </option>

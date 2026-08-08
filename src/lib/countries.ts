@@ -208,3 +208,51 @@ export const countryOptions: CountryOption[] = [
 export function getCountryByCode(code: string | null | undefined) {
   return countryOptions.find((country) => country.code === code);
 }
+
+// countryOptions carries English names. Rather than translate two hundred of
+// them by hand, let the platform do it: Intl knows every region name in
+// Spanish and stays correct as country names change.
+const spanishRegionNames =
+  typeof Intl !== "undefined" && "DisplayNames" in Intl
+    ? new Intl.DisplayNames(["es"], { type: "region" })
+    : null;
+
+export function getCountryName(code: string | null | undefined) {
+  if (!code) {
+    return "";
+  }
+
+  const normalized = code.toUpperCase();
+
+  try {
+    const translated = spanishRegionNames?.of(normalized);
+
+    if (translated && translated !== normalized) {
+      return translated;
+    }
+  } catch {
+    // Not a region code Intl recognises; fall through to the static list.
+  }
+
+  return getCountryByCode(normalized)?.name ?? code;
+}
+
+// The pickers show these, so they are sorted by the Spanish name the user
+// actually reads rather than by the English one stored above.
+export const countryPickerOptions = countryOptions
+  .map((country) => ({ code: country.code, name: getCountryName(country.code) }))
+  .sort((first, second) => first.name.localeCompare(second.name, "es"));
+
+// Regional indicator symbols: "PE" -> the Peruvian flag. Derived from the code
+// itself, so there is no flag table to keep in sync.
+export function getCountryFlag(code: string | null | undefined) {
+  if (!code || !/^[A-Za-z]{2}$/.test(code)) {
+    return "";
+  }
+
+  return String.fromCodePoint(
+    ...[...code.toUpperCase()].map(
+      (letter) => 0x1f1e6 + letter.charCodeAt(0) - 65,
+    ),
+  );
+}

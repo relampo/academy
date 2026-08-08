@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CommunityMap, type CountryCount } from "../components/CommunityMap";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
-import { getCountryByCode } from "../lib/countries";
+import { getCountryFlag, getCountryName } from "../lib/countries";
 import {
   listEnrollmentReviews,
   listApprovedCourseStudents,
@@ -413,15 +413,12 @@ export function DashboardPage() {
       try {
         const counts = await listStudentCountryCounts();
         setCountryCounts(
-          counts.map((record) => {
-            const country = getCountryByCode(record.country);
-
-            return {
-              code: record.country,
-              name: country?.name ?? record.country,
-              count: record.student_count,
-            };
-          }),
+          counts.map((record) => ({
+            code: record.country,
+            name: getCountryName(record.country),
+            flag: getCountryFlag(record.country),
+            count: record.student_count,
+          })),
         );
       } catch {
         setCountryCounts([]);
