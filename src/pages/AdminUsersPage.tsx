@@ -412,6 +412,13 @@ export function AdminUsersPage() {
               ) : (
                 filteredUsers.map((academyUser) => {
                   const leaderboardEntry = leaderboardByUser[academyUser.id];
+                  // Leaderboard rows read "Alias · Nombre real" when the
+                  // student shows their name, so keep only the alias part —
+                  // the real name is already the heading of this cell.
+                  const resolvedAlias =
+                    leaderboardEntry?.display_name.split("·")[0]?.trim() ||
+                    academyUser.leaderboard_name ||
+                    "";
                   const isCurrentUser = academyUser.id === currentUser?.id;
                   const approvedEnrollments = (
                     enrollmentByUser[academyUser.id] ?? []
@@ -430,6 +437,11 @@ export function AdminUsersPage() {
                           <span>{getUserInitials(academyUser) || "U"}</span>
                           <div>
                             <strong>{getUserName(academyUser)}</strong>
+                            {resolvedAlias ? (
+                              <span className="admin-user-alias">
+                                {resolvedAlias}
+                              </span>
+                            ) : null}
                             <small>{academyUser.id.slice(0, 8)}</small>
                           </div>
                         </div>
@@ -541,9 +553,9 @@ export function AdminUsersPage() {
                         )}
                       </td>
                       <td data-label="Alias público">
-                        {leaderboardEntry?.display_name ||
-                          academyUser.leaderboard_name ||
-                          "Sin alias"}
+                        {resolvedAlias || (
+                          <span className="muted-text">Sin alias</span>
+                        )}
                       </td>
                       <td data-label="Puntos">
                         {leaderboardEntry ? (

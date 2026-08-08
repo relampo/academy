@@ -6793,6 +6793,33 @@ button,
   font-weight: 400;
 }
 
+/* Public leaderboard alias, shown under the real name so an instructor can map
+   a ranking row back to the person behind it. */
+.admin-user-alias {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 20px;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(255, 199, 18, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 199, 18, 0.12);
+  padding: 0 9px;
+  color: #ffd95a;
+  font-size: 0.74rem;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-user-alias::before {
+  content: "@";
+  opacity: 0.6;
+  font-weight: 800;
+}
+
 .admin-user-course-cell {
   display: grid;
   min-width: 280px;
