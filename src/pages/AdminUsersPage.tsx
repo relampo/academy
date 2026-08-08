@@ -27,6 +27,10 @@ const STATUS_LABELS: Record<AcademyUserStatus, string> = {
   suspended: "Desactivado",
 };
 
+// Sentinel for the course filter. Deliberately not a uuid so it can never
+// collide with a real course id.
+const UNASSIGNED_FILTER = "unassigned";
+
 function getUserName(user: AcademyUser) {
   return (
     user.display_name ||
@@ -121,7 +125,9 @@ export function AdminUsersPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedCourseId === "all") {
+    // "all" and the unassigned filter are sentinels, not course ids: passing
+    // either to the RPC would blow up on the uuid cast.
+    if (selectedCourseId === "all" || selectedCourseId === UNASSIGNED_FILTER) {
       setLeaderboard([]);
       return;
     }
@@ -168,6 +174,20 @@ export function AdminUsersPage() {
     [courses],
   );
 
+  // Badge on the filter option, so staff can see there is pending assignment
+  // work without having to switch the filter first.
+  const unassignedStudentCount = useMemo(
+    () =>
+      users.filter(
+        (academyUser) =>
+          academyUser.role === "student" &&
+          !(enrollmentByUser[academyUser.id] ?? []).some(
+            (enrollment) => enrollment.status === "approved",
+          ),
+      ).length,
+    [users, enrollmentByUser],
+  );
+
   const filteredUsers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
@@ -185,12 +205,20 @@ export function AdminUsersPage() {
           : academyUser.role === "student";
       const matchesStatus =
         statusFilter === "all" || academyUser.status === statusFilter;
+      // "Sin curso asignado" means no *approved* enrollment: a pending or
+      // rejected request still leaves the student waiting to be assigned,
+      // which is exactly who this filter is meant to surface.
+      const hasApprovedEnrollment = userEnrollments.some(
+        (enrollment) => enrollment.status === "approved",
+      );
       const matchesCourse =
         selectedCourseId === "all" ||
-        userEnrollments.some(
-          (enrollment) =>
-            enrollment.course_editions?.course_id === selectedCourseId,
-        );
+        (selectedCourseId === UNASSIGNED_FILTER
+          ? academyUser.role === "student" && !hasApprovedEnrollment
+          : userEnrollments.some(
+              (enrollment) =>
+                enrollment.course_editions?.course_id === selectedCourseId,
+            ));
 
       return matchesSearch && matchesRole && matchesStatus && matchesCourse;
     });
@@ -340,6 +368,9 @@ export function AdminUsersPage() {
               value={selectedCourseId}
             >
               <option value="all">Todos los cursos</option>
+              <option value={UNASSIGNED_FILTER}>
+                Sin curso asignado{unassignedStudentCount > 0 ? ` (${unassignedStudentCount})` : ""}
+              </option>
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.title}
