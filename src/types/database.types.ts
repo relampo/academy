@@ -961,6 +961,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: string
       }
+      get_leaderboard_alias_pool: {
+        Args: never
+        Returns: string[]
+      }
       get_leaderboard_level: {
         Args: { score_ratio: number }
         Returns: string

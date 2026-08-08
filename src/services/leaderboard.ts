@@ -25,6 +25,16 @@ export async function getCourseLeaderboard(courseId: string) {
   return data as LeaderboardEntry[];
 }
 
+export async function getLeaderboardAliasPool() {
+  const { data, error } = await supabase.rpc("get_leaderboard_alias_pool");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as string[];
+}
+
 export async function updateLeaderboardProfile(
   userId: string,
   input: Pick<

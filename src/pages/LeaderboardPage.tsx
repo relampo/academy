@@ -47,7 +47,7 @@ import {
   type AvatarPreset,
   formatPoints,
   getAvatarPreset,
-  getGeneratedAlias,
+  getGeneratedAvatarPreset,
   getLevelClass,
   leaderboardLevels,
 } from "../lib/leaderboardIdentity";
@@ -57,6 +57,7 @@ import {
 } from "../services/courses";
 import {
   getCourseLeaderboard,
+  getLeaderboardAliasPool,
   updateLeaderboardProfile,
   type LeaderboardEntry,
   type LeaderboardVisibility,
@@ -348,8 +349,14 @@ function getSavedNameChangeCount(savedValue: string | null | undefined) {
   }
 }
 
+// Leaderboard rows read "Alias · Nombre Real" when the student opted into
+// showing their name, so the alias is everything before the separator.
+function normalizeAliasPart(value: string | null | undefined) {
+  return value?.split("·")[0]?.trim() || "";
+}
+
 function normalizeGeneratedName(value: string) {
-  return value.split("·")[0]?.trim().toLowerCase() || "";
+  return normalizeAliasPart(value).toLowerCase();
 }
 
 export function LeaderboardPage() {
@@ -368,6 +375,7 @@ export function LeaderboardPage() {
     getShapeKey(avatarPresets[0].radius, avatarPresets[0].clipPath),
   );
   const [nameChangeCount, setNameChangeCount] = useState(0);
+  const [aliasPool, setAliasPool] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -459,13 +467,25 @@ export function LeaderboardPage() {
   }, [selectedCourseId]);
 
   useEffect(() => {
+    const loadAliasPool = async () => {
+      try {
+        setAliasPool(await getLeaderboardAliasPool());
+      } catch {
+        // The pool only powers the "generate another name" button. If it fails
+        // to load the rest of the page still works, so stay quiet here.
+        setAliasPool([]);
+      }
+    };
+
+    void loadAliasPool();
+  }, []);
+
+  useEffect(() => {
     if (!profile) {
       return;
     }
 
-    setLeaderboardName(
-      profile.leaderboard_name || getGeneratedAlias(profile.id),
-    );
+    setLeaderboardName(profile.leaderboard_name || "");
     setLeaderboardVisibility(
       profile.leaderboard_visibility === "full_name" ? "full_name" : "alias",
     );
@@ -487,7 +507,7 @@ export function LeaderboardPage() {
       return;
     }
 
-    setLeaderboardName(currentEntry.display_name.split("·")[0]?.trim() || "");
+    setLeaderboardName(normalizeAliasPart(currentEntry.display_name));
   }, [currentEntry?.display_name, profile?.leaderboard_name]);
 
   const currentRank =
@@ -509,7 +529,10 @@ export function LeaderboardPage() {
     [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
     profile?.first_name ||
     "";
-  const previewAlias = leaderboardName || getGeneratedAlias(user?.id || "relampo");
+  // The leaderboard row is the source of truth for the alias, so the profile
+  // card can never drift from what the ranking shows.
+  const serverAlias = normalizeAliasPart(currentEntry?.display_name);
+  const previewAlias = leaderboardName || serverAlias || "Asignando nombre...";
   const previewDisplayName =
     leaderboardVisibility === "full_name" && fullProfileName
       ? `${previewAlias} · ${fullProfileName}`
@@ -540,23 +563,26 @@ export function LeaderboardPage() {
       return;
     }
 
-    const availablePresets = avatarPresets.filter(
-      (preset) => !usedNames.has(preset.label.toLowerCase()),
+    const availableAliases = aliasPool.filter(
+      (alias) => !usedNames.has(alias.toLowerCase()),
     );
 
-    if (availablePresets.length === 0) {
+    if (availableAliases.length === 0) {
       setMessage(null);
       setError("No hay nombres generados disponibles para este curso.");
       return;
     }
 
+    const alias =
+      availableAliases[Math.floor(Math.random() * availableAliases.length)];
     const preset =
-      availablePresets[Math.floor(Math.random() * availablePresets.length)];
+      avatarPresets.find((candidate) => candidate.label === alias) ||
+      getGeneratedAvatarPreset(alias);
 
     setAvatarPresetLabel(preset.label);
     setAvatarColor(preset.background);
     setAvatarShapeKey(getShapeKey(preset.radius, preset.clipPath));
-    setLeaderboardName(preset.label);
+    setLeaderboardName(alias);
     setNameChangeCount((current) => Math.min(2, current + 1));
     setError(null);
     setMessage(
@@ -587,7 +613,7 @@ export function LeaderboardPage() {
       }
 
       await updateLeaderboardProfile(user.id, {
-        leaderboard_name: leaderboardName || getGeneratedAlias(user.id),
+        leaderboard_name: leaderboardName || null,
         leaderboard_visibility: leaderboardVisibility,
         avatar_url: JSON.stringify({
           background: selectedAvatarPreset.background,
