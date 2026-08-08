@@ -1,9 +1,18 @@
-import { useState, type FormEvent } from "react";
-import { MessageCircle, MessagesSquare } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { Crown, MessageCircle, MessagesSquare } from "lucide-react";
+import { AvatarEmblem } from "../components/AvatarEmblem";
 import { CommunityMap, type CountryCount } from "../components/CommunityMap";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
 import { countryPickerOptions } from "../lib/countries";
+import {
+  formatPoints,
+  getAvatarPreset,
+} from "../lib/leaderboardIdentity";
+import {
+  getPublicLeaderboardPodium,
+  type PodiumEntry,
+} from "../services/leaderboard";
 import { sendPasswordReset } from "../services/users";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -157,6 +166,21 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
+  const [podium, setPodium] = useState<PodiumEntry[]>([]);
+
+  useEffect(() => {
+    const loadPodium = async () => {
+      try {
+        setPodium(await getPublicLeaderboardPodium());
+      } catch {
+        // The podium is a flourish on a public page: if it cannot load, the
+        // section hides itself rather than showing an error to a visitor.
+        setPodium([]);
+      }
+    };
+
+    void loadPodium();
+  }, []);
 
   const isSignUp = mode === "sign-up";
 
@@ -373,6 +397,45 @@ export function LoginPage() {
           </form>
         </section>
       </section>
+
+      {podium.length > 0 ? (
+        <section className="landing-section podium-section" aria-labelledby="podium-title">
+          <div className="section-heading">
+            <p className="eyebrow">Tabla de posiciones</p>
+            <h2 id="podium-title">Los tres primeros lugares</h2>
+            <p>
+              Quienes más avanzan en asistencia, quizzes y tareas revisadas.
+              Compiten bajo su alias.
+            </p>
+          </div>
+
+          <ol className="podium-grid">
+            {podium.map((entry) => (
+              <li
+                className={`podium-card is-position-${entry.podium_position}`}
+                key={entry.podium_position}
+              >
+                <span className="podium-rank">
+                  {entry.podium_position === 1 ? (
+                    <Crown aria-hidden="true" size={15} strokeWidth={2.4} />
+                  ) : null}
+                  {entry.podium_position}
+                </span>
+                <AvatarEmblem
+                  className="podium-avatar"
+                  preset={getAvatarPreset(entry.avatar_url, entry.alias)}
+                  size={26}
+                />
+                <strong>{entry.alias}</strong>
+                <span className="podium-score">
+                  {formatPoints(entry.total_score)}
+                  <small>/{formatPoints(entry.max_score)} pts</small>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       <section className="landing-section communication-section" aria-labelledby="communication-title">
         <div className="section-heading">

@@ -965,6 +965,17 @@ export type Database = {
         Args: never
         Returns: string[]
       }
+      get_public_leaderboard_podium: {
+        Args: never
+        Returns: {
+          podium_position: number
+          alias: string
+          avatar_url: string | null
+          total_score: number
+          max_score: number
+          level: string
+        }[]
+      }
       get_leaderboard_level: {
         Args: { score_ratio: number }
         Returns: string

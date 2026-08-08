@@ -1,36 +1,8 @@
 import {
-  Activity,
-  Asterisk,
-  Atom,
-  AudioWaveform,
   Bolt,
-  CircleDot,
-  CloudFog,
-  CloudHail,
-  CloudLightning,
-  CloudRain,
-  CloudRainWind,
-  CloudSun,
-  CloudSunRain,
-  Droplets,
-  Flame,
-  Leaf,
-  Magnet,
-  Moon,
-  Mountain,
-  MountainSnow,
-  Orbit,
-  Radar,
-  Satellite,
   RefreshCw,
-  Snowflake,
   Sparkles,
-  Star,
-  Sun,
-  Tornado,
   Trophy,
-  Waves,
-  Wind,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -41,6 +13,7 @@ import {
   type CSSProperties,
   type FormEvent,
 } from "react";
+import { AvatarEmblem } from "../components/AvatarEmblem";
 import { useAuth } from "../hooks/useAuth";
 import {
   avatarPresets,
@@ -80,72 +53,6 @@ const defaultLeaderboardCourse: LeaderboardCourseOption = {
   course_id: "0ac11057-0025-485d-abef-265af3c21a62",
   title: "Grupo de Estudio: Performance Testing LATAM",
 };
-
-const avatarIcons: Record<string, LucideIcon> = {
-  activity: Activity,
-  asterisk: Asterisk,
-  atom: Atom,
-  audioWaveform: AudioWaveform,
-  bolt: Bolt,
-  circleDot: CircleDot,
-  cloudFog: CloudFog,
-  cloudHail: CloudHail,
-  cloudLightning: CloudLightning,
-  cloudRain: CloudRain,
-  cloudRainWind: CloudRainWind,
-  cloudSun: CloudSun,
-  cloudSunRain: CloudSunRain,
-  droplets: Droplets,
-  flame: Flame,
-  leaf: Leaf,
-  magnet: Magnet,
-  moon: Moon,
-  mountain: Mountain,
-  mountainSnow: MountainSnow,
-  orbit: Orbit,
-  radar: Radar,
-  satellite: Satellite,
-  snowflake: Snowflake,
-  sparkles: Sparkles,
-  star: Star,
-  sun: Sun,
-  tornado: Tornado,
-  waves: Waves,
-  wind: Wind,
-  zap: Zap,
-};
-
-function getAvatarIcon(preset: AvatarPreset) {
-  return avatarIcons[preset.iconKey] ?? Sparkles;
-}
-
-function AvatarEmblem({
-  className = "",
-  preset,
-  size = 18,
-}: {
-  className?: string;
-  preset: AvatarPreset;
-  size?: number;
-}) {
-  const Icon = getAvatarIcon(preset);
-
-  return (
-    <span
-      className={`avatar-emblem ${className}`}
-      style={
-        {
-          "--avatar-color": preset.background,
-          "--avatar-radius": preset.radius,
-          "--avatar-clip": preset.clipPath,
-        } as CSSProperties
-      }
-      title={preset.label}
-    >
-      <Icon aria-hidden="true" size={size} strokeWidth={2.35} />
-    </span>
-  );
-}
 
 const avatarShapeOptions = [
   { key: "orb", label: "Órbita", radius: "999px", clipPath: "none" },

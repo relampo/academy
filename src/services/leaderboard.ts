@@ -25,6 +25,27 @@ export async function getCourseLeaderboard(courseId: string) {
   return data as LeaderboardEntry[];
 }
 
+export type PodiumEntry = {
+  podium_position: number;
+  alias: string;
+  avatar_url: string | null;
+  total_score: number;
+  max_score: number;
+  level: string;
+};
+
+// Public: callable without a session, and returns aliases only — never a
+// student's real name, whatever their leaderboard visibility is set to.
+export async function getPublicLeaderboardPodium() {
+  const { data, error } = await supabase.rpc("get_public_leaderboard_podium");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as PodiumEntry[];
+}
+
 export async function getLeaderboardAliasPool() {
   const { data, error } = await supabase.rpc("get_leaderboard_alias_pool");
 
