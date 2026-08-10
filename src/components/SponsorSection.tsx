@@ -1,4 +1,5 @@
 import performance360LogoUrl from "../assets/360Performance.png";
+import ptuLogoUrl from "../assets/PTU.png";
 import relampoLogoUrl from "../assets/relampo-sponsor-logo.png";
 import sqaAdvisoryLogoUrl from "../assets/sqaadvisory.png";
 
@@ -19,6 +20,7 @@ const supporters: Supporter[] = [
   { name: "Relampo", logoUrl: relampoLogoUrl, href: "https://relampo.com/" },
   { name: "SQAadvisory", logoUrl: sqaAdvisoryLogoUrl },
   { name: "Performance 360 LATAM", logoUrl: performance360LogoUrl },
+  { name: "Performance Testing United", logoUrl: ptuLogoUrl },
 ];
 
 function SupporterCard({ supporter }: { supporter: Supporter }) {
