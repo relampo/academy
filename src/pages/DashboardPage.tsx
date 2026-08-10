@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CommunityMap, type CountryCount } from "../components/CommunityMap";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
-import { getCountryFlag, getCountryName } from "../lib/countries";
+import { listCommunityCountries } from "../lib/communityCountries";
 import {
   listEnrollmentReviews,
   listApprovedCourseStudents,
@@ -22,7 +22,6 @@ import {
   getCourseLeaderboard,
   type LeaderboardEntry,
 } from "../services/leaderboard";
-import { listStudentCountryCounts } from "../services/users";
 import { formatPoints } from "../lib/leaderboardIdentity";
 
 const attendancePoints = 10;
@@ -411,15 +410,7 @@ export function DashboardPage() {
       }
 
       try {
-        const counts = await listStudentCountryCounts();
-        setCountryCounts(
-          counts.map((record) => ({
-            code: record.country,
-            name: getCountryName(record.country),
-            flag: getCountryFlag(record.country),
-            count: record.student_count,
-          })),
-        );
+        setCountryCounts(await listCommunityCountries());
       } catch {
         setCountryCounts([]);
       }

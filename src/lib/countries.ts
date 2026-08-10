@@ -209,6 +209,82 @@ export function getCountryByCode(code: string | null | undefined) {
   return countryOptions.find((country) => country.code === code);
 }
 
+// profiles.country holds an ISO code when it came from the signup select, but
+// free text when it was imported: "Peru", "Perú", "Colombia - Bogotá",
+// "Buenos Aires". Resolving it here means both maps agree without the database
+// having to be migrated first.
+const countryAliases: Record<string, string> = {
+  argentina: "AR",
+  "buenos aires": "AR",
+  bolivia: "BO",
+  brasil: "BR",
+  brazil: "BR",
+  canada: "CA",
+  chile: "CL",
+  colombia: "CO",
+  colombo: "CO",
+  "costa rica": "CR",
+  cuba: "CU",
+  ecuador: "EC",
+  espana: "ES",
+  spain: "ES",
+  "estados unidos": "US",
+  "united states": "US",
+  eeuu: "US",
+  usa: "US",
+  guatemala: "GT",
+  honduras: "HN",
+  mexico: "MX",
+  "ciudad de mexico": "MX",
+  cdmx: "MX",
+  nicaragua: "NI",
+  panama: "PA",
+  panana: "PA",
+  paraguay: "PY",
+  peru: "PE",
+  "republica dominicana": "DO",
+  "el salvador": "SV",
+  uruguay: "UY",
+  venezuela: "VE",
+};
+
+export function normalizeCountryCode(raw: string | null | undefined) {
+  if (!raw) {
+    return null;
+  }
+
+  const value = raw
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+  if (!value) {
+    return null;
+  }
+
+  if (/^[a-z]{2}$/.test(value)) {
+    return value.toUpperCase();
+  }
+
+  if (countryAliases[value]) {
+    return countryAliases[value];
+  }
+
+  // "Colombia - Bogotá", "México, Querétaro": the country leads and a region
+  // follows. Requiring a separator keeps names like Guinea-Bissau intact.
+  const prefixMatch = Object.keys(countryAliases)
+    .filter((alias) =>
+      [" ", ",", "-"].some((separator) =>
+        value.startsWith(`${alias}${separator}`),
+      ),
+    )
+    .sort((first, second) => second.length - first.length)[0];
+
+  return prefixMatch ? countryAliases[prefixMatch] : null;
+}
+
 // countryOptions carries English names. Rather than translate two hundred of
 // them by hand, let the platform do it: Intl knows every region name in
 // Spanish and stays correct as country names change.

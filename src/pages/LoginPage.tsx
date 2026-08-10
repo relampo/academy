@@ -4,11 +4,8 @@ import { AvatarEmblem } from "../components/AvatarEmblem";
 import { CommunityMap, type CountryCount } from "../components/CommunityMap";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
-import {
-  countryPickerOptions,
-  getCountryFlag,
-  getCountryName,
-} from "../lib/countries";
+import { listCommunityCountries } from "../lib/communityCountries";
+import { countryPickerOptions } from "../lib/countries";
 import {
   formatPoints,
   getAvatarPreset,
@@ -17,10 +14,7 @@ import {
   getPublicLeaderboardPodium,
   type PodiumEntry,
 } from "../services/leaderboard";
-import {
-  listStudentCountryCounts,
-  sendPasswordReset,
-} from "../services/users";
+import { sendPasswordReset } from "../services/users";
 
 type AuthMode = "sign-in" | "sign-up";
 
@@ -160,15 +154,7 @@ export function LoginPage() {
     // Same source as the map inside the app, so the two can never disagree.
     const loadCountryCounts = async () => {
       try {
-        const counts = await listStudentCountryCounts();
-        setCommunityCountries(
-          counts.map((record) => ({
-            code: record.country,
-            name: getCountryName(record.country),
-            flag: getCountryFlag(record.country),
-            count: record.student_count,
-          })),
-        );
+        setCommunityCountries(await listCommunityCountries());
       } catch {
         setCommunityCountries([]);
       }
