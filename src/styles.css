@@ -6619,6 +6619,45 @@ button,
   outline: none;
 }
 
+/* Supporting companies are a credit, not a destination: no link, so no hover
+   affordance that would suggest one. */
+.sponsor-card.is-static,
+.sponsor-card.is-static:hover {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.62);
+  transform: none;
+  cursor: default;
+}
+
+.sponsor-subheader {
+  margin-top: 4px;
+}
+
+.sponsor-subheader h3 {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.sponsor-list-supporters {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 240px));
+}
+
+.sponsor-list-supporters .sponsor-card {
+  min-height: 92px;
+}
+
+.sponsor-list-supporters .sponsor-logo-frame {
+  min-height: 74px;
+}
+
+/* Supporter logos are mostly light wordmarks on white, so give them a light
+   plate instead of the dark one the sponsor card uses. */
+.sponsor-list-supporters .sponsor-logo-frame {
+  background: rgba(248, 250, 252, 0.94);
+}
+
 .sponsor-logo-frame {
   display: grid;
   place-items: center;
