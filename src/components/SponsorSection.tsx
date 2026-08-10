@@ -9,18 +9,14 @@ type SponsorSectionProps = {
 type Supporter = {
   name: string;
   logoUrl: string;
-  // Sponsors link out; supporting companies are shown as a credit only, so an
-  // entry without href renders as a plain card with no link behaviour.
+  // Entries without href render as a plain card: a credit, not a destination.
   href?: string;
 };
 
-const sponsors: Supporter[] = [
-  { name: "Relampo", logoUrl: relampoLogoUrl, href: "https://relampo.com/" },
-];
-
-// Companies backing the academy, credited without a link. To add one: drop the
-// image in src/assets, import it at the top, and add a line here.
+// One list, one level. To add a company: drop the image in src/assets, import
+// it above, and add a line here.
 const supporters: Supporter[] = [
+  { name: "Relampo", logoUrl: relampoLogoUrl, href: "https://relampo.com/" },
   { name: "SQAadvisory", logoUrl: sqaAdvisoryLogoUrl },
   { name: "Performance 360 LATAM", logoUrl: performance360LogoUrl },
 ];
@@ -60,23 +56,10 @@ export function SponsorSection({ compact = false }: SponsorSectionProps) {
       </div>
 
       <div className="sponsor-list">
-        {sponsors.map((sponsor) => (
-          <SupporterCard key={sponsor.name} supporter={sponsor} />
+        {supporters.map((supporter) => (
+          <SupporterCard key={supporter.name} supporter={supporter} />
         ))}
       </div>
-
-      {supporters.length > 0 ? (
-        <>
-          <div className="sponsor-section-header sponsor-subheader">
-            <h3>Con el apoyo de</h3>
-          </div>
-          <div className="sponsor-list sponsor-list-supporters">
-            {supporters.map((supporter) => (
-              <SupporterCard key={supporter.name} supporter={supporter} />
-            ))}
-          </div>
-        </>
-      ) : null}
 
       <p className="sponsor-contact">
         ¿Interesado en sponsorizar? Escríbenos a{" "}

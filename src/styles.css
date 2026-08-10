@@ -6585,7 +6585,8 @@ button,
 
 .sponsor-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 320px));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  align-items: stretch;
   gap: 12px;
 }
 
@@ -6598,7 +6599,7 @@ button,
   grid-template-columns: minmax(0, 1fr);
   justify-items: start;
   gap: 10px;
-  min-height: 112px;
+  min-height: 96px;
   padding: 12px;
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 8px;
@@ -6629,54 +6630,22 @@ button,
   cursor: default;
 }
 
-.sponsor-subheader {
-  margin-top: 4px;
-}
-
-.sponsor-subheader h3 {
-  margin: 0;
-  color: #cbd5e1;
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.sponsor-list-supporters {
-  grid-template-columns: repeat(auto-fit, minmax(160px, 240px));
-}
-
-.sponsor-list-supporters .sponsor-card {
-  min-height: 92px;
-}
-
-.sponsor-list-supporters .sponsor-logo-frame {
-  min-height: 74px;
-}
-
-/* Supplied logos vary from wide wordmarks to square marks padded with white.
-   Capping the height keeps a square one from stretching its card to twice the
-   height of the others. */
-.sponsor-list-supporters .sponsor-logo {
+/* Logos are supplied at wildly different aspect ratios, from wide wordmarks to
+   square marks. Capping the height keeps every card the same size. */
+.sponsor-logo {
   width: auto;
   max-width: 100%;
-  max-height: 64px;
-}
-
-/* Supporter logos are mostly light wordmarks on white, so give them a light
-   plate instead of the dark one the sponsor card uses. */
-.sponsor-list-supporters .sponsor-logo-frame {
-  background: rgba(248, 250, 252, 0.94);
+  max-height: 62px;
 }
 
 .sponsor-logo-frame {
   display: grid;
   place-items: center;
   width: 100%;
-  min-height: 94px;
+  min-height: 78px;
   padding: 12px;
   border-radius: 8px;
-  background:
-    radial-gradient(circle at 18% 20%, rgba(250, 204, 21, 0.1), transparent 34%),
-    rgba(15, 23, 42, 0.72);
+  background: rgba(248, 250, 252, 0.94);
 }
 
 .sponsor-card img {
@@ -7750,13 +7719,7 @@ button,
 }
 
 .sponsors-landing-section .sponsor-list {
-  grid-template-columns: minmax(0, 320px);
-}
-
-/* Supporters are a row of credits, not one headline sponsor, so they keep the
-   auto-fit track the base rule gives them. */
-.sponsors-landing-section .sponsor-list-supporters {
-  grid-template-columns: repeat(auto-fit, minmax(160px, 240px));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
 
 @media (max-width: 1020px) {
