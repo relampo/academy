@@ -1,4 +1,6 @@
+import performance360LogoUrl from "../assets/360Performance.jpeg";
 import relampoLogoUrl from "../assets/relampo-sponsor-logo.png";
+import sqaAdvisoryLogoUrl from "../assets/sqaadvisory.png";
 
 type SponsorSectionProps = {
   compact?: boolean;
@@ -18,7 +20,10 @@ const sponsors: Supporter[] = [
 
 // Companies backing the academy, credited without a link. To add one: drop the
 // image in src/assets, import it at the top, and add a line here.
-const supporters: Supporter[] = [];
+const supporters: Supporter[] = [
+  { name: "SQAadvisory", logoUrl: sqaAdvisoryLogoUrl },
+  { name: "Performance 360 LATAM", logoUrl: performance360LogoUrl },
+];
 
 function SupporterCard({ supporter }: { supporter: Supporter }) {
   const logo = (

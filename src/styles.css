@@ -6652,6 +6652,15 @@ button,
   min-height: 74px;
 }
 
+/* Supplied logos vary from wide wordmarks to square marks padded with white.
+   Capping the height keeps a square one from stretching its card to twice the
+   height of the others. */
+.sponsor-list-supporters .sponsor-logo {
+  width: auto;
+  max-width: 100%;
+  max-height: 64px;
+}
+
 /* Supporter logos are mostly light wordmarks on white, so give them a light
    plate instead of the dark one the sponsor card uses. */
 .sponsor-list-supporters .sponsor-logo-frame {
@@ -7742,6 +7751,12 @@ button,
 
 .sponsors-landing-section .sponsor-list {
   grid-template-columns: minmax(0, 320px);
+}
+
+/* Supporters are a row of credits, not one headline sponsor, so they keep the
+   auto-fit track the base rule gives them. */
+.sponsors-landing-section .sponsor-list-supporters {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 240px));
 }
 
 @media (max-width: 1020px) {
