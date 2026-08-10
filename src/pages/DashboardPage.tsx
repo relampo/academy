@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { CommunityMap, type CountryCount } from "../components/CommunityMap";
+import { CommunityMap } from "../components/CommunityMap";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
-import { listCommunityCountries } from "../lib/communityCountries";
+import { communityCountries } from "../lib/communityCountries";
 import {
   listEnrollmentReviews,
   listApprovedCourseStudents,
@@ -100,7 +100,6 @@ export function DashboardPage() {
   const [instructorSummaries, setInstructorSummaries] = useState<
     InstructorCourseSummary[]
   >([]);
-  const [countryCounts, setCountryCounts] = useState<CountryCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const name = profile?.first_name || profile?.display_name || "Relampo";
@@ -402,23 +401,6 @@ export function DashboardPage() {
     void loadLeaderboard();
   }, [selectedCourseId]);
 
-  useEffect(() => {
-    const loadCountryCounts = async () => {
-      if (!user) {
-        setCountryCounts([]);
-        return;
-      }
-
-      try {
-        setCountryCounts(await listCommunityCountries());
-      } catch {
-        setCountryCounts([]);
-      }
-    };
-
-    void loadCountryCounts();
-  }, [user]);
-
   const currentEntry = useMemo(
     () => leaderboard.find((entry) => entry.student_id === user?.id),
     [leaderboard, user?.id],
@@ -675,7 +657,7 @@ export function DashboardPage() {
 
         <aside className="dashboard-side-column">
           <SponsorSection />
-          <CommunityMap countries={countryCounts} />
+          <CommunityMap countries={communityCountries} />
         </aside>
       </div>
     </section>

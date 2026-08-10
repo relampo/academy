@@ -1,10 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Crown, MessageCircle, MessagesSquare } from "lucide-react";
 import { AvatarEmblem } from "../components/AvatarEmblem";
-import { CommunityMap, type CountryCount } from "../components/CommunityMap";
+import { CommunityMap } from "../components/CommunityMap";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
-import { listCommunityCountries } from "../lib/communityCountries";
+import { communityCountries } from "../lib/communityCountries";
 import { countryPickerOptions } from "../lib/countries";
 import {
   formatPoints,
@@ -148,21 +148,6 @@ export function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [podium, setPodium] = useState<PodiumEntry[]>([]);
-  const [communityCountries, setCommunityCountries] = useState<CountryCount[]>([]);
-
-  useEffect(() => {
-    // Same source as the map inside the app, so the two can never disagree.
-    const loadCountryCounts = async () => {
-      try {
-        setCommunityCountries(await listCommunityCountries());
-      } catch {
-        setCommunityCountries([]);
-      }
-    };
-
-    void loadCountryCounts();
-  }, []);
-
   useEffect(() => {
     const loadPodium = async () => {
       try {
