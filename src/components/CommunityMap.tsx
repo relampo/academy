@@ -32,10 +32,10 @@ type CommunityMapProps = {
 export function CommunityMap({
   countries,
   className = "",
-  title = "Estudiantes por país",
+  title = "Inscritos por país",
   eyebrow = "Comunidad LATAM",
   totalLabel = "Inscritos en la Comunidad",
-  listLimit = 6,
+  listLimit = Number.POSITIVE_INFINITY,
   showExpand = true,
   showCredit = false,
   showList = true,
@@ -79,14 +79,14 @@ export function CommunityMap({
   const renderMap = (isModal = false) => (
     <div
       className={`world-map${isModal ? " world-map-expanded" : ""}`}
-      aria-label="Mapa de estudiantes por país"
+      aria-label="Mapa de inscritos por país"
     >
       <svg viewBox={worldMap.viewBox} role="img" aria-label={worldMap.label}>
         {worldMap.locations.map((location: SvgMapLocation) => {
           const country = countByCode.get(location.id);
           const studentCount = country?.count ?? 0;
           const label = `${country?.flag ? `${country.flag} ` : ""}${country?.name ?? location.name}: ${studentCount} ${
-            studentCount === 1 ? "miembro" : "miembros"
+            studentCount === 1 ? "inscrito" : "inscritos"
           }`;
 
           return (

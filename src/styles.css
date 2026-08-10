@@ -587,7 +587,12 @@ p {
   flex-direction: row;
 }
 
+/* The count and its label are separate elements, so without an explicit gap
+   they render glued together as "185Inscritos". */
 .community-panel .compact-header > strong {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
   border: 1px solid #d9e0ea;
   border-radius: 999px;
   background: #f8fafc;
@@ -740,21 +745,24 @@ p {
 .country-count-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
+/* All eighteen countries sit under the map, so the chips stay compact enough to
+   wrap into a couple of rows instead of a wall. */
 .country-count-list span {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 30px;
+  gap: 5px;
+  min-height: 26px;
   border: 1px solid #e1e7f0;
   border-radius: 999px;
   background: #f8fafc;
   color: #526176;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 850;
-  padding: 0 10px;
+  padding: 0 9px;
+  white-space: nowrap;
 }
 
 .country-count-list strong {

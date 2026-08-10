@@ -482,7 +482,6 @@ export function LoginPage() {
             eyebrow="Mapa de la comunidad"
             showCredit={false}
             showExpand
-            showList={false}
             showTotal
             title="Comunidad en crecimiento"
             variant="hero"
