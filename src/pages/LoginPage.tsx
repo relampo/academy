@@ -4,7 +4,11 @@ import { AvatarEmblem } from "../components/AvatarEmblem";
 import { CommunityMap, type CountryCount } from "../components/CommunityMap";
 import { SponsorSection } from "../components/SponsorSection";
 import { useAuth } from "../hooks/useAuth";
-import { countryPickerOptions } from "../lib/countries";
+import {
+  countryPickerOptions,
+  getCountryFlag,
+  getCountryName,
+} from "../lib/countries";
 import {
   formatPoints,
   getAvatarPreset,
@@ -13,30 +17,13 @@ import {
   getPublicLeaderboardPodium,
   type PodiumEntry,
 } from "../services/leaderboard";
-import { sendPasswordReset } from "../services/users";
+import {
+  listStudentCountryCounts,
+  sendPasswordReset,
+} from "../services/users";
 
 type AuthMode = "sign-in" | "sign-up";
 
-const communityCountries: CountryCount[] = [
-  { code: "PE", name: "Perú", count: 41, flag: "🇵🇪" },
-  { code: "CO", name: "Colombia", count: 26, flag: "🇨🇴" },
-  { code: "AR", name: "Argentina", count: 24, flag: "🇦🇷" },
-  { code: "MX", name: "México", count: 16, flag: "🇲🇽" },
-  { code: "BO", name: "Bolivia", count: 14, flag: "🇧🇴" },
-  { code: "UY", name: "Uruguay", count: 11, flag: "🇺🇾" },
-  { code: "CL", name: "Chile", count: 9, flag: "🇨🇱" },
-  { code: "PA", name: "Panamá", count: 8, flag: "🇵🇦" },
-  { code: "CR", name: "Costa Rica", count: 4, flag: "🇨🇷" },
-  { code: "ES", name: "España", count: 3, flag: "🇪🇸" },
-  { code: "CU", name: "Cuba", count: 2, flag: "🇨🇺" },
-  { code: "EC", name: "Ecuador", count: 2, flag: "🇪🇨" },
-  { code: "PY", name: "Paraguay", count: 2, flag: "🇵🇾" },
-  { code: "US", name: "Estados Unidos", count: 2, flag: "🇺🇸" },
-  { code: "BR", name: "Brasil", count: 1, flag: "🇧🇷" },
-  { code: "CA", name: "Canadá", count: 1, flag: "🇨🇦" },
-  { code: "NI", name: "Nicaragua", count: 1, flag: "🇳🇮" },
-  { code: "VE", name: "Venezuela", count: 1, flag: "🇻🇪" },
-];
 
 function isExistingAccountError(errorMessage: string) {
   const normalizedMessage = errorMessage.toLowerCase();
@@ -167,6 +154,28 @@ export function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [podium, setPodium] = useState<PodiumEntry[]>([]);
+  const [communityCountries, setCommunityCountries] = useState<CountryCount[]>([]);
+
+  useEffect(() => {
+    // Same source as the map inside the app, so the two can never disagree.
+    const loadCountryCounts = async () => {
+      try {
+        const counts = await listStudentCountryCounts();
+        setCommunityCountries(
+          counts.map((record) => ({
+            code: record.country,
+            name: getCountryName(record.country),
+            flag: getCountryFlag(record.country),
+            count: record.student_count,
+          })),
+        );
+      } catch {
+        setCommunityCountries([]);
+      }
+    };
+
+    void loadCountryCounts();
+  }, []);
 
   useEffect(() => {
     const loadPodium = async () => {
@@ -503,7 +512,7 @@ export function LoginPage() {
             showCredit={false}
             showExpand
             showList={false}
-            showTotal={false}
+            showTotal
             title="Comunidad en crecimiento"
             variant="hero"
           />

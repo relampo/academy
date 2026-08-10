@@ -34,7 +34,7 @@ export function CommunityMap({
   className = "",
   title = "Estudiantes por país",
   eyebrow = "Comunidad LATAM",
-  totalLabel = "miembros",
+  totalLabel = "Inscritos en la Comunidad",
   listLimit = 6,
   showExpand = true,
   showCredit = false,
