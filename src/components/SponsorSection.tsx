@@ -1,4 +1,4 @@
-import performance360LogoUrl from "../assets/360Performance.jpeg";
+import performance360LogoUrl from "../assets/360Performance.png";
 import relampoLogoUrl from "../assets/relampo-sponsor-logo.png";
 import sqaAdvisoryLogoUrl from "../assets/sqaadvisory.png";
 
