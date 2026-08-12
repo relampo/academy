@@ -45,6 +45,10 @@ export type LessonQuizWithQuestions = LessonQuiz & {
   quiz_questions: QuizQuestion[];
 };
 
+type QuizAttemptWithAnswers = QuizAttempt & {
+  quiz_answers?: Pick<QuizAnswer, "id">[];
+};
+
 export type QuizAnswerInput = {
   questionId: string;
   selectedOption: string;
@@ -458,7 +462,10 @@ export async function listQuizAttemptsByQuizIds(
     return [];
   }
 
-  let query = supabase.from("quiz_attempts").select("*").in("quiz_id", quizIds);
+  let query = supabase
+    .from("quiz_attempts")
+    .select("*, quiz_answers(id)")
+    .in("quiz_id", quizIds);
 
   if (studentId) {
     query = query.eq("student_id", studentId);
@@ -470,7 +477,9 @@ export async function listQuizAttemptsByQuizIds(
     throw error;
   }
 
-  return data as QuizAttempt[];
+  return (data as QuizAttemptWithAnswers[])
+    .filter((attempt) => (attempt.quiz_answers?.length ?? 0) === 10)
+    .map(({ quiz_answers: _quizAnswers, ...attempt }) => attempt);
 }
 
 function getQuizPoints(isCorrect: boolean, secondsSpent: number) {

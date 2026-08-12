@@ -163,7 +163,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const [activeQuizLessonId, setActiveQuizLessonId] = useState<string | null>(
     null,
   );
-  const [activeQuizQuestionIndex, setActiveQuizQuestionIndex] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<QuizAnswerInput[]>([]);
   const [selectedQuizOption, setSelectedQuizOption] = useState("");
   const [questionStartedAt, setQuestionStartedAt] = useState<number | null>(null);
@@ -381,10 +380,16 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       return next;
     });
     setActiveQuizLessonId(lessonId);
-    setActiveQuizQuestionIndex(0);
     setQuizAnswers([]);
     setSelectedQuizOption("");
     setQuestionStartedAt(Date.now());
+  };
+
+  const cancelQuiz = () => {
+    setActiveQuizLessonId(null);
+    setQuizAnswers([]);
+    setSelectedQuizOption("");
+    setQuestionStartedAt(null);
   };
 
   const handleQuizAnswer = async (quiz: LessonQuizWithQuestions) => {
@@ -392,7 +397,13 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
       return;
     }
 
+    const activeQuizQuestionIndex = quizAnswers.length;
     const question = quiz.quiz_questions[activeQuizQuestionIndex];
+
+    if (!question) {
+      return;
+    }
+
     const nextAnswers = [
       ...quizAnswers,
       {
@@ -405,7 +416,6 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
 
     if (nextQuestionIndex < quiz.quiz_questions.length) {
       setQuizAnswers(nextAnswers);
-      setActiveQuizQuestionIndex(nextQuestionIndex);
       setSelectedQuizOption("");
       setQuestionStartedAt(Date.now());
       return;
@@ -427,10 +437,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         );
         return [...withoutCurrent, attempt];
       });
-      setActiveQuizLessonId(null);
-      setQuizAnswers([]);
-      setSelectedQuizOption("");
-      setQuestionStartedAt(null);
+      cancelQuiz();
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -961,11 +968,15 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               isQuizReady ? (
                               <div className="student-quiz-runner">
                                 {(() => {
+                                  const activeQuizQuestionIndex = Math.min(
+                                    quizAnswers.length,
+                                    quiz.quiz_questions.length - 1,
+                                  );
                                   const question =
                                     quiz.quiz_questions[activeQuizQuestionIndex];
 
                                   return (
-                                    <>
+                                    <div key={question.id}>
                                       <div className="student-quiz-progress">
                                         <span>
                                           Pregunta {activeQuizQuestionIndex + 1}/
@@ -979,12 +990,12 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                       <div className="student-quiz-options">
                                         {(["a", "b", "c", "d"] as const).map(
                                           (option) => (
-                                            <label key={option}>
+                                            <label key={`${question.id}-${option}`}>
                                               <input
                                                 checked={
                                                   selectedQuizOption === option
                                                 }
-                                                name={`quiz-${quiz.id}`}
+                                                name={`quiz-${quiz.id}-${question.id}`}
                                                 type="radio"
                                                 value={option}
                                                 onChange={(event) =>
@@ -1021,14 +1032,12 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                         </button>
                                         <button
                                           type="button"
-                                          onClick={() =>
-                                            setActiveQuizLessonId(null)
-                                          }
+                                          onClick={cancelQuiz}
                                         >
                                           Cancelar
                                         </button>
                                       </div>
-                                    </>
+                                    </div>
                                   );
                                 })()}
                               </div>
