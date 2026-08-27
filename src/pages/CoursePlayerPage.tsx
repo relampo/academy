@@ -449,6 +449,13 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
     }
   };
 
+  // Depend on the id, not on the user object. Supabase refreshes the token when
+  // the tab regains focus, which hands useAuth a brand new session object; with
+  // the object as a dependency loadCourse was recreated on every refresh, the
+  // effect below re-ran with resetCollapsed and every module closed on the
+  // student mid-lesson.
+  const userId = user?.id ?? null;
+
   const loadCourse = useCallback(
     async (options: { resetCollapsed: boolean; showLoading: boolean }) => {
       setError(null);
@@ -462,23 +469,23 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
           getCourseWithEditions(courseId),
           listCourseContent(courseId),
         ]);
-        const nextAttendance = user
-          ? await listLessonAttendance(courseId, user.id).catch(() => [])
+        const nextAttendance = userId
+          ? await listLessonAttendance(courseId, userId).catch(() => [])
           : [];
         const nextAssignments = await listLessonAssignments(courseId).catch(
           () => [],
         );
         const nextQuizzes = await listLessonQuizzes(courseId).catch(() => []);
-        const nextAssignmentSubmissions = user
+        const nextAssignmentSubmissions = userId
           ? await listAssignmentSubmissionsByAssignmentIds(
               nextAssignments.map((assignment) => assignment.id),
-              user.id,
+              userId,
             ).catch(() => [])
           : [];
-        const nextQuizAttempts = user
+        const nextQuizAttempts = userId
           ? await listQuizAttemptsByQuizIds(
               nextQuizzes.map((quiz) => quiz.id),
-              user.id,
+              userId,
             ).catch(() => [])
           : [];
 
@@ -512,7 +519,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         }
       }
     },
-    [courseId, user],
+    [courseId, userId],
   );
 
   useEffect(() => {
