@@ -2436,6 +2436,81 @@ p {
   font-size: 0.86rem;
 }
 
+/* Post-quiz review: every question, marked right or wrong. */
+.quiz-review {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quiz-review-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-left: 3px solid #37a267;
+  border-radius: 8px;
+  background: rgba(8, 13, 21, 0.42);
+  padding: 10px 12px;
+}
+
+.quiz-review-item.is-wrong {
+  border-left-color: #e05656;
+}
+
+.quiz-review-mark {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(55, 162, 103, 0.18);
+  color: #4ade80;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.quiz-review-item.is-wrong .quiz-review-mark {
+  background: rgba(224, 86, 86, 0.18);
+  color: #fca5a5;
+}
+
+.quiz-review-item > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.quiz-review-item strong {
+  color: #f8fafc;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.quiz-review-answer,
+.quiz-review-correct,
+.quiz-review-meta {
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.quiz-review-answer {
+  color: #cbd5e1;
+}
+
+.quiz-review-correct {
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.quiz-review-meta {
+  color: #9aa8ba;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
 .student-quiz-result {
   display: inline-flex;
   align-items: center;

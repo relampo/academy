@@ -21,6 +21,7 @@ import {
   listLessonQuizzes,
   listAssignmentSubmissionsByAssignmentIds,
   listCourseContent,
+  listQuizAnswersByAttemptIds,
   listQuizAttemptsByQuizIds,
   submitAssignment,
   submitQuizAttempt,
@@ -31,6 +32,7 @@ import {
   type Resource,
   type ModuleWithLessons,
   type QuizAnswerInput,
+  type QuizAnswer,
   type QuizAttempt,
 } from "../services/content";
 import {
@@ -146,6 +148,7 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   >([]);
   const [quizzes, setQuizzes] = useState<LessonQuizWithQuestions[]>([]);
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([]);
+  const [completedQuizAnswers, setCompletedQuizAnswers] = useState<QuizAnswer[]>([]);
   const [collapsedModuleIds, setCollapsedModuleIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -186,6 +189,18 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
   const quizByLesson = new Map(quizzes.map((quiz) => [quiz.lesson_id, quiz]));
   const attemptByQuiz = new Map(
     quizAttempts.map((attempt) => [attempt.quiz_id, attempt]),
+  );
+  // Per-question detail of finished attempts, keyed by attempt so a student can
+  // review which questions they missed.
+  const answersByAttempt = completedQuizAnswers.reduce<Map<string, Map<string, QuizAnswer>>>(
+    (accumulator, answer) => {
+      const forAttempt =
+        accumulator.get(answer.attempt_id) ?? new Map<string, QuizAnswer>();
+      forAttempt.set(answer.question_id, answer);
+      accumulator.set(answer.attempt_id, forAttempt);
+      return accumulator;
+    },
+    new Map(),
   );
 
   const isLessonSystemComplete = (lessonId: string) => {
@@ -496,6 +511,11 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         setAssignmentSubmissions(nextAssignmentSubmissions);
         setQuizzes(nextQuizzes);
         setQuizAttempts(nextQuizAttempts);
+        setCompletedQuizAnswers(
+          await listQuizAnswersByAttemptIds(
+            nextQuizAttempts.map((attempt) => attempt.id),
+          ).catch(() => []),
+        );
 
         if (options.resetCollapsed) {
           setCollapsedModuleIds(new Set(nextModules.map((module) => module.id)));
@@ -962,15 +982,112 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                               </div>
                             </div>
                             {quizAttempt ? (
-                              <div className="student-assignment-meta">
-                                <span className="student-quiz-result">
-                                  Completado
-                                </span>
-                                <span>
-                                  {formatPoints(quizAttempt.total_score)}/
-                                  {quizMaxPoints} pts
-                                </span>
-                              </div>
+                              (() => {
+                                const answers = answersByAttempt.get(
+                                  quizAttempt.id,
+                                );
+                                const correctCount =
+                                  quiz.quiz_questions.filter(
+                                    (question) =>
+                                      answers?.get(question.id)?.is_correct,
+                                  ).length;
+
+                                return (
+                                  <>
+                                    <div className="student-assignment-meta">
+                                      <span className="student-quiz-result">
+                                        Completado
+                                      </span>
+                                      <span>
+                                        {formatPoints(quizAttempt.total_score)}/
+                                        {quizMaxPoints} pts
+                                      </span>
+                                      {answers ? (
+                                        <span>
+                                          {correctCount} de{" "}
+                                          {quiz.quiz_questions.length} correctas
+                                        </span>
+                                      ) : null}
+                                    </div>
+
+                                    {answers ? (
+                                      <ol className="quiz-review">
+                                        {quiz.quiz_questions.map((question) => {
+                                          const answer = answers.get(
+                                            question.id,
+                                          );
+                                          const options: Record<string, string> = {
+                                            a: question.option_a,
+                                            b: question.option_b,
+                                            c: question.option_c,
+                                            d: question.option_d,
+                                          };
+                                          const isCorrect =
+                                            answer?.is_correct ?? false;
+
+                                          return (
+                                            <li
+                                              className={`quiz-review-item ${
+                                                isCorrect
+                                                  ? "is-correct"
+                                                  : "is-wrong"
+                                              }`}
+                                              key={question.id}
+                                            >
+                                              <span
+                                                aria-label={
+                                                  isCorrect
+                                                    ? "Correcta"
+                                                    : "Incorrecta"
+                                                }
+                                                className="quiz-review-mark"
+                                              >
+                                                {isCorrect ? "✓" : "✗"}
+                                              </span>
+                                              <div>
+                                                <strong>
+                                                  {question.question_text}
+                                                </strong>
+                                                <span className="quiz-review-answer">
+                                                  Respondiste:{" "}
+                                                  {answer
+                                                    ? `${answer.selected_option.toUpperCase()}) ${
+                                                        options[
+                                                          answer.selected_option
+                                                        ]
+                                                      }`
+                                                    : "Sin respuesta"}
+                                                </span>
+                                                {!isCorrect ? (
+                                                  <span className="quiz-review-correct">
+                                                    Correcta:{" "}
+                                                    {question.correct_option.toUpperCase()}
+                                                    ){" "}
+                                                    {
+                                                      options[
+                                                        question.correct_option
+                                                      ]
+                                                    }
+                                                  </span>
+                                                ) : null}
+                                                {answer ? (
+                                                  <span className="quiz-review-meta">
+                                                    {answer.seconds_spent}s ·{" "}
+                                                    {formatPoints(
+                                                      answer.points_awarded,
+                                                    )}{" "}
+                                                    pts
+                                                  </span>
+                                                ) : null}
+                                              </div>
+                                            </li>
+                                          );
+                                        })}
+                                      </ol>
+                                    ) : null}
+                                  </>
+                                );
+                              })()
                             ) : activeQuizLessonId === lesson.id &&
                               isQuizReady ? (
                               <div className="student-quiz-runner">

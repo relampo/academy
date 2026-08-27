@@ -482,6 +482,27 @@ export async function listQuizAttemptsByQuizIds(
     .map(({ quiz_answers: _quizAnswers, ...attempt }) => attempt);
 }
 
+// Per-question detail of a finished attempt, for the review a student sees
+// afterwards. Deliberately does not read quiz_questions.correct_option: the
+// quiz allows a single attempt, so revealing the right answer to whoever
+// finished first hands them the solved paper to pass around.
+export async function listQuizAnswersByAttemptIds(attemptIds: string[]) {
+  if (attemptIds.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("quiz_answers")
+    .select("*")
+    .in("attempt_id", attemptIds);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as QuizAnswer[];
+}
+
 function getQuizPoints(isCorrect: boolean, secondsSpent: number) {
   if (!isCorrect) {
     return 0;
