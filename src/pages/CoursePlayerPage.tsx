@@ -452,6 +452,19 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
         );
         return [...withoutCurrent, attempt];
       });
+
+      // The per-question detail powers the review shown right below. Without
+      // this the review only appeared after a page reload, since the answers
+      // are otherwise fetched by loadCourse alone.
+      const savedAnswers = await listQuizAnswersByAttemptIds([
+        attempt.id,
+      ]).catch(() => []);
+
+      setCompletedQuizAnswers((current) => [
+        ...current.filter((answer) => answer.attempt_id !== attempt.id),
+        ...savedAnswers,
+      ]);
+
       cancelQuiz();
     } catch (caughtError) {
       setError(
