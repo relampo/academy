@@ -2320,6 +2320,9 @@ p {
   overflow: hidden;
   margin-top: 2px;
   font-size: 0.86rem;
+  /* Los enunciados traen los pasos en líneas sueltas; respetarlas los deja
+     legibles como lista sin necesidad de marcado. */
+  white-space: pre-line;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
 }
@@ -7353,6 +7356,9 @@ button,
 
   .student-assignment-panel p {
     display: block;
+    /* La regla de arriba pone white-space: normal para el resto de textos;
+       el enunciado necesita conservar sus saltos de línea. */
+    white-space: pre-line;
     -webkit-line-clamp: unset;
   }
 
