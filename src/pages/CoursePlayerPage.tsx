@@ -1120,8 +1120,8 @@ export function CoursePlayerPage({ courseId }: CoursePlayerPageProps) {
                                           {quiz.quiz_questions.length}
                                         </span>
                                         <span>
-                                          2 pts ≤5s · 1.8 ≤10s · 1.6 ≤20s · 1.4
-                                          ≤30s · 1.2 después
+                                          2 pts ≤10s · 1.8 ≤20s · 1.6 ≤30s · 1.4
+                                          ≤45s · 1.2 después
                                         </span>
                                       </div>
                                       <strong>{question.question_text}</strong>

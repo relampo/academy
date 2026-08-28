@@ -503,27 +503,29 @@ export async function listQuizAnswersByAttemptIds(attemptIds: string[]) {
   return (data ?? []) as QuizAnswer[];
 }
 
-// Escala por pregunta. Los tramos son cortos a propósito: premian a quien ya
-// domina el tema y responde de inmediato, sin dejar sin puntos a quien se toma
-// su tiempo. Una respuesta incorrecta no suma, rápida o lenta.
+// Escala por pregunta. Premia a quien ya domina el tema y responde de
+// inmediato, sin dejar sin puntos a quien se toma su tiempo. El tramo máximo
+// llega hasta los 10 segundos porque varias preguntas plantean un escenario:
+// leerlo con calma no debería costar puntos. Una respuesta incorrecta no suma,
+// rápida o lenta.
 function getQuizPoints(isCorrect: boolean, secondsSpent: number) {
   if (!isCorrect) {
     return 0;
   }
 
-  if (secondsSpent <= 5) {
+  if (secondsSpent <= 10) {
     return 2;
   }
 
-  if (secondsSpent <= 10) {
+  if (secondsSpent <= 20) {
     return 1.8;
   }
 
-  if (secondsSpent <= 20) {
+  if (secondsSpent <= 30) {
     return 1.6;
   }
 
-  if (secondsSpent <= 30) {
+  if (secondsSpent <= 45) {
     return 1.4;
   }
 
