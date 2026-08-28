@@ -503,20 +503,31 @@ export async function listQuizAnswersByAttemptIds(attemptIds: string[]) {
   return (data ?? []) as QuizAnswer[];
 }
 
+// Escala por pregunta. Los tramos son cortos a propósito: premian a quien ya
+// domina el tema y responde de inmediato, sin dejar sin puntos a quien se toma
+// su tiempo. Una respuesta incorrecta no suma, rápida o lenta.
 function getQuizPoints(isCorrect: boolean, secondsSpent: number) {
   if (!isCorrect) {
     return 0;
   }
 
-  if (secondsSpent <= 30) {
+  if (secondsSpent <= 5) {
     return 2;
   }
 
-  if (secondsSpent <= 60) {
-    return 1.5;
+  if (secondsSpent <= 10) {
+    return 1.8;
   }
 
-  return 1;
+  if (secondsSpent <= 20) {
+    return 1.6;
+  }
+
+  if (secondsSpent <= 30) {
+    return 1.4;
+  }
+
+  return 1.2;
 }
 
 export async function submitQuizAttempt(input: {
