@@ -73,9 +73,9 @@ begin
   )
   select
     l.id,
-    'Tarea - Fundamentos de Performance Testing',
+    'Tarea - Casos reales de problemas de performance',
     'Investiga 5 aplicaciones o plataformas que hayan tenido problemas de performance durante su lanzamiento o durante un evento de alto tráfico. Para cada caso, redacta: qué ocurrió, cuáles fueron los principales impactos para usuarios y negocio, qué aprendizajes deja para performance testing, y agrega las referencias consultadas. Sube tu documento o evidencia a tu carpeta compartida de Google Drive y pega aquí el enlace directo para que el instructor pueda revisarlo.',
-    'report',
+    'research',
     10,
     true
   from public.lessons l
@@ -85,6 +85,7 @@ begin
   do update set
     title = excluded.title,
     description = excluded.description,
+    assignment_type = excluded.assignment_type,
     updated_at = now()
   where
     public.lesson_assignments.description is null
