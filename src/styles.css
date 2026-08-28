@@ -148,21 +148,23 @@ button:disabled {
   padding: 32px;
 }
 
+/* Los topes son generosos para aprovechar los monitores anchos, pero siguen
+   existiendo: sin ellos las líneas de texto se vuelven ilegibles de largas. */
 .page {
   display: grid;
-  width: min(100%, 1400px);
+  width: 100%;
   gap: 24px;
-  max-width: 1180px;
+  max-width: 1460px;
 }
 
 .page:has(.student-progress-panel),
 .page:has(.curriculum-panel),
 .page:has(.course-details-panel) {
-  max-width: 1500px;
+  max-width: 1780px;
 }
 
 .dashboard-page {
-  max-width: 1300px;
+  max-width: 1560px;
 }
 
 .page-header {
@@ -3279,6 +3281,9 @@ p {
 
 .leaderboard-page {
   gap: 22px;
+  /* El tablero es denso y los alias venían recortados con puntos suspensivos.
+     Con más ancho las filas caben enteras, así que se le da más que al resto. */
+  max-width: 1680px;
 }
 
 .leaderboard-hero {
