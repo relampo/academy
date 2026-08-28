@@ -148,23 +148,15 @@ button:disabled {
   padding: 32px;
 }
 
-/* Los topes son generosos para aprovechar los monitores anchos, pero siguen
-   existiendo: sin ellos las líneas de texto se vuelven ilegibles de largas. */
+/* Un solo ancho para todas las páginas: antes cada una tenía su propio tope y
+   se veían desalineadas al cambiar de sección. El tope sigue existiendo porque
+   sin él las líneas de texto se vuelven ilegibles de largas en un monitor muy
+   ancho; a 1920 la página ya ocupa todo el espacio disponible. */
 .page {
   display: grid;
   width: 100%;
   gap: 24px;
-  max-width: 1460px;
-}
-
-.page:has(.student-progress-panel),
-.page:has(.curriculum-panel),
-.page:has(.course-details-panel) {
-  max-width: 1780px;
-}
-
-.dashboard-page {
-  max-width: 1560px;
+  max-width: 1680px;
 }
 
 .page-header {
@@ -3281,9 +3273,6 @@ p {
 
 .leaderboard-page {
   gap: 22px;
-  /* El tablero es denso y los alias venían recortados con puntos suspensivos.
-     Con más ancho las filas caben enteras, así que se le da más que al resto. */
-  max-width: 1680px;
 }
 
 .leaderboard-hero {
